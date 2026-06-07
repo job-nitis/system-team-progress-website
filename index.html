@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System Team Project Progress</title>
+  <style>
+    :root {
+      --ink: #18212f;
+      --muted: #667085;
+      --line: #d9e0ea;
+      --paper: #f6f8fb;
+      --panel: #ffffff;
+      --teal: #087f8c;
+      --blue: #2856b6;
+      --green: #238456;
+      --amber: #b7791f;
+      --red: #bd3d37;
+      --shadow: 0 18px 42px rgba(24, 33, 47, 0.11);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      line-height: 1.5;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 14px clamp(18px, 3vw, 42px);
+      background: rgba(255, 255, 255, 0.92);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      background: var(--ink);
+      border-radius: 8px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .year-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #eef2f7;
+    }
+
+    .year-tabs button {
+      min-width: 70px;
+      border: 0;
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .year-tabs button[aria-selected="true"] {
+      color: var(--ink);
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(24, 33, 47, 0.1);
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+      gap: 24px;
+      min-height: 360px;
+      padding: clamp(24px, 4vw, 44px);
+      color: #ffffff;
+      background: #132033;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    #systemMap {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.62;
+    }
+
+    .hero-copy,
+    .hero-aside {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #98d4d9;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero h2 {
+      max-width: 720px;
+      margin: 0;
+      font-size: clamp(34px, 5vw, 66px);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .hero-copy > p:not(.eyebrow) {
+      max-width: 640px;
+      margin: 18px 0 0;
+      color: #dbe8f2;
+      font-size: 17px;
+    }
+
+    .hero-aside {
+      align-self: stretch;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 14px;
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+    }
+
+    .current-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: #dbe8f2;
+      font-size: 13px;
+    }
+
+    .current-score {
+      align-self: end;
+    }
+
+    .score-number {
+      font-size: clamp(60px, 9vw, 104px);
+      line-height: 0.9;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .score-number span {
+      font-size: 28px;
+      color: #98d4d9;
+    }
+
+    .score-caption {
+      margin-top: 12px;
+      color: #dbe8f2;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .stat {
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 10px 0 14px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .section-head p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .project-card {
+      display: grid;
+      gap: 14px;
+      min-height: 260px;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(24, 33, 47, 0.06);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .project-card h4 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .project-card p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status.on-track {
+      background: var(--green);
+    }
+
+    .status.watch {
+      background: var(--amber);
+    }
+
+    .status.done {
+      background: var(--blue);
+    }
+
+    .status.blocked {
+      background: var(--red);
+    }
+
+    .progress-wrap {
+      display: grid;
+      gap: 8px;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .progress {
+      height: 10px;
+      overflow: hidden;
+      background: #e7ecf3;
+      border-radius: 999px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal), #4c78d8);
+      border-radius: inherit;
+    }
+
+    .meta-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .meta-list li {
+      min-width: 0;
+      padding: 9px;
+      background: #f3f6fa;
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .meta-list strong {
+      display: block;
+      overflow-wrap: anywhere;
+      color: var(--ink);
+      font-size: 13px;
+    }
+
+    .side-panel {
+      display: grid;
+      gap: 14px;
+      position: sticky;
+      top: 88px;
+    }
+
+    .panel {
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .panel h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .quarter-list,
+    .decision-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .quarter-list li,
+    .decision-list li {
+      display: grid;
+      gap: 4px;
+      padding-left: 14px;
+      border-left: 3px solid var(--teal);
+    }
+
+    .quarter-list strong,
+    .decision-list strong {
+      font-size: 14px;
+    }
+
+    .quarter-list span,
+    .decision-list span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .footer-note {
+      margin: 24px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 940px) {
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .year-tabs {
+        overflow-x: auto;
+      }
+
+      .hero,
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .side-panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        width: min(100% - 20px, 1180px);
+        padding-top: 14px;
+      }
+
+      .hero {
+        min-height: 0;
+        padding: 22px;
+      }
+
+      .project-grid,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .meta-list {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">ST</div>
+        <div>
+          <h1>System Team Projects</h1>
+          <p>Annual project progress and delivery view</p>
+        </div>
+      </div>
+      <nav class="year-tabs" aria-label="Project year" id="yearTabs"></nav>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="heroTitle">
+        <canvas id="systemMap" aria-hidden="true"></canvas>
+        <div class="hero-copy">
+          <p class="eyebrow" id="heroEyebrow">Project year</p>
+          <h2 id="heroTitle">System delivery progress</h2>
+          <p id="heroSummary">A projects-first view for tracking annual system team work, visible progress, delivery risks, and operational impact.</p>
+        </div>
+        <aside class="hero-aside" aria-label="Current year progress">
+          <div class="current-label">
+            <span>Overall progress</span>
+            <strong id="currentYearLabel">2026</strong>
+          </div>
+          <div class="current-score">
+            <div class="score-number"><span id="overallScore">0</span><span>%</span></div>
+            <div class="score-caption" id="scoreCaption">Across active system projects</div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="stats" aria-label="Project metrics">
+        <div class="stat">
+          <strong id="metricProjects">0</strong>
+          <span>Total projects</span>
+        </div>
+        <div class="stat">
+          <strong id="metricCompleted">0</strong>
+          <span>Completed</span>
+        </div>
+        <div class="stat">
+          <strong id="metricActive">0</strong>
+          <span>Active</span>
+        </div>
+        <div class="stat">
+          <strong id="metricWatch">0</strong>
+          <span>Needs attention</span>
+        </div>
+      </section>
+
+      <div class="content-grid">
+        <section>
+          <div class="section-head">
+            <div>
+              <h3>Project Portfolio</h3>
+              <p id="portfolioSubtitle">Current system work by progress, owner, and status.</p>
+            </div>
+          </div>
+          <div class="project-grid" id="projectGrid"></div>
+        </section>
+
+        <aside class="side-panel">
+          <section class="panel" aria-labelledby="timelineTitle">
+            <h3 id="timelineTitle">Year Timeline</h3>
+            <ul class="quarter-list" id="quarterList"></ul>
+          </section>
+          <section class="panel" aria-labelledby="decisionsTitle">
+            <h3 id="decisionsTitle">Key Decisions</h3>
+            <ul class="decision-list" id="decisionList"></ul>
+          </section>
+        </aside>
+      </div>
+
+      <p class="footer-note">System Team Annual Progress View</p>
+    </main>
+  </div>
+
+  <script>
+    const projectYears = [
+      {
+        year: 2026,
+        title: "2026 System Team Delivery Progress",
+        summary: "Track yearly system projects across platform reliability, automation, integrations, and internal tooling.",
+        quarters: [
+          ["Q1", "Baseline platform health and define delivery targets"],
+          ["Q2", "Deliver automation and monitoring upgrades"],
+          ["Q3", "Expand integrations and reduce manual operations"],
+          ["Q4", "Close reliability gaps and publish annual outcomes"]
+        ],
+        decisions: [
+          ["Project reporting", "Use progress, status, owner, impact, and next milestone for every project."],
+          ["Risk tracking", "Flag watch items early when delivery, dependency, or adoption risk appears."],
+          ["Annual review", "Keep completed projects visible so yearly impact is easy to summarize."]
+        ],
+        projects: [
+          {
+            name: "Infrastructure Monitoring Upgrade",
+            description: "Improve visibility across services with cleaner alerts, health signals, and incident dashboards.",
+            status: "On track",
+            progress: 72,
+            owner: "System Team",
+            quarter: "Q2",
+            impact: "Faster incident response",
+            tech: "Monitoring"
+          },
+          {
+            name: "Access Request Automation",
+            description: "Reduce manual approvals and standardize audit records for common system access requests.",
+            status: "Watch",
+            progress: 48,
+            owner: "System Team",
+            quarter: "Q3",
+            impact: "Lower operations load",
+            tech: "Workflow"
+          },
+          {
+            name: "Core Service Renewal",
+            description: "Update legacy service components and prepare the next maintenance window with rollback paths.",
+            status: "On track",
+            progress: 63,
+            owner: "Platform Ops",
+            quarter: "Q3",
+            impact: "Improved stability",
+            tech: "Backend"
+          },
+          {
+            name: "Project Progress Portal",
+            description: "Create a simple website for annual system team project reporting and stakeholder visibility.",
+            status: "On track",
+            progress: 35,
+            owner: "System Team",
+            quarter: "Q2",
+            impact: "Clearer communication",
+            tech: "Website"
+          }
+        ]
+      },
+      {
+        year: 2025,
+        title: "2025 System Team Project Archive",
+        summary: "A completed-year snapshot for system improvements, support initiatives, and operational cleanup.",
+        quarters: [
+          ["Q1", "Inventory critical workflows and support requests"],
+          ["Q2", "Ship core operational improvements"],
+          ["Q3", "Retire stale processes and consolidate reporting"],
+          ["Q4", "Publish results and next-year recommendations"]
+        ],
+        decisions: [
+          ["Archive format", "Keep prior-year work readable but visually secondary."],
+          ["Outcome focus", "Show the operational result for every completed project."],
+          ["Carryover work", "Move unfinished work into the next year with a fresh owner and target."]
+        ],
+        projects: [
+          {
+            name: "Service Inventory Cleanup",
+            description: "Consolidated service ownership records and removed duplicate system entries.",
+            status: "Done",
+            progress: 100,
+            owner: "System Team",
+            quarter: "Q2",
+            impact: "Cleaner ownership data",
+            tech: "Inventory"
+          },
+          {
+            name: "Support Queue Reporting",
+            description: "Built a monthly reporting view for recurring support requests and resolution patterns.",
+            status: "Done",
+            progress: 100,
+            owner: "Ops Support",
+            quarter: "Q3",
+            impact: "Better support planning",
+            tech: "Reporting"
+          },
+          {
+            name: "Backup Policy Review",
+            description: "Reviewed backup coverage and documented gaps for critical internal systems.",
+            status: "Done",
+            progress: 92,
+            owner: "Platform Ops",
+            quarter: "Q4",
+            impact: "Reduced recovery risk",
+            tech: "Reliability"
+          }
+        ]
+      }
+    ];
+
+    const state = {
+      activeYear: projectYears[0].year
+    };
+
+    const statusClass = {
+      "On track": "on-track",
+      "Watch": "watch",
+      "Done": "done",
+      "Blocked": "blocked"
+    };
+
+    const yearTabs = document.querySelector("#yearTabs");
+    const projectGrid = document.querySelector("#projectGrid");
+    const quarterList = document.querySelector("#quarterList");
+    const decisionList = document.querySelector("#decisionList");
+
+    function averageProgress(projects) {
+      if (!projects.length) return 0;
+      return Math.round(projects.reduce((sum, project) => sum + project.progress, 0) / projects.length);
+    }
+
+    function selectedYear() {
+      return projectYears.find((item) => item.year === state.activeYear) || projectYears[0];
+    }
+
+    function renderTabs() {
+      yearTabs.innerHTML = projectYears.map((item) => `
+        <button type="button" data-year="${item.year}" aria-selected="${item.year === state.activeYear}">
+          ${item.year}
+        </button>
+      `).join("");
+    }
+
+    function renderDashboard() {
+      const data = selectedYear();
+      const projects = data.projects;
+      const completed = projects.filter((project) => project.status === "Done").length;
+      const watch = projects.filter((project) => project.status === "Watch" || project.status === "Blocked").length;
+      const active = projects.length - completed;
+      const score = averageProgress(projects);
+
+      document.querySelector("#heroEyebrow").textContent = `${data.year} project year`;
+      document.querySelector("#heroTitle").textContent = data.title;
+      document.querySelector("#heroSummary").textContent = data.summary;
+      document.querySelector("#currentYearLabel").textContent = data.year;
+      document.querySelector("#overallScore").textContent = score;
+      document.querySelector("#scoreCaption").textContent = `${projects.length} projects tracked for ${data.year}`;
+      document.querySelector("#metricProjects").textContent = projects.length;
+      document.querySelector("#metricCompleted").textContent = completed;
+      document.querySelector("#metricActive").textContent = active;
+      document.querySelector("#metricWatch").textContent = watch;
+      document.querySelector("#portfolioSubtitle").textContent = `${data.year} system work by progress, owner, and status.`;
+
+      projectGrid.innerHTML = projects.map((project) => `
+        <article class="project-card">
+          <div class="card-top">
+            <div>
+              <h4>${project.name}</h4>
+              <p>${project.description}</p>
+            </div>
+            <span class="status ${statusClass[project.status] || "on-track"}">${project.status}</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-meta">
+              <span>Progress</span>
+              <strong>${project.progress}%</strong>
+            </div>
+            <div class="progress" aria-label="${project.name} progress">
+              <span style="width: ${project.progress}%"></span>
+            </div>
+          </div>
+          <ul class="meta-list">
+            <li><strong>${project.owner}</strong>Owner</li>
+            <li><strong>${project.quarter}</strong>Target</li>
+            <li><strong>${project.tech}</strong>Area</li>
+          </ul>
+          <p><strong>Impact:</strong> ${project.impact}</p>
+        </article>
+      `).join("");
+
+      quarterList.innerHTML = data.quarters.map(([quarter, text]) => `
+        <li><strong>${quarter}</strong><span>${text}</span></li>
+      `).join("");
+
+      decisionList.innerHTML = data.decisions.map(([title, text]) => `
+        <li><strong>${title}</strong><span>${text}</span></li>
+      `).join("");
+
+      renderTabs();
+    }
+
+    yearTabs.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-year]");
+      if (!button) return;
+      state.activeYear = Number(button.dataset.year);
+      renderDashboard();
+    });
+
+    const canvas = document.querySelector("#systemMap");
+    const ctx = canvas.getContext("2d");
+    let animationFrame;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function drawSystemMap(time) {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      const nodes = [
+        [0.12, 0.24], [0.28, 0.42], [0.2, 0.7], [0.46, 0.22],
+        [0.55, 0.58], [0.72, 0.35], [0.84, 0.66], [0.67, 0.82]
+      ];
+
+      ctx.lineWidth = 1;
+      for (let i = 0; i < nodes.length; i += 1) {
+        for (let j = i + 1; j < nodes.length; j += 1) {
+          if ((i + j) % 3 !== 0) continue;
+          const [x1, y1] = nodes[i];
+          const [x2, y2] = nodes[j];
+          ctx.strokeStyle = "rgba(152, 212, 217, 0.18)";
+          ctx.beginPath();
+          ctx.moveTo(x1 * rect.width, y1 * rect.height);
+          ctx.lineTo(x2 * rect.width, y2 * rect.height);
+          ctx.stroke();
+        }
+      }
+
+      nodes.forEach(([x, y], index) => {
+        const pulse = 2 + Math.sin(time / 700 + index) * 1.6;
+        ctx.fillStyle = index % 2 === 0 ? "rgba(152, 212, 217, 0.88)" : "rgba(255, 202, 87, 0.8)";
+        ctx.beginPath();
+        ctx.arc(x * rect.width, y * rect.height, 4 + pulse, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      animationFrame = requestAnimationFrame(drawSystemMap);
+    }
+
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+    });
+
+    resizeCanvas();
+    renderDashboard();
+    animationFrame = requestAnimationFrame(drawSystemMap);
+  </script>
+</body>
+</html>
