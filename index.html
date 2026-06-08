@@ -331,11 +331,11 @@
     }
 
     .progress-table .col-narrow {
-      width: 68px;
+      width: 48px;
     }
 
     .progress-table .col-medium {
-      width: 118px;
+      width: 160px;
     }
 
     .progress-table .col-wide {
@@ -348,10 +348,11 @@
     }
 
     .vertical-header {
-      height: 138px;
+      height: 112px;
       writing-mode: vertical-rl;
       transform: rotate(180deg);
       white-space: nowrap;
+      font-size: 11px;
     }
 
     .project-name {
@@ -384,16 +385,17 @@
     }
 
     .prpo-stack {
-      display: grid;
-      gap: 6px;
+      display: flex;
+      gap: 12px;
       text-align: left;
+      white-space: nowrap;
     }
 
     .prpo-line {
-      display: grid;
-      grid-template-columns: 58px minmax(0, 1fr);
-      gap: 8px;
-      align-items: start;
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      white-space: nowrap;
     }
 
     .prpo-line strong {
@@ -402,7 +404,7 @@
     }
 
     .prpo-line span {
-      overflow-wrap: anywhere;
+      white-space: nowrap;
     }
 
     .edit-button {
@@ -1142,6 +1144,7 @@
 
     let progressRows = loadProgressRows();
     let pendingDeleteRowId = "";
+    let editMode = "update";
 
     function loadProgressRows() {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -1185,7 +1188,7 @@
 
     function saveProgressRows() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
-      tableStorageStatus.textContent = GOOGLE_APPS_SCRIPT_URL ? "Saved locally and sent to Google Sheets" : "Saved in this browser";
+      tableStorageStatus.textContent = GOOGLE_APPS_SCRIPT_URL ? "Saved locally, sending table to Google Sheets" : "Saved in this browser";
 
       if (!GOOGLE_APPS_SCRIPT_URL) return;
 
@@ -1197,7 +1200,11 @@
           year: state.activeYear,
           rows: progressRows[state.activeYear] || []
         })
-      }).catch(() => {
+      })
+      .then(() => {
+        tableStorageStatus.textContent = "Saved locally and sent table to Google Sheets";
+      })
+      .catch(() => {
         tableStorageStatus.textContent = "Saved locally, Google Sheets sync failed";
       });
     }
@@ -1330,6 +1337,7 @@
       const row = rowsForActiveYear().find((item) => item.id === rowId);
       if (!row) return;
 
+      editMode = "update";
       document.querySelector("#editRowId").value = row.id;
       document.querySelector("#editProject").value = row.project || "";
       document.querySelector("#editOwner").value = row.owner || "";
@@ -1346,8 +1354,27 @@
       document.querySelector("#editProject").focus();
     }
 
+    function openNewProjectDialog() {
+      editMode = "create";
+      document.querySelector("#editRowId").value = "";
+      document.querySelector("#editProject").value = "";
+      document.querySelector("#editOwner").value = "System Team";
+      document.querySelector("#editTechPrep").value = "empty";
+      document.querySelector("#editTor").value = "";
+      document.querySelector("#editPr").value = "";
+      document.querySelector("#editSapPr").value = "";
+      document.querySelector("#editPo").value = "";
+      document.querySelector("#editDelivery").value = "empty";
+      document.querySelector("#editFatSat").value = "empty";
+      document.querySelector("#editCloseMoc").value = "empty";
+      document.querySelector("#editOverallPlan").value = "";
+      editDialog.classList.add("is-open");
+      document.querySelector("#editProject").focus();
+    }
+
     function closeEditDialog() {
       editDialog.classList.remove("is-open");
+      editMode = "update";
     }
 
     function openDeleteDialog(rowId) {
@@ -1373,25 +1400,7 @@
     }
 
     function addProgressRow() {
-      const rows = rowsForActiveYear();
-      const id = `${state.activeYear}-${Date.now()}`;
-      rows.push({
-        id,
-        project: "New initiative project",
-        owner: "System Team",
-        techPrep: "empty",
-        tor: "",
-        pr: "",
-        sapPr: "",
-        po: "",
-        delivery: "empty",
-        fatSat: "empty",
-        closeMoc: "empty",
-        overallPlan: ""
-      });
-      saveProgressRows();
-      renderDashboard();
-      openEditDialog(id);
+      openNewProjectDialog();
     }
 
     function averageProgress(projects) {
@@ -1499,7 +1508,26 @@
       event.preventDefault();
       const rowId = document.querySelector("#editRowId").value;
       const rows = rowsForActiveYear();
-      const row = rows.find((item) => item.id === rowId);
+      let row = rows.find((item) => item.id === rowId);
+
+      if (!row && editMode === "create") {
+        row = {
+          id: `${state.activeYear}-${Date.now()}`,
+          project: "",
+          owner: "",
+          techPrep: "empty",
+          tor: "",
+          pr: "",
+          sapPr: "",
+          po: "",
+          delivery: "empty",
+          fatSat: "empty",
+          closeMoc: "empty",
+          overallPlan: ""
+        };
+        rows.push(row);
+      }
+
       if (!row) return;
 
       row.project = document.querySelector("#editProject").value.trim();
