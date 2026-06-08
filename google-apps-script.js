@@ -1,6 +1,18 @@
 const SHEET_NAME = "ProgressRows";
 
+function doGet() {
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true, message: "System Team Progress API is running" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
+  if (!e || !e.postData || !e.postData.contents) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ ok: false, error: "No POST data received" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
   const payload = JSON.parse(e.postData.contents);
   const sheet = getSheet();
   const rows = payload.rows || [];
