@@ -379,6 +379,28 @@
       background: #ffffff;
     }
 
+    .prpo-stack {
+      display: grid;
+      gap: 6px;
+      text-align: left;
+    }
+
+    .prpo-line {
+      display: grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+    }
+
+    .prpo-line strong {
+      color: inherit;
+      font-size: 12px;
+    }
+
+    .prpo-line span {
+      overflow-wrap: anywhere;
+    }
+
     .edit-button {
       border: 1px solid var(--line);
       border-radius: 6px;
@@ -858,8 +880,16 @@
           <input id="editTor" name="tor">
         </div>
         <div class="form-field">
-          <label for="editPrpo">PR/PO</label>
-          <textarea id="editPrpo" name="prpo"></textarea>
+          <label for="editPr">PR</label>
+          <input id="editPr" name="pr">
+        </div>
+        <div class="form-field">
+          <label for="editSapPr">SAP PR</label>
+          <input id="editSapPr" name="sapPr">
+        </div>
+        <div class="form-field">
+          <label for="editPo">PO</label>
+          <input id="editPo" name="po">
         </div>
         <div class="form-field">
           <label for="editDelivery">Delivery</label>
@@ -1015,7 +1045,9 @@
           owner: "System Team",
           techPrep: "done",
           tor: "TR-69C000803",
-          prpo: "PR: 1121000435\nSAP PR: PR-69C001072\nPO: 3121000540",
+          pr: "1121000435",
+          sapPr: "PR-69C001072",
+          po: "3121000540",
           delivery: "progress",
           fatSat: "empty",
           closeMoc: "empty",
@@ -1027,7 +1059,9 @@
           owner: "System Team",
           techPrep: "done",
           tor: "Internal",
-          prpo: "N/A",
+          pr: "N/A",
+          sapPr: "",
+          po: "",
           delivery: "progress",
           fatSat: "empty",
           closeMoc: "empty",
@@ -1041,7 +1075,9 @@
           owner: "System Team",
           techPrep: "done",
           tor: "Completed",
-          prpo: "Completed",
+          pr: "Completed",
+          sapPr: "Completed",
+          po: "Completed",
           delivery: "done",
           fatSat: "done",
           closeMoc: "done",
@@ -1080,13 +1116,42 @@
 
     function loadProgressRows() {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return structuredClone(defaultProgressRows);
+      if (!saved) return normalizeProgressRows(structuredClone(defaultProgressRows));
 
       try {
-        return { ...structuredClone(defaultProgressRows), ...JSON.parse(saved) };
+        return normalizeProgressRows({ ...structuredClone(defaultProgressRows), ...JSON.parse(saved) });
       } catch (error) {
-        return structuredClone(defaultProgressRows);
+        return normalizeProgressRows(structuredClone(defaultProgressRows));
       }
+    }
+
+    function normalizeProgressRows(rowsByYear) {
+      return Object.fromEntries(
+        Object.entries(rowsByYear).map(([year, rows]) => [year, rows.map(normalizeRow)])
+      );
+    }
+
+    function normalizeRow(row) {
+      const legacy = parseLegacyPrpo(row.prpo || "");
+
+      return {
+        ...row,
+        pr: row.pr ?? legacy.pr,
+        sapPr: row.sapPr ?? legacy.sapPr,
+        po: row.po ?? legacy.po
+      };
+    }
+
+    function parseLegacyPrpo(value) {
+      const result = { pr: "", sapPr: "", po: "" };
+      String(value || "").split("\n").forEach((line) => {
+        const clean = line.trim();
+        if (/^SAP PR\s*:/i.test(clean)) result.sapPr = clean.replace(/^SAP PR\s*:\s*/i, "");
+        else if (/^PR\s*:/i.test(clean)) result.pr = clean.replace(/^PR\s*:\s*/i, "");
+        else if (/^PO\s*:/i.test(clean)) result.po = clean.replace(/^PO\s*:\s*/i, "");
+        else if (clean && !result.pr) result.pr = clean;
+      });
+      return result;
     }
 
     function saveProgressRows() {
@@ -1121,10 +1186,74 @@
       return escapeHtml(value).replaceAll("\n", "<br>");
     }
 
+    function progressCellClass(value) {
+      if (value === "done") return "cell-done";
+      if (value === "progress") return "cell-progress";
+      return "cell-empty";
+    }
+
     function statusCell(value, label = "") {
       const status = value || "empty";
       const text = label || (status === "done" ? "Done" : status === "progress" ? "Progress" : "");
-      return `<td class="cell-${status}">${formatCellText(text)}</td>`;
+      return `<td class="${progressCellClass(status)}">${formatCellText(text)}</td>`;
+    }
+
+    function filledCell(value) {
+      const text = String(value ?? "").trim();
+      return `<td class="${text ? "cell-done" : "cell-empty"}">${formatCellText(text)}</td>`;
+    }
+
+    function prpoCell(row) {
+      const hasValue = [row.pr, row.sapPr, row.po].some((value) => String(value ?? "").trim());
+
+      return `
+        <td class="${hasValue ? "cell-done" : "cell-empty"}">
+          <div class="prpo-stack">
+            <div class="prpo-line"><strong>PR</strong><span>${formatCellText(row.pr)}</span></div>
+            <div class="prpo-line"><strong>SAP PR</strong><span>${formatCellText(row.sapPr)}</span></div>
+            <div class="prpo-line"><strong>PO</strong><span>${formatCellText(row.po)}</span></div>
+          </div>
+        </td>
+      `;
+    }
+
+    function rowStageValue(value) {
+      if (value === "done") return 1;
+      if (value === "progress") return 0.5;
+      return 0;
+    }
+
+    function rowProgress(row) {
+      const score =
+        rowStageValue(row.techPrep) +
+        (String(row.tor ?? "").trim() ? 1 : 0) +
+        ([row.pr, row.sapPr, row.po].some((value) => String(value ?? "").trim()) ? 1 : 0) +
+        rowStageValue(row.delivery) +
+        rowStageValue(row.fatSat) +
+        rowStageValue(row.closeMoc);
+
+      return Math.round((score / 6) * 100);
+    }
+
+    function rowStatus(row) {
+      const progress = rowProgress(row);
+      if (progress === 100) return "Done";
+      if ([row.techPrep, row.delivery, row.fatSat, row.closeMoc].includes("progress")) return "On track";
+      if (progress > 0) return "Watch";
+      return "Blocked";
+    }
+
+    function projectCardsFromRows(rows) {
+      return rows.map((row) => ({
+        name: row.project || "Untitled project",
+        description: row.overallPlan || "No overall plan added yet.",
+        status: rowStatus(row),
+        progress: rowProgress(row),
+        owner: row.owner || "Unknown",
+        quarter: selectedYear().year,
+        impact: row.overallPlan || "Waiting for update.",
+        tech: row.tor || "TOR empty"
+      }));
     }
 
     function rowsForActiveYear() {
@@ -1152,8 +1281,8 @@
             <span class="project-owner">${formatCellText(row.owner)}</span>
           </td>
           ${statusCell(row.techPrep)}
-          <td class="cell-${row.tor ? "done" : "empty"}">${formatCellText(row.tor)}</td>
-          <td class="cell-${row.prpo ? "done" : "empty"}">${formatCellText(row.prpo)}</td>
+          ${filledCell(row.tor)}
+          ${prpoCell(row)}
           ${statusCell(row.delivery)}
           ${statusCell(row.fatSat)}
           ${statusCell(row.closeMoc)}
@@ -1172,7 +1301,9 @@
       document.querySelector("#editOwner").value = row.owner || "";
       document.querySelector("#editTechPrep").value = row.techPrep || "empty";
       document.querySelector("#editTor").value = row.tor || "";
-      document.querySelector("#editPrpo").value = row.prpo || "";
+      document.querySelector("#editPr").value = row.pr || "";
+      document.querySelector("#editSapPr").value = row.sapPr || "";
+      document.querySelector("#editPo").value = row.po || "";
       document.querySelector("#editDelivery").value = row.delivery || "empty";
       document.querySelector("#editFatSat").value = row.fatSat || "empty";
       document.querySelector("#editCloseMoc").value = row.closeMoc || "empty";
@@ -1194,14 +1325,16 @@
         owner: "System Team",
         techPrep: "empty",
         tor: "",
-        prpo: "",
+        pr: "",
+        sapPr: "",
+        po: "",
         delivery: "empty",
         fatSat: "empty",
         closeMoc: "empty",
         overallPlan: ""
       });
       saveProgressRows();
-      renderProgressTable();
+      renderDashboard();
       openEditDialog(id);
     }
 
@@ -1224,7 +1357,7 @@
 
     function renderDashboard() {
       const data = selectedYear();
-      const projects = data.projects;
+      const projects = projectCardsFromRows(rowsForActiveYear());
       const completed = projects.filter((project) => project.status === "Done").length;
       const watch = projects.filter((project) => project.status === "Watch" || project.status === "Blocked").length;
       const active = projects.length - completed;
@@ -1297,7 +1430,7 @@
     resetTableButton.addEventListener("click", () => {
       progressRows[state.activeYear] = structuredClone(defaultProgressRows[state.activeYear] || []);
       saveProgressRows();
-      renderProgressTable();
+      renderDashboard();
     });
 
     cancelEditButton.addEventListener("click", closeEditDialog);
@@ -1317,7 +1450,9 @@
       row.owner = document.querySelector("#editOwner").value.trim();
       row.techPrep = document.querySelector("#editTechPrep").value;
       row.tor = document.querySelector("#editTor").value.trim();
-      row.prpo = document.querySelector("#editPrpo").value.trim();
+      row.pr = document.querySelector("#editPr").value.trim();
+      row.sapPr = document.querySelector("#editSapPr").value.trim();
+      row.po = document.querySelector("#editPo").value.trim();
       row.delivery = document.querySelector("#editDelivery").value;
       row.fatSat = document.querySelector("#editFatSat").value;
       row.closeMoc = document.querySelector("#editCloseMoc").value;
@@ -1325,6 +1460,7 @@
 
       saveProgressRows();
       renderProgressTable();
+      renderDashboard();
       closeEditDialog();
     });
 

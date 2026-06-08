@@ -30,6 +30,7 @@ Edit the placeholder projects inside that list. For each project, you can update
 - `quarter`
 - `impact`
 - `tech`
+- table fields such as `tor`, `pr`, `sapPr`, and `po`
 
 Use these status values for the built-in colors:
 
@@ -56,6 +57,12 @@ const GOOGLE_APPS_SCRIPT_URL = "";
 ```
 
 Paste your web app URL between the quotes.
+
+The Google Sheet will store these columns:
+
+```text
+Year | ID | Initiative Project | Owner | Tech Preparation | TOR | PR | SAP PR | PO | Delivery | FAT/SAT | Close MOC | Overall Plan | Updated At
+```
 
 ## How to publish with GitHub Pages
 
