@@ -8,6 +8,7 @@ Static website for showing yearly System Team project progress.
 - `google-apps-script.js` - optional Google Sheets backend script
 - Year tabs for switching between project years
 - Editable progress summary table
+- `Add Project`, `Edit`, and `Delete` actions for table rows
 - Project cards with status, owner, quarter, area, progress, and impact
 - Summary metrics for total, completed, active, and watch projects
 - Timeline and decision sections for annual reporting
@@ -42,6 +43,7 @@ Use these status values for the built-in colors:
 ## How table storage works
 
 The progress table saves edits in the browser immediately using `localStorage`.
+Deleting a project removes it from the active year after a confirmation popup.
 
 For team/shared storage, use Google Sheets:
 

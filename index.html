@@ -298,16 +298,16 @@
 
     .progress-table {
       width: 100%;
-      min-width: 1040px;
+      min-width: 960px;
       border-collapse: collapse;
       table-layout: fixed;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .progress-table th,
     .progress-table td {
       border: 2px solid #161a21;
-      padding: 10px;
+      padding: 8px;
       text-align: center;
       vertical-align: middle;
     }
@@ -322,29 +322,33 @@
     }
 
     .progress-table .col-no {
-      width: 62px;
+      width: 52px;
     }
 
     .progress-table .col-project {
-      width: 270px;
+      width: 240px;
       text-align: left;
     }
 
     .progress-table .col-narrow {
-      width: 76px;
+      width: 68px;
     }
 
     .progress-table .col-medium {
-      width: 130px;
+      width: 118px;
     }
 
     .progress-table .col-wide {
-      width: 280px;
+      width: 250px;
       text-align: left;
     }
 
+    .progress-table .col-action {
+      width: 118px;
+    }
+
     .vertical-header {
-      height: 156px;
+      height: 138px;
       writing-mode: vertical-rl;
       transform: rotate(180deg);
       white-space: nowrap;
@@ -404,12 +408,30 @@
     .edit-button {
       border: 1px solid var(--line);
       border-radius: 6px;
-      padding: 7px 10px;
+      padding: 7px 9px;
       color: var(--ink);
       background: #ffffff;
       cursor: pointer;
       font-size: 12px;
       font-weight: 700;
+    }
+
+    .delete-button {
+      border: 1px solid #f0b4b1;
+      border-radius: 6px;
+      padding: 7px 9px;
+      color: #9f2f2a;
+      background: #fff2f1;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
     }
 
     .dialog-backdrop {
@@ -440,6 +462,24 @@
     .edit-dialog h3 {
       margin: 0 0 14px;
       font-size: 20px;
+    }
+
+    .confirm-dialog {
+      width: min(440px, 100%);
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .confirm-dialog h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .confirm-dialog p {
+      margin: 10px 0 0;
+      color: var(--muted);
     }
 
     .form-grid {
@@ -488,10 +528,7 @@
     }
 
     .content-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 330px;
-      gap: 22px;
-      align-items: start;
+      display: block;
     }
 
     .section-head {
@@ -626,13 +663,6 @@
       font-size: 13px;
     }
 
-    .side-panel {
-      display: grid;
-      gap: 14px;
-      position: sticky;
-      top: 88px;
-    }
-
     .panel {
       padding: 18px;
       background: var(--panel);
@@ -690,8 +720,7 @@
         align-self: flex-start;
       }
 
-      .hero,
-      .content-grid {
+      .hero {
         grid-template-columns: 1fr;
       }
 
@@ -704,9 +733,6 @@
         flex-direction: column;
       }
 
-      .side-panel {
-        position: static;
-      }
     }
 
     @media (max-width: 640px) {
@@ -784,7 +810,7 @@
           </div>
           <div class="table-actions">
             <button class="action-button secondary" type="button" id="resetTableButton">Reset</button>
-            <button class="action-button" type="button" id="addRowButton">Add Row</button>
+            <button class="action-button" type="button" id="addRowButton">Add Project</button>
           </div>
         </div>
         <div class="table-scroll">
@@ -800,7 +826,7 @@
                 <th class="col-narrow vertical-header">FAT / SAT</th>
                 <th class="col-narrow vertical-header">CLOSE MOC</th>
                 <th class="col-wide">Overall Plan</th>
-                <th class="col-narrow">Action</th>
+                <th class="col-action">Action</th>
               </tr>
             </thead>
             <tbody id="progressTableBody"></tbody>
@@ -837,17 +863,6 @@
           </div>
           <div class="project-grid" id="projectGrid"></div>
         </section>
-
-        <aside class="side-panel">
-          <section class="panel" aria-labelledby="timelineTitle">
-            <h3 id="timelineTitle">Year Timeline</h3>
-            <ul class="quarter-list" id="quarterList"></ul>
-          </section>
-          <section class="panel" aria-labelledby="decisionsTitle">
-            <h3 id="decisionsTitle">Key Decisions</h3>
-            <ul class="decision-list" id="decisionList"></ul>
-          </section>
-        </aside>
       </div>
 
       <p class="footer-note">System Team Annual Progress View</p>
@@ -856,7 +871,7 @@
 
   <div class="dialog-backdrop" id="editDialog" role="dialog" aria-modal="true" aria-labelledby="editDialogTitle">
     <form class="edit-dialog" id="editForm">
-      <h3 id="editDialogTitle">Edit Progress Row</h3>
+      <h3 id="editDialogTitle">Update Progress</h3>
       <input type="hidden" id="editRowId">
       <div class="form-grid">
         <div class="form-field full">
@@ -925,6 +940,17 @@
         <button class="action-button" type="submit">Save</button>
       </div>
     </form>
+  </div>
+
+  <div class="dialog-backdrop" id="deleteDialog" role="dialog" aria-modal="true" aria-labelledby="deleteDialogTitle">
+    <div class="confirm-dialog">
+      <h3 id="deleteDialogTitle">Delete Project</h3>
+      <p id="deleteDialogText">Are you sure you want to delete this project?</p>
+      <div class="dialog-actions">
+        <button class="action-button secondary" type="button" id="cancelDeleteButton">Cancel</button>
+        <button class="delete-button" type="button" id="confirmDeleteButton">Delete</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -1102,17 +1128,20 @@
 
     const yearSelect = document.querySelector("#yearSelect");
     const projectGrid = document.querySelector("#projectGrid");
-    const quarterList = document.querySelector("#quarterList");
-    const decisionList = document.querySelector("#decisionList");
     const progressTableBody = document.querySelector("#progressTableBody");
     const editDialog = document.querySelector("#editDialog");
     const editForm = document.querySelector("#editForm");
+    const deleteDialog = document.querySelector("#deleteDialog");
+    const deleteDialogText = document.querySelector("#deleteDialogText");
     const addRowButton = document.querySelector("#addRowButton");
     const resetTableButton = document.querySelector("#resetTableButton");
     const cancelEditButton = document.querySelector("#cancelEditButton");
+    const cancelDeleteButton = document.querySelector("#cancelDeleteButton");
+    const confirmDeleteButton = document.querySelector("#confirmDeleteButton");
     const tableStorageStatus = document.querySelector("#tableStorageStatus");
 
     let progressRows = loadProgressRows();
+    let pendingDeleteRowId = "";
 
     function loadProgressRows() {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -1287,7 +1316,12 @@
           ${statusCell(row.fatSat)}
           ${statusCell(row.closeMoc)}
           <td class="col-wide">${formatCellText(row.overallPlan)}</td>
-          <td><button class="edit-button" type="button" data-row-id="${escapeHtml(row.id)}">Edit</button></td>
+          <td>
+            <div class="row-actions">
+              <button class="edit-button" type="button" data-action="edit" data-row-id="${escapeHtml(row.id)}">Edit</button>
+              <button class="delete-button" type="button" data-action="delete" data-row-id="${escapeHtml(row.id)}">Delete</button>
+            </div>
+          </td>
         </tr>
       `).join("");
     }
@@ -1314,6 +1348,28 @@
 
     function closeEditDialog() {
       editDialog.classList.remove("is-open");
+    }
+
+    function openDeleteDialog(rowId) {
+      const row = rowsForActiveYear().find((item) => item.id === rowId);
+      if (!row) return;
+
+      pendingDeleteRowId = rowId;
+      deleteDialogText.textContent = `Delete "${row.project || "this project"}"? This action cannot be undone.`;
+      deleteDialog.classList.add("is-open");
+    }
+
+    function closeDeleteDialog() {
+      pendingDeleteRowId = "";
+      deleteDialog.classList.remove("is-open");
+    }
+
+    function deleteProgressRow() {
+      if (!pendingDeleteRowId) return;
+      progressRows[state.activeYear] = rowsForActiveYear().filter((row) => row.id !== pendingDeleteRowId);
+      saveProgressRows();
+      renderDashboard();
+      closeDeleteDialog();
     }
 
     function addProgressRow() {
@@ -1402,14 +1458,6 @@
         </article>
       `).join("");
 
-      quarterList.innerHTML = data.quarters.map(([quarter, text]) => `
-        <li><strong>${quarter}</strong><span>${text}</span></li>
-      `).join("");
-
-      decisionList.innerHTML = data.decisions.map(([title, text]) => `
-        <li><strong>${title}</strong><span>${text}</span></li>
-      `).join("");
-
       renderYearOptions();
       renderProgressTable();
     }
@@ -1420,9 +1468,10 @@
     });
 
     progressTableBody.addEventListener("click", (event) => {
-      const button = event.target.closest("button[data-row-id]");
+      const button = event.target.closest("button[data-action][data-row-id]");
       if (!button) return;
-      openEditDialog(button.dataset.rowId);
+      if (button.dataset.action === "edit") openEditDialog(button.dataset.rowId);
+      if (button.dataset.action === "delete") openDeleteDialog(button.dataset.rowId);
     });
 
     addRowButton.addEventListener("click", addProgressRow);
@@ -1437,6 +1486,13 @@
 
     editDialog.addEventListener("click", (event) => {
       if (event.target === editDialog) closeEditDialog();
+    });
+
+    cancelDeleteButton.addEventListener("click", closeDeleteDialog);
+    confirmDeleteButton.addEventListener("click", deleteProgressRow);
+
+    deleteDialog.addEventListener("click", (event) => {
+      if (event.target === deleteDialog) closeDeleteDialog();
     });
 
     editForm.addEventListener("submit", (event) => {
