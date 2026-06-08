@@ -9,7 +9,8 @@ Static website for showing yearly System Team project progress.
 - Year tabs for switching between project years
 - Editable progress summary table
 - `Add Project`, `Edit`, and `Delete` actions for table rows
-- Project cards with status, owner, quarter, area, progress, and impact
+- Highlight cards with month filter, image upload, topic, and detail
+- Project cards with status, owner, overall project, and progress
 - Summary metrics for total, completed, active, and watch projects
 - Timeline and decision sections for annual reporting
 

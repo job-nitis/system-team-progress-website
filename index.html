@@ -664,7 +664,7 @@
 
     .meta-list {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: 150px minmax(0, 1fr);
       gap: 8px;
       margin: 0;
       padding: 0;
@@ -685,6 +685,110 @@
       overflow-wrap: anywhere;
       color: var(--ink);
       font-size: 13px;
+    }
+
+    .highlight-section {
+      margin: 22px 0;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(24, 33, 47, 0.06);
+    }
+
+    .highlight-toolbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .highlight-toolbar h3 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .highlight-toolbar p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .highlight-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .highlight-controls label {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .highlight-controls select {
+      min-width: 132px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 9px 10px;
+      color: var(--ink);
+      background: #ffffff;
+      font: inherit;
+    }
+
+    .highlight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .highlight-card {
+      overflow: hidden;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(24, 33, 47, 0.06);
+    }
+
+    .highlight-image {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      background: #eef2f7;
+    }
+
+    .highlight-body {
+      padding: 14px;
+    }
+
+    .highlight-month {
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .highlight-body h4 {
+      margin: 6px 0 0;
+      font-size: 17px;
+    }
+
+    .highlight-body p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .empty-state {
+      grid-column: 1 / -1;
+      padding: 24px;
+      color: var(--muted);
+      background: #f8fafc;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      text-align: center;
     }
 
     .panel {
@@ -771,8 +875,20 @@
       }
 
       .project-grid,
-      .stats {
+      .stats,
+      .highlight-grid {
         grid-template-columns: 1fr;
+      }
+
+      .highlight-toolbar {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .highlight-controls {
+        align-items: stretch;
+        flex-direction: column;
+        width: 100%;
       }
 
       .section-head {
@@ -877,6 +993,21 @@
         </div>
       </section>
 
+      <section class="highlight-section" aria-labelledby="highlightTitle">
+        <div class="highlight-toolbar">
+          <div>
+            <h3 id="highlightTitle">Highlight</h3>
+            <p>Monthly highlight activity cards for the system team.</p>
+          </div>
+          <div class="highlight-controls">
+            <label for="highlightMonthSelect">Month</label>
+            <select id="highlightMonthSelect" aria-label="Highlight month"></select>
+            <button class="action-button" type="button" id="addHighlightButton">Create Highlight</button>
+          </div>
+        </div>
+        <div class="highlight-grid" id="highlightGrid"></div>
+      </section>
+
       <div class="content-grid">
         <section>
           <div class="section-head">
@@ -975,6 +1106,34 @@
         <button class="delete-button" type="button" id="confirmDeleteButton">Delete</button>
       </div>
     </div>
+  </div>
+
+  <div class="dialog-backdrop" id="highlightDialog" role="dialog" aria-modal="true" aria-labelledby="highlightDialogTitle">
+    <form class="edit-dialog" id="highlightForm">
+      <h3 id="highlightDialogTitle">Create Highlight</h3>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="highlightMonthInput">Month</label>
+          <select id="highlightMonthInput" name="month" required></select>
+        </div>
+        <div class="form-field">
+          <label for="highlightImageInput">Picture</label>
+          <input id="highlightImageInput" name="image" type="file" accept="image/*">
+        </div>
+        <div class="form-field full">
+          <label for="highlightTopicInput">Topic</label>
+          <input id="highlightTopicInput" name="topic" required>
+        </div>
+        <div class="form-field full">
+          <label for="highlightDetailInput">Detail</label>
+          <textarea id="highlightDetailInput" name="detail" required></textarea>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="action-button secondary" type="button" id="cancelHighlightButton">Cancel</button>
+        <button class="action-button" type="submit">Create</button>
+      </div>
+    </form>
   </div>
 
   <script>
@@ -1137,7 +1296,24 @@
     };
 
     const STORAGE_KEY = "system-team-progress-table-v1";
+    const HIGHLIGHT_STORAGE_KEY = "system-team-highlights-v1";
     const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFCLYc8qR1PgP7HhAi4__81fApUZvOCZ1CooazOq_HwPteqZiAMpYSlJfrUKWs7QLaPA/exec";
+
+    const monthOptions = [
+      ["all", "All"],
+      ["01", "January"],
+      ["02", "February"],
+      ["03", "March"],
+      ["04", "April"],
+      ["05", "May"],
+      ["06", "June"],
+      ["07", "July"],
+      ["08", "August"],
+      ["09", "September"],
+      ["10", "October"],
+      ["11", "November"],
+      ["12", "December"]
+    ];
 
     const state = {
       activeYear: projectYears[0].year
@@ -1157,6 +1333,13 @@
     const editForm = document.querySelector("#editForm");
     const deleteDialog = document.querySelector("#deleteDialog");
     const deleteDialogText = document.querySelector("#deleteDialogText");
+    const highlightDialog = document.querySelector("#highlightDialog");
+    const highlightForm = document.querySelector("#highlightForm");
+    const highlightGrid = document.querySelector("#highlightGrid");
+    const highlightMonthSelect = document.querySelector("#highlightMonthSelect");
+    const highlightMonthInput = document.querySelector("#highlightMonthInput");
+    const addHighlightButton = document.querySelector("#addHighlightButton");
+    const cancelHighlightButton = document.querySelector("#cancelHighlightButton");
     const addRowButton = document.querySelector("#addRowButton");
     const resetTableButton = document.querySelector("#resetTableButton");
     const cancelEditButton = document.querySelector("#cancelEditButton");
@@ -1165,8 +1348,28 @@
     const tableStorageStatus = document.querySelector("#tableStorageStatus");
 
     let progressRows = loadProgressRows();
+    let highlights = loadHighlights();
     let pendingDeleteRowId = "";
     let editMode = "update";
+
+    function loadHighlights() {
+      const saved = localStorage.getItem(HIGHLIGHT_STORAGE_KEY);
+      if (!saved) return [];
+
+      try {
+        return JSON.parse(saved);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveHighlights() {
+      localStorage.setItem(HIGHLIGHT_STORAGE_KEY, JSON.stringify(highlights));
+    }
+
+    function monthLabel(monthValue) {
+      return (monthOptions.find(([value]) => value === monthValue) || ["", "Unknown"])[1];
+    }
 
     function loadProgressRows() {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -1334,6 +1537,64 @@
       return "Blocked";
     }
 
+    function renderHighlightMonthOptions() {
+      highlightMonthSelect.innerHTML = monthOptions.map(([value, label]) => `
+        <option value="${value}">${label}</option>
+      `).join("");
+
+      highlightMonthInput.innerHTML = monthOptions
+        .filter(([value]) => value !== "all")
+        .map(([value, label]) => `<option value="${value}">${label}</option>`)
+        .join("");
+    }
+
+    function renderHighlights() {
+      const selectedMonth = highlightMonthSelect.value || "all";
+      const visibleHighlights = highlights.filter((item) => selectedMonth === "all" || item.month === selectedMonth);
+
+      if (!visibleHighlights.length) {
+        highlightGrid.innerHTML = `<div class="empty-state">No highlight activity for this month.</div>`;
+        return;
+      }
+
+      highlightGrid.innerHTML = visibleHighlights.map((item) => `
+        <article class="highlight-card">
+          ${item.image ? `<img class="highlight-image" src="${item.image}" alt="${escapeHtml(item.topic)}">` : `<div class="highlight-image" aria-hidden="true"></div>`}
+          <div class="highlight-body">
+            <span class="highlight-month">${monthLabel(item.month)}</span>
+            <h4>${formatCellText(item.topic)}</h4>
+            <p>${formatCellText(item.detail)}</p>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function openHighlightDialog() {
+      highlightForm.reset();
+      const selectedMonth = highlightMonthSelect.value === "all" ? "01" : highlightMonthSelect.value;
+      highlightMonthInput.value = selectedMonth || "01";
+      highlightDialog.classList.add("is-open");
+      document.querySelector("#highlightTopicInput").focus();
+    }
+
+    function closeHighlightDialog() {
+      highlightDialog.classList.remove("is-open");
+    }
+
+    function readImageAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          resolve("");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     function projectCardsFromRows(rows) {
       return rows.map((row) => ({
         name: row.project || "Untitled project",
@@ -1343,7 +1604,7 @@
         owner: row.owner || "Unknown",
         quarter: selectedYear().year,
         impact: row.overallPlan || "Waiting for update.",
-        tech: row.tor || "TOR empty"
+        overallProject: row.overallPlan || "Waiting for update."
       }));
     }
 
@@ -1500,7 +1761,6 @@
           <div class="card-top">
             <div>
               <h4>${project.name}</h4>
-              <p>${project.description}</p>
             </div>
             <span class="status ${statusClass[project.status] || "on-track"}">${project.status}</span>
           </div>
@@ -1515,21 +1775,47 @@
           </div>
           <ul class="meta-list">
             <li><strong>${project.owner}</strong>Owner</li>
-            <li><strong>${project.quarter}</strong>Target</li>
-            <li><strong>${project.tech}</strong>Area</li>
+            <li><strong>${project.overallProject}</strong>Overall Project</li>
           </ul>
-          <p><strong>Impact:</strong> ${project.impact}</p>
         </article>
       `).join("");
 
       renderYearOptions();
       renderProgressTable();
+      renderHighlights();
     }
 
     yearSelect.addEventListener("change", (event) => {
       state.activeYear = Number(event.target.value);
       renderDashboard();
       loadRowsFromGoogleSheet(state.activeYear);
+    });
+
+    highlightMonthSelect.addEventListener("change", renderHighlights);
+    addHighlightButton.addEventListener("click", openHighlightDialog);
+    cancelHighlightButton.addEventListener("click", closeHighlightDialog);
+
+    highlightDialog.addEventListener("click", (event) => {
+      if (event.target === highlightDialog) closeHighlightDialog();
+    });
+
+    highlightForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const imageFile = document.querySelector("#highlightImageInput").files[0];
+      const image = await readImageAsDataUrl(imageFile);
+
+      highlights.unshift({
+        id: `highlight-${Date.now()}`,
+        month: highlightMonthInput.value,
+        topic: document.querySelector("#highlightTopicInput").value.trim(),
+        detail: document.querySelector("#highlightDetailInput").value.trim(),
+        image
+      });
+
+      saveHighlights();
+      highlightMonthSelect.value = highlightMonthInput.value;
+      renderHighlights();
+      closeHighlightDialog();
     });
 
     progressTableBody.addEventListener("click", (event) => {
@@ -1654,6 +1940,7 @@
     });
 
     resizeCanvas();
+    renderHighlightMonthOptions();
     renderDashboard();
     loadRowsFromGoogleSheet(state.activeYear);
     setInterval(() => loadRowsFromGoogleSheet(state.activeYear), 60000);
