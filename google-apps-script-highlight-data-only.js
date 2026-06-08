@@ -1,6 +1,6 @@
 // Use this script only for Highlight data.
-// It reads and writes the "Highlight data" sheet tab and uploads pictures to the SYSTEM WEBSITE Drive folder.
-const HIGHLIGHT_SHEET_NAME = "Highlight data";
+// It reads and writes the "Highlight information" sheet tab and uploads pictures to the SYSTEM WEBSITE Drive folder.
+const HIGHLIGHT_SHEET_NAME = "Highlight information";
 const HIGHLIGHT_FOLDER_ID = "1J4M5xA3rZoZc-ZDg8MSKpy8zlD-QDdXU";
 const HIGHLIGHT_HEADERS = [
   "ID",
