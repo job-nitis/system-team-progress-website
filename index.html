@@ -689,30 +689,6 @@
 
     .highlight-section {
       margin: 22px 0;
-      padding: 18px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 10px 24px rgba(24, 33, 47, 0.06);
-    }
-
-    .highlight-toolbar {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .highlight-toolbar h3 {
-      margin: 0;
-      font-size: 22px;
-    }
-
-    .highlight-toolbar p {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 13px;
     }
 
     .highlight-controls {
@@ -880,11 +856,6 @@
         grid-template-columns: 1fr;
       }
 
-      .highlight-toolbar {
-        align-items: start;
-        flex-direction: column;
-      }
-
       .highlight-controls {
         align-items: stretch;
         flex-direction: column;
@@ -993,21 +964,6 @@
         </div>
       </section>
 
-      <section class="highlight-section" aria-labelledby="highlightTitle">
-        <div class="highlight-toolbar">
-          <div>
-            <h3 id="highlightTitle">Highlight</h3>
-            <p>Monthly highlight activity cards for the system team.</p>
-          </div>
-          <div class="highlight-controls">
-            <label for="highlightMonthSelect">Month</label>
-            <select id="highlightMonthSelect" aria-label="Highlight month"></select>
-            <button class="action-button" type="button" id="addHighlightButton">Create Highlight</button>
-          </div>
-        </div>
-        <div class="highlight-grid" id="highlightGrid"></div>
-      </section>
-
       <div class="content-grid">
         <section>
           <div class="section-head">
@@ -1017,6 +973,21 @@
             </div>
           </div>
           <div class="project-grid" id="projectGrid"></div>
+        </section>
+
+        <section class="highlight-section" aria-labelledby="highlightTitle">
+          <div class="section-head">
+            <div>
+              <h3 id="highlightTitle">Highlight</h3>
+              <p>Monthly highlight activity cards for the system team.</p>
+            </div>
+            <div class="highlight-controls">
+              <label for="highlightMonthSelect">Month</label>
+              <select id="highlightMonthSelect" aria-label="Highlight month"></select>
+              <button class="action-button" type="button" id="addHighlightButton">Create Highlight</button>
+            </div>
+          </div>
+          <div class="highlight-grid" id="highlightGrid"></div>
         </section>
       </div>
 
