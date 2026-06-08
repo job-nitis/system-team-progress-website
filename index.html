@@ -378,6 +378,8 @@
       background: #fff200;
       color: #171400;
       font-weight: 700;
+      text-align: center;
+      vertical-align: middle;
     }
 
     .cell-empty {
@@ -889,7 +891,7 @@
           <label for="editTechPrep">Tech. Preparation</label>
           <select id="editTechPrep" name="techPrep">
             <option value="empty">Empty</option>
-            <option value="progress">In progress</option>
+            <option value="progress">Ongoing</option>
             <option value="done">Done</option>
           </select>
         </div>
@@ -913,7 +915,7 @@
           <label for="editDelivery">Delivery</label>
           <select id="editDelivery" name="delivery">
             <option value="empty">Empty</option>
-            <option value="progress">In progress</option>
+            <option value="progress">Ongoing</option>
             <option value="done">Done</option>
           </select>
         </div>
@@ -921,7 +923,7 @@
           <label for="editFatSat">FAT / SAT</label>
           <select id="editFatSat" name="fatSat">
             <option value="empty">Empty</option>
-            <option value="progress">In progress</option>
+            <option value="progress">Ongoing</option>
             <option value="done">Done</option>
           </select>
         </div>
@@ -929,7 +931,7 @@
           <label for="editCloseMoc">Close MOC</label>
           <select id="editCloseMoc" name="closeMoc">
             <option value="empty">Empty</option>
-            <option value="progress">In progress</option>
+            <option value="progress">Ongoing</option>
             <option value="done">Done</option>
           </select>
         </div>
@@ -1210,6 +1212,39 @@
       });
     }
 
+    function loadRowsFromGoogleSheet(year = state.activeYear) {
+      if (!GOOGLE_APPS_SCRIPT_URL) return;
+
+      const callbackName = `systemTeamProgressCallback_${Date.now()}`;
+      const script = document.createElement("script");
+      const separator = GOOGLE_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+
+      tableStorageStatus.textContent = "Loading table from Google Sheets";
+
+      window[callbackName] = (payload) => {
+        if (payload && payload.ok) {
+          progressRows[year] = (payload.rows || []).map(normalizeRow);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
+          tableStorageStatus.textContent = "Loaded table from Google Sheets";
+          renderDashboard();
+        } else {
+          tableStorageStatus.textContent = "Could not load table from Google Sheets";
+        }
+
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.onerror = () => {
+        tableStorageStatus.textContent = "Could not load table from Google Sheets";
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.src = `${GOOGLE_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&callback=${encodeURIComponent(callbackName)}`;
+      document.body.appendChild(script);
+    }
+
     function escapeHtml(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
@@ -1231,7 +1266,7 @@
 
     function statusCell(value, label = "") {
       const status = value || "empty";
-      const text = label || (status === "done" ? "Done" : status === "progress" ? "Progress" : "");
+      const text = label || (status === "done" ? "Done" : status === "progress" ? "Ongoing" : "");
       return `<td class="${progressCellClass(status)}">${formatCellText(text)}</td>`;
     }
 
@@ -1475,6 +1510,7 @@
     yearSelect.addEventListener("change", (event) => {
       state.activeYear = Number(event.target.value);
       renderDashboard();
+      loadRowsFromGoogleSheet(state.activeYear);
     });
 
     progressTableBody.addEventListener("click", (event) => {
@@ -1600,7 +1636,10 @@
 
     resizeCanvas();
     renderDashboard();
+    loadRowsFromGoogleSheet(state.activeYear);
+    setInterval(() => loadRowsFromGoogleSheet(state.activeYear), 60000);
     animationFrame = requestAnimationFrame(drawSystemMap);
   </script>
 </body>
 </html>
+

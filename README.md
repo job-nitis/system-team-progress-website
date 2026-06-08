@@ -44,6 +44,7 @@ Use these status values for the built-in colors:
 
 The progress table saves edits in the browser immediately using `localStorage`.
 Deleting a project removes it from the active year after a confirmation popup.
+The website also loads table rows from Google Sheets on page load, when the year changes, and once every minute while open.
 
 For team/shared storage, use Google Sheets:
 
