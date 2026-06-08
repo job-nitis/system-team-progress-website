@@ -1268,7 +1268,8 @@
 
     const STORAGE_KEY = "system-team-progress-table-v1";
     const HIGHLIGHT_STORAGE_KEY = "system-team-highlights-v1";
-    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFCLYc8qR1PgP7HhAi4__81fApUZvOCZ1CooazOq_HwPteqZiAMpYSlJfrUKWs7QLaPA/exec";
+    const PROGRESS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFCLYc8qR1PgP7HhAi4__81fApUZvOCZ1CooazOq_HwPteqZiAMpYSlJfrUKWs7QLaPA/exec";
+    const HIGHLIGHT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEa6Mn9r-OC_cAnOTp36aP6fr0vPpwa7BJZA7m8hhSU2-ko0ERPqgLu90-pDbzog24/exec";
 
     const monthOptions = [
       ["all", "All"],
@@ -1338,6 +1339,55 @@
       localStorage.setItem(HIGHLIGHT_STORAGE_KEY, JSON.stringify(highlights));
     }
 
+    function saveHighlightToGoogleSheet(highlight) {
+      if (!HIGHLIGHT_APPS_SCRIPT_URL) return Promise.resolve();
+
+      return fetch(HIGHLIGHT_APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          type: "highlight",
+          year: state.activeYear,
+          ...highlight
+        })
+      });
+    }
+
+    function loadHighlightsFromGoogleSheet(year = state.activeYear) {
+      if (!HIGHLIGHT_APPS_SCRIPT_URL) return;
+
+      const callbackName = `systemTeamHighlightCallback_${Date.now()}`;
+      const script = document.createElement("script");
+      const separator = HIGHLIGHT_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+
+      window[callbackName] = (payload) => {
+        if (payload && payload.ok) {
+          highlights = (payload.rows || []).map((item) => ({
+            id: item.id,
+            year: item.year,
+            month: item.month,
+            topic: item.topic,
+            detail: item.detail,
+            image: item.imageUrl || item.image || ""
+          }));
+          saveHighlights();
+          renderHighlights();
+        }
+
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.onerror = () => {
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.src = `${HIGHLIGHT_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&callback=${encodeURIComponent(callbackName)}`;
+      document.body.appendChild(script);
+    }
+
     function monthLabel(monthValue) {
       return (monthOptions.find(([value]) => value === monthValue) || ["", "Unknown"])[1];
     }
@@ -1384,11 +1434,11 @@
 
     function saveProgressRows() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
-      tableStorageStatus.textContent = GOOGLE_APPS_SCRIPT_URL ? "Saved locally, sending table to Google Sheets" : "Saved in this browser";
+      tableStorageStatus.textContent = PROGRESS_APPS_SCRIPT_URL ? "Saved locally, sending table to Google Sheets" : "Saved in this browser";
 
-      if (!GOOGLE_APPS_SCRIPT_URL) return;
+      if (!PROGRESS_APPS_SCRIPT_URL) return;
 
-      fetch(GOOGLE_APPS_SCRIPT_URL, {
+      fetch(PROGRESS_APPS_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -1406,11 +1456,11 @@
     }
 
     function loadRowsFromGoogleSheet(year = state.activeYear) {
-      if (!GOOGLE_APPS_SCRIPT_URL) return;
+      if (!PROGRESS_APPS_SCRIPT_URL) return;
 
       const callbackName = `systemTeamProgressCallback_${Date.now()}`;
       const script = document.createElement("script");
-      const separator = GOOGLE_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+      const separator = PROGRESS_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
 
       tableStorageStatus.textContent = "Loading table from Google Sheets";
 
@@ -1434,7 +1484,7 @@
         script.remove();
       };
 
-      script.src = `${GOOGLE_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&callback=${encodeURIComponent(callbackName)}`;
+      script.src = `${PROGRESS_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&callback=${encodeURIComponent(callbackName)}`;
       document.body.appendChild(script);
     }
 
@@ -1760,6 +1810,7 @@
       state.activeYear = Number(event.target.value);
       renderDashboard();
       loadRowsFromGoogleSheet(state.activeYear);
+      loadHighlightsFromGoogleSheet(state.activeYear);
     });
 
     highlightMonthSelect.addEventListener("change", renderHighlights);
@@ -1774,16 +1825,21 @@
       event.preventDefault();
       const imageFile = document.querySelector("#highlightImageInput").files[0];
       const image = await readImageAsDataUrl(imageFile);
-
-      highlights.unshift({
+      const highlight = {
         id: `highlight-${Date.now()}`,
+        year: state.activeYear,
         month: highlightMonthInput.value,
         topic: document.querySelector("#highlightTopicInput").value.trim(),
         detail: document.querySelector("#highlightDetailInput").value.trim(),
         image
-      });
+      };
+
+      highlights.unshift(highlight);
 
       saveHighlights();
+      tableStorageStatus.textContent = "Saving highlight to Google Drive and Google Sheets";
+      await saveHighlightToGoogleSheet(highlight);
+      tableStorageStatus.textContent = "Saved highlight to Google Drive and Google Sheets";
       highlightMonthSelect.value = highlightMonthInput.value;
       renderHighlights();
       closeHighlightDialog();
@@ -1914,7 +1970,9 @@
     renderHighlightMonthOptions();
     renderDashboard();
     loadRowsFromGoogleSheet(state.activeYear);
+    loadHighlightsFromGoogleSheet(state.activeYear);
     setInterval(() => loadRowsFromGoogleSheet(state.activeYear), 60000);
+    setInterval(() => loadHighlightsFromGoogleSheet(state.activeYear), 60000);
     animationFrame = requestAnimationFrame(drawSystemMap);
   </script>
 </body>
