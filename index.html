@@ -385,14 +385,15 @@
     }
 
     .prpo-stack {
-      display: flex;
-      gap: 12px;
+      display: grid;
+      gap: 4px;
       text-align: left;
       white-space: nowrap;
     }
 
     .prpo-line {
-      display: inline-flex;
+      display: grid;
+      grid-template-columns: 58px minmax(max-content, 1fr);
       gap: 4px;
       align-items: center;
       white-space: nowrap;
