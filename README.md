@@ -5,7 +5,9 @@ Static website for showing yearly System Team project progress.
 ## What is included
 
 - `index.html` - the full website in one file
+- `google-apps-script.js` - optional Google Sheets backend script
 - Year tabs for switching between project years
+- Editable progress summary table
 - Project cards with status, owner, quarter, area, progress, and impact
 - Summary metrics for total, completed, active, and watch projects
 - Timeline and decision sections for annual reporting
@@ -35,6 +37,25 @@ Use these status values for the built-in colors:
 - `Watch`
 - `Done`
 - `Blocked`
+
+## How table storage works
+
+The progress table saves edits in the browser immediately using `localStorage`.
+
+For team/shared storage, use Google Sheets:
+
+1. Create a Google Sheet.
+2. Open `Extensions` > `Apps Script`.
+3. Paste the code from `google-apps-script.js`.
+4. Deploy it as a web app.
+5. Copy the web app URL.
+6. In `index.html`, find:
+
+```js
+const GOOGLE_APPS_SCRIPT_URL = "";
+```
+
+Paste your web app URL between the quotes.
 
 ## How to publish with GitHub Pages
 

@@ -239,6 +239,232 @@
       font-size: 13px;
     }
 
+    .summary-section {
+      margin: 22px 0;
+      padding: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 10px 24px rgba(24, 33, 47, 0.06);
+    }
+
+    .summary-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .summary-toolbar h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .summary-toolbar p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .table-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .action-button {
+      border: 0;
+      border-radius: 6px;
+      padding: 9px 12px;
+      color: #ffffff;
+      background: var(--teal);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .action-button.secondary {
+      color: var(--ink);
+      background: #eef2f7;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      border: 1px solid var(--ink);
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .progress-table {
+      width: 100%;
+      min-width: 1040px;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    .progress-table th,
+    .progress-table td {
+      border: 2px solid #161a21;
+      padding: 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    .progress-table th {
+      background: #ffffff;
+      font-weight: 700;
+    }
+
+    .progress-table td {
+      min-height: 68px;
+    }
+
+    .progress-table .col-no {
+      width: 62px;
+    }
+
+    .progress-table .col-project {
+      width: 270px;
+      text-align: left;
+    }
+
+    .progress-table .col-narrow {
+      width: 76px;
+    }
+
+    .progress-table .col-medium {
+      width: 130px;
+    }
+
+    .progress-table .col-wide {
+      width: 280px;
+      text-align: left;
+    }
+
+    .vertical-header {
+      height: 156px;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      white-space: nowrap;
+    }
+
+    .project-name {
+      display: block;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .project-owner {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .cell-done {
+      background: #05b75a;
+      color: #07140c;
+      font-weight: 700;
+    }
+
+    .cell-progress {
+      background: #fff200;
+      color: #171400;
+      font-weight: 700;
+    }
+
+    .cell-empty {
+      background: #ffffff;
+    }
+
+    .edit-button {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: var(--ink);
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(15, 23, 42, 0.62);
+    }
+
+    .dialog-backdrop.is-open {
+      display: flex;
+    }
+
+    .edit-dialog {
+      width: min(760px, 100%);
+      max-height: min(860px, calc(100vh - 36px));
+      overflow-y: auto;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .edit-dialog h3 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .form-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .form-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .form-field input,
+    .form-field select,
+    .form-field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px;
+      color: var(--ink);
+      background: #ffffff;
+      font: inherit;
+    }
+
+    .form-field textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
     .content-grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 330px;
@@ -451,6 +677,11 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .summary-toolbar {
+        align-items: start;
+        flex-direction: column;
+      }
+
       .side-panel {
         position: static;
       }
@@ -478,6 +709,10 @@
       }
 
       .meta-list {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -517,6 +752,38 @@
             <div class="score-caption" id="scoreCaption">Across active system projects</div>
           </div>
         </aside>
+      </section>
+
+      <section class="summary-section" aria-labelledby="summaryTableTitle">
+        <div class="summary-toolbar">
+          <div>
+            <h3 id="summaryTableTitle">Progress Summary</h3>
+            <p id="tableStorageStatus">Saved in this browser</p>
+          </div>
+          <div class="table-actions">
+            <button class="action-button secondary" type="button" id="resetTableButton">Reset</button>
+            <button class="action-button" type="button" id="addRowButton">Add Row</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="progress-table">
+            <thead>
+              <tr>
+                <th class="col-no">No</th>
+                <th class="col-project">Initiative project</th>
+                <th class="col-narrow vertical-header">Tech. Preparation</th>
+                <th class="col-medium">TOR</th>
+                <th class="col-medium">PR/PO</th>
+                <th class="col-narrow vertical-header">DELIVERY</th>
+                <th class="col-narrow vertical-header">FAT / SAT</th>
+                <th class="col-narrow vertical-header">CLOSE MOC</th>
+                <th class="col-wide">Overall Plan</th>
+                <th class="col-narrow">Action</th>
+              </tr>
+            </thead>
+            <tbody id="progressTableBody"></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="stats" aria-label="Project metrics">
@@ -563,6 +830,71 @@
 
       <p class="footer-note">System Team Annual Progress View</p>
     </main>
+  </div>
+
+  <div class="dialog-backdrop" id="editDialog" role="dialog" aria-modal="true" aria-labelledby="editDialogTitle">
+    <form class="edit-dialog" id="editForm">
+      <h3 id="editDialogTitle">Edit Progress Row</h3>
+      <input type="hidden" id="editRowId">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label for="editProject">Initiative project</label>
+          <input id="editProject" name="project" required>
+        </div>
+        <div class="form-field">
+          <label for="editOwner">Owner</label>
+          <input id="editOwner" name="owner">
+        </div>
+        <div class="form-field">
+          <label for="editTechPrep">Tech. Preparation</label>
+          <select id="editTechPrep" name="techPrep">
+            <option value="empty">Empty</option>
+            <option value="progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="editTor">TOR</label>
+          <input id="editTor" name="tor">
+        </div>
+        <div class="form-field">
+          <label for="editPrpo">PR/PO</label>
+          <textarea id="editPrpo" name="prpo"></textarea>
+        </div>
+        <div class="form-field">
+          <label for="editDelivery">Delivery</label>
+          <select id="editDelivery" name="delivery">
+            <option value="empty">Empty</option>
+            <option value="progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="editFatSat">FAT / SAT</label>
+          <select id="editFatSat" name="fatSat">
+            <option value="empty">Empty</option>
+            <option value="progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="editCloseMoc">Close MOC</label>
+          <select id="editCloseMoc" name="closeMoc">
+            <option value="empty">Empty</option>
+            <option value="progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div class="form-field full">
+          <label for="editOverallPlan">Overall Plan</label>
+          <textarea id="editOverallPlan" name="overallPlan"></textarea>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="action-button secondary" type="button" id="cancelEditButton">Cancel</button>
+        <button class="action-button" type="submit">Save</button>
+      </div>
+    </form>
   </div>
 
   <script>
@@ -675,6 +1007,52 @@
       }
     ];
 
+    const defaultProgressRows = {
+      2026: [
+        {
+          id: "2026-001",
+          project: "ExaPilot GSP 2 3 and ESP",
+          owner: "System Team",
+          techPrep: "done",
+          tor: "TR-69C000803",
+          prpo: "PR: 1121000435\nSAP PR: PR-69C001072\nPO: 3121000540",
+          delivery: "progress",
+          fatSat: "empty",
+          closeMoc: "empty",
+          overallPlan: "Waiting for delivery and installation after vendor schedule confirmation."
+        },
+        {
+          id: "2026-002",
+          project: "Project Progress Portal",
+          owner: "System Team",
+          techPrep: "done",
+          tor: "Internal",
+          prpo: "N/A",
+          delivery: "progress",
+          fatSat: "empty",
+          closeMoc: "empty",
+          overallPlan: "Build website page, publish on GitHub Pages, and prepare data collection."
+        }
+      ],
+      2025: [
+        {
+          id: "2025-001",
+          project: "Service Inventory Cleanup",
+          owner: "System Team",
+          techPrep: "done",
+          tor: "Completed",
+          prpo: "Completed",
+          delivery: "done",
+          fatSat: "done",
+          closeMoc: "done",
+          overallPlan: "Completed and archived for annual project summary."
+        }
+      ]
+    };
+
+    const STORAGE_KEY = "system-team-progress-table-v1";
+    const GOOGLE_APPS_SCRIPT_URL = "";
+
     const state = {
       activeYear: projectYears[0].year
     };
@@ -690,6 +1068,142 @@
     const projectGrid = document.querySelector("#projectGrid");
     const quarterList = document.querySelector("#quarterList");
     const decisionList = document.querySelector("#decisionList");
+    const progressTableBody = document.querySelector("#progressTableBody");
+    const editDialog = document.querySelector("#editDialog");
+    const editForm = document.querySelector("#editForm");
+    const addRowButton = document.querySelector("#addRowButton");
+    const resetTableButton = document.querySelector("#resetTableButton");
+    const cancelEditButton = document.querySelector("#cancelEditButton");
+    const tableStorageStatus = document.querySelector("#tableStorageStatus");
+
+    let progressRows = loadProgressRows();
+
+    function loadProgressRows() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return structuredClone(defaultProgressRows);
+
+      try {
+        return { ...structuredClone(defaultProgressRows), ...JSON.parse(saved) };
+      } catch (error) {
+        return structuredClone(defaultProgressRows);
+      }
+    }
+
+    function saveProgressRows() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
+      tableStorageStatus.textContent = GOOGLE_APPS_SCRIPT_URL ? "Saved locally and sent to Google Sheets" : "Saved in this browser";
+
+      if (!GOOGLE_APPS_SCRIPT_URL) return;
+
+      fetch(GOOGLE_APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          year: state.activeYear,
+          rows: progressRows[state.activeYear] || []
+        })
+      }).catch(() => {
+        tableStorageStatus.textContent = "Saved locally, Google Sheets sync failed";
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatCellText(value) {
+      return escapeHtml(value).replaceAll("\n", "<br>");
+    }
+
+    function statusCell(value, label = "") {
+      const status = value || "empty";
+      const text = label || (status === "done" ? "Done" : status === "progress" ? "Progress" : "");
+      return `<td class="cell-${status}">${formatCellText(text)}</td>`;
+    }
+
+    function rowsForActiveYear() {
+      if (!progressRows[state.activeYear]) progressRows[state.activeYear] = [];
+      return progressRows[state.activeYear];
+    }
+
+    function renderProgressTable() {
+      const rows = rowsForActiveYear();
+
+      if (!rows.length) {
+        progressTableBody.innerHTML = `
+          <tr>
+            <td colspan="10">No progress rows for ${state.activeYear}</td>
+          </tr>
+        `;
+        return;
+      }
+
+      progressTableBody.innerHTML = rows.map((row, index) => `
+        <tr>
+          <td>${index + 1}</td>
+          <td class="col-project">
+            <span class="project-name">${formatCellText(row.project)}</span>
+            <span class="project-owner">${formatCellText(row.owner)}</span>
+          </td>
+          ${statusCell(row.techPrep)}
+          <td class="cell-${row.tor ? "done" : "empty"}">${formatCellText(row.tor)}</td>
+          <td class="cell-${row.prpo ? "done" : "empty"}">${formatCellText(row.prpo)}</td>
+          ${statusCell(row.delivery)}
+          ${statusCell(row.fatSat)}
+          ${statusCell(row.closeMoc)}
+          <td class="col-wide">${formatCellText(row.overallPlan)}</td>
+          <td><button class="edit-button" type="button" data-row-id="${escapeHtml(row.id)}">Edit</button></td>
+        </tr>
+      `).join("");
+    }
+
+    function openEditDialog(rowId) {
+      const row = rowsForActiveYear().find((item) => item.id === rowId);
+      if (!row) return;
+
+      document.querySelector("#editRowId").value = row.id;
+      document.querySelector("#editProject").value = row.project || "";
+      document.querySelector("#editOwner").value = row.owner || "";
+      document.querySelector("#editTechPrep").value = row.techPrep || "empty";
+      document.querySelector("#editTor").value = row.tor || "";
+      document.querySelector("#editPrpo").value = row.prpo || "";
+      document.querySelector("#editDelivery").value = row.delivery || "empty";
+      document.querySelector("#editFatSat").value = row.fatSat || "empty";
+      document.querySelector("#editCloseMoc").value = row.closeMoc || "empty";
+      document.querySelector("#editOverallPlan").value = row.overallPlan || "";
+      editDialog.classList.add("is-open");
+      document.querySelector("#editProject").focus();
+    }
+
+    function closeEditDialog() {
+      editDialog.classList.remove("is-open");
+    }
+
+    function addProgressRow() {
+      const rows = rowsForActiveYear();
+      const id = `${state.activeYear}-${Date.now()}`;
+      rows.push({
+        id,
+        project: "New initiative project",
+        owner: "System Team",
+        techPrep: "empty",
+        tor: "",
+        prpo: "",
+        delivery: "empty",
+        fatSat: "empty",
+        closeMoc: "empty",
+        overallPlan: ""
+      });
+      saveProgressRows();
+      renderProgressTable();
+      openEditDialog(id);
+    }
 
     function averageProgress(projects) {
       if (!projects.length) return 0;
@@ -764,11 +1278,54 @@
       `).join("");
 
       renderYearOptions();
+      renderProgressTable();
     }
 
     yearSelect.addEventListener("change", (event) => {
       state.activeYear = Number(event.target.value);
       renderDashboard();
+    });
+
+    progressTableBody.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-row-id]");
+      if (!button) return;
+      openEditDialog(button.dataset.rowId);
+    });
+
+    addRowButton.addEventListener("click", addProgressRow);
+
+    resetTableButton.addEventListener("click", () => {
+      progressRows[state.activeYear] = structuredClone(defaultProgressRows[state.activeYear] || []);
+      saveProgressRows();
+      renderProgressTable();
+    });
+
+    cancelEditButton.addEventListener("click", closeEditDialog);
+
+    editDialog.addEventListener("click", (event) => {
+      if (event.target === editDialog) closeEditDialog();
+    });
+
+    editForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const rowId = document.querySelector("#editRowId").value;
+      const rows = rowsForActiveYear();
+      const row = rows.find((item) => item.id === rowId);
+      if (!row) return;
+
+      row.project = document.querySelector("#editProject").value.trim();
+      row.owner = document.querySelector("#editOwner").value.trim();
+      row.techPrep = document.querySelector("#editTechPrep").value;
+      row.tor = document.querySelector("#editTor").value.trim();
+      row.prpo = document.querySelector("#editPrpo").value.trim();
+      row.delivery = document.querySelector("#editDelivery").value;
+      row.fatSat = document.querySelector("#editFatSat").value;
+      row.closeMoc = document.querySelector("#editCloseMoc").value;
+      row.overallPlan = document.querySelector("#editOverallPlan").value.trim();
+
+      saveProgressRows();
+      renderProgressTable();
+      closeEditDialog();
     });
 
     const canvas = document.querySelector("#systemMap");
