@@ -1549,7 +1549,17 @@
     }
 
     function saveHighlights() {
-      localStorage.setItem(HIGHLIGHT_STORAGE_KEY, JSON.stringify(highlights));
+      localStorage.setItem(HIGHLIGHT_STORAGE_KEY, JSON.stringify(highlightsForLocalStorage()));
+    }
+
+    function highlightsForLocalStorage() {
+      return highlights.map((item) => ({
+        ...item,
+        image: "",
+        pendingImages: [],
+        uploadImages: [],
+        imageUrls: persistedImageUrls(item.imageUrls || item.image)
+      }));
     }
 
     function saveHighlightToGoogleSheet(highlight) {
@@ -1751,7 +1761,7 @@
     }
 
     function saveProgressRows() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRowsForLocalStorage()));
       tableStorageStatus.textContent = PROGRESS_APPS_SCRIPT_URL ? "Saved locally, sending table to Google Sheets" : "Saved in this browser";
 
       if (!PROGRESS_APPS_SCRIPT_URL) return;
@@ -1770,8 +1780,9 @@
         rowsForActiveYear().forEach((row) => {
           row.pendingProjectImage = false;
           row.projectImage = "";
+          row.pendingProjectImages = [];
         });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRowsForLocalStorage()));
       })
       .catch(() => {
         tableStorageStatus.textContent = "Saved locally, Google Sheets sync failed";
@@ -1798,6 +1809,18 @@
         projectImages: row.pendingProjectImage ? row.pendingProjectImages || [] : [],
         projectImage: row.pendingProjectImage ? row.projectImage : ""
       }));
+    }
+
+    function progressRowsForLocalStorage() {
+      return Object.fromEntries(
+        Object.entries(progressRows).map(([year, rows]) => [year, rows.map((row) => ({
+          ...row,
+          projectImage: "",
+          pendingProjectImages: [],
+          pendingProjectImage: false,
+          projectImageUrls: persistedImageUrls(row.projectImageUrls || row.projectImageUrl)
+        }))])
+      );
     }
 
     function loadRowsFromGoogleSheet(year = state.activeYear) {
@@ -1991,7 +2014,27 @@
         }
 
         const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onload = () => {
+          const dataUrl = String(reader.result || "");
+          const image = new Image();
+
+          image.onload = () => {
+            const maxSide = 1400;
+            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+            const width = Math.max(1, Math.round(image.width * scale));
+            const height = Math.max(1, Math.round(image.height * scale));
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(image, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", 0.78));
+          };
+
+          image.onerror = () => resolve(dataUrl);
+          image.src = dataUrl;
+        };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
@@ -2302,41 +2345,52 @@
 
     highlightForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const pendingImages = await readImagesAsDataUrls(document.querySelector("#highlightImageInput").files);
-      const highlightId = highlightIdInput.value || `highlight-${Date.now()}`;
-      let highlight = highlights.find((item) => item.id === highlightId);
+      saveHighlightButton.disabled = true;
+      saveHighlightButton.textContent = "Saving";
+      tableStorageStatus.textContent = "Preparing highlight pictures";
 
-      if (!highlight) {
-        highlight = {
+      try {
+        const pendingImages = await readImagesAsDataUrls(document.querySelector("#highlightImageInput").files);
+        const highlightId = highlightIdInput.value || `highlight-${Date.now()}`;
+        let highlight = highlights.find((item) => item.id === highlightId);
+
+        if (!highlight) {
+          highlight = {
+            id: highlightId,
+            imageUrls: [],
+            pendingImages: [],
+            uploadImages: []
+          };
+          highlights.unshift(highlight);
+        }
+
+        Object.assign(highlight, {
           id: highlightId,
-          imageUrls: [],
-          pendingImages: [],
-          uploadImages: []
-        };
-        highlights.unshift(highlight);
+          year: state.activeYear,
+          month: highlightMonthInput.value,
+          topic: document.querySelector("#highlightTopicInput").value.trim(),
+          detail: document.querySelector("#highlightDetailInput").value.trim(),
+          imageUrls: persistedImageUrls(highlight.imageUrls || highlight.image),
+          pendingImages: [...normalizeImageUrls(highlight.pendingImages), ...pendingImages],
+          uploadImages: pendingImages,
+          image: ""
+        });
+
+        saveHighlights();
+        tableStorageStatus.textContent = highlightMode === "edit" ? "Saving highlight changes to Google Drive and Google Sheets" : "Saving highlight to Google Drive and Google Sheets";
+        await saveHighlightToGoogleSheet(highlight);
+        highlight.uploadImages = [];
+        saveHighlights();
+        tableStorageStatus.textContent = highlightMode === "edit" ? "Saved highlight changes to Google Drive and Google Sheets" : "Saved highlight to Google Drive and Google Sheets";
+        highlightMonthSelect.value = highlightMonthInput.value;
+        renderHighlights();
+        closeHighlightDialog();
+      } catch (error) {
+        tableStorageStatus.textContent = "Could not save highlight pictures. Try smaller images.";
+      } finally {
+        saveHighlightButton.disabled = false;
+        saveHighlightButton.textContent = highlightMode === "edit" ? "Save" : "Create";
       }
-
-      Object.assign(highlight, {
-        id: highlightId,
-        year: state.activeYear,
-        month: highlightMonthInput.value,
-        topic: document.querySelector("#highlightTopicInput").value.trim(),
-        detail: document.querySelector("#highlightDetailInput").value.trim(),
-        imageUrls: persistedImageUrls(highlight.imageUrls || highlight.image),
-        pendingImages: [...normalizeImageUrls(highlight.pendingImages), ...pendingImages],
-        uploadImages: pendingImages,
-        image: ""
-      });
-
-      saveHighlights();
-      tableStorageStatus.textContent = highlightMode === "edit" ? "Saving highlight changes to Google Drive and Google Sheets" : "Saving highlight to Google Drive and Google Sheets";
-      await saveHighlightToGoogleSheet(highlight);
-      highlight.uploadImages = [];
-      saveHighlights();
-      tableStorageStatus.textContent = highlightMode === "edit" ? "Saved highlight changes to Google Drive and Google Sheets" : "Saved highlight to Google Drive and Google Sheets";
-      highlightMonthSelect.value = highlightMonthInput.value;
-      renderHighlights();
-      closeHighlightDialog();
     });
 
     progressTableBody.addEventListener("click", (event) => {
@@ -2369,64 +2423,76 @@
 
     editForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      const editSaveButton = editForm.querySelector("button[type='submit']");
+      editSaveButton.disabled = true;
+      editSaveButton.textContent = "Saving";
+      tableStorageStatus.textContent = "Preparing project pictures";
+
       const rowId = document.querySelector("#editRowId").value;
       const rows = rowsForActiveYear();
       let row = rows.find((item) => item.id === rowId);
 
-      if (!row && editMode === "create") {
-        row = {
-          id: `${state.activeYear}-${Date.now()}`,
-          project: "",
-          owner: "",
-          techPrep: "empty",
-          tor: "",
-          pr: "",
-          sapPr: "",
-          po: "",
-          delivery: "empty",
-          fatSat: "empty",
-          closeMoc: "empty",
-          overallPlan: "",
-          projectImageUrl: "",
-          projectImageUrls: [],
-          projectImage: "",
-          pendingProjectImages: [],
-          pendingProjectImage: false,
-          updatePlan: [],
-          updateActual: []
-        };
-        rows.push(row);
+      try {
+        if (!row && editMode === "create") {
+          row = {
+            id: `${state.activeYear}-${Date.now()}`,
+            project: "",
+            owner: "",
+            techPrep: "empty",
+            tor: "",
+            pr: "",
+            sapPr: "",
+            po: "",
+            delivery: "empty",
+            fatSat: "empty",
+            closeMoc: "empty",
+            overallPlan: "",
+            projectImageUrl: "",
+            projectImageUrls: [],
+            projectImage: "",
+            pendingProjectImages: [],
+            pendingProjectImage: false,
+            updatePlan: [],
+            updateActual: []
+          };
+          rows.push(row);
+        }
+
+        if (!row) return;
+
+        row.project = document.querySelector("#editProject").value.trim();
+        row.owner = document.querySelector("#editOwner").value.trim();
+        row.techPrep = document.querySelector("#editTechPrep").value;
+        row.tor = document.querySelector("#editTor").value.trim();
+        row.pr = document.querySelector("#editPr").value.trim();
+        row.sapPr = document.querySelector("#editSapPr").value.trim();
+        row.po = document.querySelector("#editPo").value.trim();
+        row.delivery = document.querySelector("#editDelivery").value;
+        row.fatSat = document.querySelector("#editFatSat").value;
+        row.closeMoc = document.querySelector("#editCloseMoc").value;
+        row.overallPlan = document.querySelector("#editOverallPlan").value.trim();
+        row.updatePlan = parseMilestoneText(editUpdatePlan.value);
+        row.updateActual = parseMilestoneText(editUpdateActual.value);
+
+        const projectImages = await readImagesAsDataUrls(document.querySelector("#editProjectImage").files);
+        if (projectImages.length) {
+          row.projectImageUrls = persistedImageUrls(row.projectImageUrls || row.projectImageUrl);
+          row.pendingProjectImages = [...normalizeImageUrls(row.pendingProjectImages), ...projectImages];
+          row.projectImage = projectImages[0];
+          row.projectImageUrl = row.projectImageUrls[0] || projectImages[0];
+          row.pendingProjectImage = true;
+        }
+
+        saveProgressRows();
+        renderProgressTable();
+        renderDashboard();
+        closeEditDialog();
+      } catch (error) {
+        tableStorageStatus.textContent = "Could not save project pictures. Try smaller images.";
+      } finally {
+        editSaveButton.disabled = false;
+        editSaveButton.textContent = "Save";
       }
-
-      if (!row) return;
-
-      row.project = document.querySelector("#editProject").value.trim();
-      row.owner = document.querySelector("#editOwner").value.trim();
-      row.techPrep = document.querySelector("#editTechPrep").value;
-      row.tor = document.querySelector("#editTor").value.trim();
-      row.pr = document.querySelector("#editPr").value.trim();
-      row.sapPr = document.querySelector("#editSapPr").value.trim();
-      row.po = document.querySelector("#editPo").value.trim();
-      row.delivery = document.querySelector("#editDelivery").value;
-      row.fatSat = document.querySelector("#editFatSat").value;
-      row.closeMoc = document.querySelector("#editCloseMoc").value;
-      row.overallPlan = document.querySelector("#editOverallPlan").value.trim();
-      row.updatePlan = parseMilestoneText(editUpdatePlan.value);
-      row.updateActual = parseMilestoneText(editUpdateActual.value);
-
-      const projectImages = await readImagesAsDataUrls(document.querySelector("#editProjectImage").files);
-      if (projectImages.length) {
-        row.projectImageUrls = persistedImageUrls(row.projectImageUrls || row.projectImageUrl);
-        row.pendingProjectImages = [...normalizeImageUrls(row.pendingProjectImages), ...projectImages];
-        row.projectImage = projectImages[0];
-        row.projectImageUrl = row.projectImageUrls[0] || projectImages[0];
-        row.pendingProjectImage = true;
-      }
-
-      saveProgressRows();
-      renderProgressTable();
-      renderDashboard();
-      closeEditDialog();
     });
 
     const canvas = document.querySelector("#systemMap");
