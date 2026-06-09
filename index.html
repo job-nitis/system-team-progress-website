@@ -628,6 +628,10 @@
       background: var(--amber);
     }
 
+    .status.delay {
+      background: var(--red);
+    }
+
     .status.done {
       background: var(--blue);
     }
@@ -660,6 +664,10 @@
       height: 100%;
       background: linear-gradient(90deg, var(--teal), #4c78d8);
       border-radius: inherit;
+    }
+
+    .progress.plan span {
+      background: linear-gradient(90deg, #b7791f, #f2c94c);
     }
 
     .meta-list {
@@ -978,7 +986,7 @@
         <canvas id="systemMap" aria-hidden="true"></canvas>
         <div class="hero-copy">
           <p class="eyebrow" id="heroEyebrow">Project year</p>
-          <h2 id="heroTitle">System delivery progress</h2>
+          <h2 id="heroTitle">System Team Progress</h2>
           <p id="heroSummary">A projects-first view for tracking annual system team work, visible progress, delivery risks, and operational impact.</p>
         </div>
         <aside class="hero-aside" aria-label="Current year progress">
@@ -1145,11 +1153,11 @@
           <textarea id="editOverallPlan" name="overallPlan"></textarea>
         </div>
         <div class="form-field full">
-          <label for="editUpdatePlan">Update Plan</label>
+          <label for="editUpdatePlan">Plan</label>
           <textarea id="editUpdatePlan" name="updatePlan" placeholder="Activity | 1,2,3"></textarea>
         </div>
         <div class="form-field full">
-          <label for="editUpdateActual">Update Actual</label>
+          <label for="editUpdateActual">Actual</label>
           <textarea id="editUpdateActual" name="updateActual" placeholder="Activity | 1,2,3"></textarea>
         </div>
       </div>
@@ -1203,7 +1211,7 @@
     const projectYears = [
       {
         year: 2026,
-        title: "2026 System Team Delivery Progress",
+        title: "2026 System Team Progress",
         summary: "Track yearly system projects across platform reliability, automation, integrations, and internal tooling.",
         quarters: [
           ["Q1", "Baseline platform health and define delivery targets"],
@@ -1414,6 +1422,7 @@
 
     const statusClass = {
       "On track": "on-track",
+      "Delay": "delay",
       "Watch": "watch",
       "Done": "done",
       "Blocked": "blocked"
@@ -1724,30 +1733,24 @@
       `;
     }
 
-    function rowStageValue(value) {
-      if (value === "done") return 1;
-      if (value === "progress") return 0.5;
-      return 0;
+    function milestonePercent(milestones) {
+      const rows = normalizeMilestones(milestones);
+      if (!rows.length) return 0;
+
+      const filledCells = rows.reduce((sum, item) => sum + item.months.length, 0);
+      return Math.round((filledCells / (rows.length * 12)) * 100);
     }
 
-    function rowProgress(row) {
-      const score =
-        rowStageValue(row.techPrep) +
-        (String(row.tor ?? "").trim() ? 1 : 0) +
-        ([row.pr, row.sapPr, row.po].some((value) => String(value ?? "").trim()) ? 1 : 0) +
-        rowStageValue(row.delivery) +
-        rowStageValue(row.fatSat) +
-        rowStageValue(row.closeMoc);
+    function rowPlanProgress(row) {
+      return milestonePercent(row.updatePlan);
+    }
 
-      return Math.round((score / 6) * 100);
+    function rowActualProgress(row) {
+      return milestonePercent(row.updateActual);
     }
 
     function rowStatus(row) {
-      const progress = rowProgress(row);
-      if (progress === 100) return "Done";
-      if ([row.techPrep, row.delivery, row.fatSat, row.closeMoc].includes("progress")) return "On track";
-      if (progress > 0) return "Watch";
-      return "Blocked";
+      return rowActualProgress(row) >= rowPlanProgress(row) ? "On track" : "Delay";
     }
 
     function renderHighlightMonthOptions() {
@@ -1813,7 +1816,8 @@
         name: row.project || "Untitled project",
         description: row.overallPlan || "No overall plan added yet.",
         status: rowStatus(row),
-        progress: rowProgress(row),
+        progress: rowActualProgress(row),
+        planProgress: rowPlanProgress(row),
         owner: row.owner || "Unknown",
         quarter: selectedYear().year,
         impact: row.overallPlan || "Waiting for update.",
@@ -1999,8 +2003,8 @@
     function renderDashboard() {
       const data = selectedYear();
       const projects = projectCardsFromRows(rowsForActiveYear());
-      const completed = projects.filter((project) => project.status === "Done").length;
-      const watch = projects.filter((project) => project.status === "Watch" || project.status === "Blocked").length;
+      const completed = projects.filter((project) => project.progress >= 100).length;
+      const watch = projects.filter((project) => project.status === "Delay").length;
       const active = projects.length - completed;
       const score = averageProgress(projects);
 
@@ -2029,6 +2033,15 @@
           </div>
           <div class="progress-wrap">
             <div class="progress-meta">
+              <span>Plan</span>
+              <strong>${project.planProgress}%</strong>
+            </div>
+            <div class="progress plan" aria-label="${escapeHtml(project.name)} plan">
+              <span style="width: ${project.planProgress}%"></span>
+            </div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-meta">
               <span>Progress</span>
               <strong>${project.progress}%</strong>
             </div>
@@ -2036,8 +2049,8 @@
               <span style="width: ${project.progress}%"></span>
             </div>
           </div>
-          ${projectMonthTable(`${state.activeYear} Update Plan`, project.updatePlan)}
-          ${projectMonthTable(`${state.activeYear} Update Actual`, project.updateActual)}
+          ${projectMonthTable(`${state.activeYear} Plan`, project.updatePlan)}
+          ${projectMonthTable(`${state.activeYear} Actual`, project.updateActual)}
           <ul class="meta-list">
             <li><strong>${formatCellText(project.owner)}</strong>Owner</li>
             <li><strong>${formatCellText(project.overallProject)}</strong>Overall Project</li>
