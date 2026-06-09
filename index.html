@@ -687,6 +687,86 @@
       font-size: 13px;
     }
 
+    .project-image {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: #eef2f7;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .project-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .project-plan-block {
+      display: grid;
+      gap: 8px;
+    }
+
+    .project-plan-title {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .project-month-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 10px;
+    }
+
+    .project-month-table th,
+    .project-month-table td {
+      height: 26px;
+      border: 1px solid var(--ink);
+      padding: 3px;
+      text-align: center;
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-month-table th {
+      background: #072b63;
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .project-month-table .milestone-title {
+      background: #072b63;
+      color: #ffffff;
+      font-size: 12px;
+    }
+
+    .project-month-table .milestone-task {
+      width: 38%;
+      background: #ffffff;
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 400;
+      text-align: left;
+      white-space: normal;
+    }
+
+    .project-month-table .milestone-fill {
+      background: #0b7bbb;
+      color: #ffffff;
+      font-weight: 800;
+    }
+
     .highlight-section {
       margin: 22px 0;
     }
@@ -1009,6 +1089,10 @@
           <input id="editOwner" name="owner">
         </div>
         <div class="form-field">
+          <label for="editProjectImage">Project Picture</label>
+          <input id="editProjectImage" name="projectImage" type="file" accept="image/*">
+        </div>
+        <div class="form-field">
           <label for="editTechPrep">Tech. Preparation</label>
           <select id="editTechPrep" name="techPrep">
             <option value="empty">Empty</option>
@@ -1059,6 +1143,14 @@
         <div class="form-field full">
           <label for="editOverallPlan">Overall Plan</label>
           <textarea id="editOverallPlan" name="overallPlan"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="editUpdatePlan">Update Plan</label>
+          <textarea id="editUpdatePlan" name="updatePlan" placeholder="Activity | 1,2,3"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="editUpdateActual">Update Actual</label>
+          <textarea id="editUpdateActual" name="updateActual" placeholder="Activity | 1,2,3"></textarea>
         </div>
       </div>
       <div class="dialog-actions">
@@ -1231,7 +1323,17 @@
           delivery: "progress",
           fatSat: "empty",
           closeMoc: "empty",
-          overallPlan: "Waiting for delivery and installation after vendor schedule confirmation."
+          overallPlan: "Waiting for delivery and installation after vendor schedule confirmation.",
+          projectImageUrl: "",
+          updatePlan: [
+            { task: "ดำเนินการดึงข้อมูลจาก EXAQUANTUM", months: [1, 2] },
+            { task: "ดำเนินการส่งข้อมูลให้ฝ่ายที่เกี่ยวข้อง Review", months: [3, 4, 5, 6, 7] },
+            { task: "แก้ไข ณ EXAQUANTUM", months: [8, 9, 10] }
+          ],
+          updateActual: [
+            { task: "ดำเนินการดึงข้อมูลจาก EXAQUANTUM", months: [1, 2] },
+            { task: "ดำเนินการส่งข้อมูลให้ฝ่ายที่เกี่ยวข้อง Review", months: [3, 4] }
+          ]
         },
         {
           id: "2026-002",
@@ -1245,7 +1347,17 @@
           delivery: "progress",
           fatSat: "empty",
           closeMoc: "empty",
-          overallPlan: "Build website page, publish on GitHub Pages, and prepare data collection."
+          overallPlan: "Build website page, publish on GitHub Pages, and prepare data collection.",
+          projectImageUrl: "",
+          updatePlan: [
+            { task: "Build website page", months: [1, 2] },
+            { task: "Publish on GitHub Pages", months: [3] },
+            { task: "Prepare data collection", months: [4, 5] }
+          ],
+          updateActual: [
+            { task: "Build website page", months: [1, 2] },
+            { task: "Publish on GitHub Pages", months: [3] }
+          ]
         }
       ],
       2025: [
@@ -1261,15 +1373,24 @@
           delivery: "done",
           fatSat: "done",
           closeMoc: "done",
-          overallPlan: "Completed and archived for annual project summary."
+          overallPlan: "Completed and archived for annual project summary.",
+          projectImageUrl: "",
+          updatePlan: [
+            { task: "Annual service inventory cleanup", months: [1, 2, 3, 4] },
+            { task: "Archive project summary", months: [5, 6] }
+          ],
+          updateActual: [
+            { task: "Annual service inventory cleanup", months: [1, 2, 3, 4] },
+            { task: "Archive project summary", months: [5, 6] }
+          ]
         }
       ]
     };
 
     const STORAGE_KEY = "system-team-progress-table-v1";
     const HIGHLIGHT_STORAGE_KEY = "system-team-highlights-v1";
-    const PROGRESS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFCLYc8qR1PgP7HhAi4__81fApUZvOCZ1CooazOq_HwPteqZiAMpYSlJfrUKWs7QLaPA/exec";
-    const HIGHLIGHT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEa6Mn9r-OC_cAnOTp36aP6fr0vPpwa7BJZA7m8hhSU2-ko0ERPqgLu90-pDbzog24/exec";
+    const PROGRESS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyP9IOgobN2e3fGiMP6hTmAyYkSuBfheTgx0eiIuIlk5wqKzNUsv4x9EpwrlT6owxgVrw/exec";
+    const HIGHLIGHT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3R3iJCwLumpaz7d6VyS4E54aCbde9y1uP-PGyMrmg3KGBimVq5Y7AZw_aJyCzyulI/exec";
 
     const monthOptions = [
       ["all", "All"],
@@ -1318,6 +1439,8 @@
     const cancelDeleteButton = document.querySelector("#cancelDeleteButton");
     const confirmDeleteButton = document.querySelector("#confirmDeleteButton");
     const tableStorageStatus = document.querySelector("#tableStorageStatus");
+    const editUpdatePlan = document.querySelector("#editUpdatePlan");
+    const editUpdateActual = document.querySelector("#editUpdateActual");
 
     let progressRows = loadProgressRows();
     let highlights = loadHighlights();
@@ -1392,6 +1515,10 @@
       return (monthOptions.find(([value]) => value === monthValue) || ["", "Unknown"])[1];
     }
 
+    function clearProjectImageInput() {
+      document.querySelector("#editProjectImage").value = "";
+    }
+
     function loadProgressRows() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) return normalizeProgressRows(structuredClone(defaultProgressRows));
@@ -1416,8 +1543,59 @@
         ...row,
         pr: row.pr ?? legacy.pr,
         sapPr: row.sapPr ?? legacy.sapPr,
-        po: row.po ?? legacy.po
+        po: row.po ?? legacy.po,
+        projectImageUrl: row.projectImageUrl || row.imageUrl || "",
+        projectImage: row.projectImage || "",
+        pendingProjectImage: Boolean(row.pendingProjectImage),
+        updatePlan: normalizeMilestones(row.updatePlan ?? row.actualPlan),
+        updateActual: normalizeMilestones(row.updateActual ?? row.progressPlan)
       };
+    }
+
+    function normalizeMilestones(value) {
+      if (typeof value === "string") return parseMilestoneText(value);
+      if (!Array.isArray(value)) return [];
+
+      if (value.every((item) => typeof item === "string")) {
+        return value
+          .map((item, index) => String(item || "").trim() ? { task: String(item).trim(), months: [index + 1] } : null)
+          .filter(Boolean);
+      }
+
+      return value
+        .map((item) => ({
+          task: String(item?.task || "").trim(),
+          months: normalizeMonths(item?.months)
+        }))
+        .filter((item) => item.task);
+    }
+
+    function normalizeMonths(months) {
+      const source = Array.isArray(months) ? months : String(months || "").split(",");
+      return Array.from(new Set(
+        source
+          .map((month) => Number(String(month).trim()))
+          .filter((month) => month >= 1 && month <= 12)
+      )).sort((a, b) => a - b);
+    }
+
+    function parseMilestoneText(text) {
+      return String(text || "")
+        .split("\n")
+        .map((line) => {
+          const [task = "", months = ""] = line.split("|");
+          return {
+            task: task.trim(),
+            months: normalizeMonths(months)
+          };
+        })
+        .filter((item) => item.task);
+    }
+
+    function milestoneText(milestones) {
+      return normalizeMilestones(milestones)
+        .map((item) => `${item.task} | ${item.months.join(",")}`)
+        .join("\n");
     }
 
     function parseLegacyPrpo(value) {
@@ -1444,15 +1622,29 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           year: state.activeYear,
-          rows: progressRows[state.activeYear] || []
+          rows: rowsForGoogleSheet()
         })
       })
       .then(() => {
         tableStorageStatus.textContent = "Saved locally and sent table to Google Sheets";
+        rowsForActiveYear().forEach((row) => {
+          row.pendingProjectImage = false;
+          row.projectImage = "";
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
       })
       .catch(() => {
         tableStorageStatus.textContent = "Saved locally, Google Sheets sync failed";
       });
+    }
+
+    function rowsForGoogleSheet() {
+      return rowsForActiveYear().map((row) => ({
+        ...row,
+        updatePlan: normalizeMilestones(row.updatePlan),
+        updateActual: normalizeMilestones(row.updateActual),
+        projectImage: row.pendingProjectImage ? row.projectImage : ""
+      }));
     }
 
     function loadRowsFromGoogleSheet(year = state.activeYear) {
@@ -1625,8 +1817,49 @@
         owner: row.owner || "Unknown",
         quarter: selectedYear().year,
         impact: row.overallPlan || "Waiting for update.",
-        overallProject: row.overallPlan || "Waiting for update."
+        overallProject: row.overallPlan || "Waiting for update.",
+        projectImageUrl: row.projectImageUrl || row.projectImage || "",
+        updatePlan: normalizeMilestones(row.updatePlan),
+        updateActual: normalizeMilestones(row.updateActual)
       }));
+    }
+
+    function projectMonthTable(title, milestones) {
+      const normalized = normalizeMilestones(milestones);
+      return `
+        <div class="project-plan-block">
+          <table class="project-month-table">
+            <thead>
+              <tr>
+                <th class="milestone-title" colspan="13">${title}</th>
+              </tr>
+              <tr>
+                <th rowspan="2">Activity</th>
+                <th colspan="3">Q1</th>
+                <th colspan="3">Q2</th>
+                <th colspan="3">Q3</th>
+                <th colspan="3">Q4</th>
+              </tr>
+              <tr>${Array.from({ length: 12 }, (_, index) => `<th>${index + 1}</th>`).join("")}</tr>
+            </thead>
+            <tbody>
+              ${normalized.length ? normalized.map((item) => `
+                <tr>
+                  <td class="milestone-task">${formatCellText(item.task)}</td>
+                  ${Array.from({ length: 12 }, (_, index) => `
+                    <td class="${item.months.includes(index + 1) ? "milestone-fill" : ""}"></td>
+                  `).join("")}
+                </tr>
+              `).join("") : `
+                <tr>
+                  <td class="milestone-task"></td>
+                  ${Array.from({ length: 12 }, () => "<td></td>").join("")}
+                </tr>
+              `}
+            </tbody>
+          </table>
+        </div>
+      `;
     }
 
     function rowsForActiveYear() {
@@ -1687,6 +1920,9 @@
       document.querySelector("#editFatSat").value = row.fatSat || "empty";
       document.querySelector("#editCloseMoc").value = row.closeMoc || "empty";
       document.querySelector("#editOverallPlan").value = row.overallPlan || "";
+      clearProjectImageInput();
+      editUpdatePlan.value = milestoneText(row.updatePlan);
+      editUpdateActual.value = milestoneText(row.updateActual);
       editDialog.classList.add("is-open");
       document.querySelector("#editProject").focus();
     }
@@ -1705,6 +1941,9 @@
       document.querySelector("#editFatSat").value = "empty";
       document.querySelector("#editCloseMoc").value = "empty";
       document.querySelector("#editOverallPlan").value = "";
+      clearProjectImageInput();
+      editUpdatePlan.value = "";
+      editUpdateActual.value = "";
       editDialog.classList.add("is-open");
       document.querySelector("#editProject").focus();
     }
@@ -1781,22 +2020,27 @@
         <article class="project-card">
           <div class="card-top">
             <div>
-              <h4>${project.name}</h4>
+              <h4>${formatCellText(project.name)}</h4>
             </div>
             <span class="status ${statusClass[project.status] || "on-track"}">${project.status}</span>
+          </div>
+          <div class="project-image">
+            ${project.projectImageUrl ? `<img src="${project.projectImageUrl}" alt="${escapeHtml(project.name)}">` : "PROJECT PICTURE"}
           </div>
           <div class="progress-wrap">
             <div class="progress-meta">
               <span>Progress</span>
               <strong>${project.progress}%</strong>
             </div>
-            <div class="progress" aria-label="${project.name} progress">
+            <div class="progress" aria-label="${escapeHtml(project.name)} progress">
               <span style="width: ${project.progress}%"></span>
             </div>
           </div>
+          ${projectMonthTable(`${state.activeYear} Update Plan`, project.updatePlan)}
+          ${projectMonthTable(`${state.activeYear} Update Actual`, project.updateActual)}
           <ul class="meta-list">
-            <li><strong>${project.owner}</strong>Owner</li>
-            <li><strong>${project.overallProject}</strong>Overall Project</li>
+            <li><strong>${formatCellText(project.owner)}</strong>Owner</li>
+            <li><strong>${formatCellText(project.overallProject)}</strong>Overall Project</li>
           </ul>
         </article>
       `).join("");
@@ -1873,7 +2117,7 @@
       if (event.target === deleteDialog) closeDeleteDialog();
     });
 
-    editForm.addEventListener("submit", (event) => {
+    editForm.addEventListener("submit", async (event) => {
       event.preventDefault();
       const rowId = document.querySelector("#editRowId").value;
       const rows = rowsForActiveYear();
@@ -1892,7 +2136,12 @@
           delivery: "empty",
           fatSat: "empty",
           closeMoc: "empty",
-          overallPlan: ""
+          overallPlan: "",
+          projectImageUrl: "",
+          projectImage: "",
+          pendingProjectImage: false,
+          updatePlan: [],
+          updateActual: []
         };
         rows.push(row);
       }
@@ -1910,6 +2159,16 @@
       row.fatSat = document.querySelector("#editFatSat").value;
       row.closeMoc = document.querySelector("#editCloseMoc").value;
       row.overallPlan = document.querySelector("#editOverallPlan").value.trim();
+      row.updatePlan = parseMilestoneText(editUpdatePlan.value);
+      row.updateActual = parseMilestoneText(editUpdateActual.value);
+
+      const projectImageFile = document.querySelector("#editProjectImage").files[0];
+      if (projectImageFile) {
+        const image = await readImageAsDataUrl(projectImageFile);
+        row.projectImage = image;
+        row.projectImageUrl = image;
+        row.pendingProjectImage = true;
+      }
 
       saveProgressRows();
       renderProgressTable();
@@ -1977,4 +2236,3 @@
   </script>
 </body>
 </html>
-

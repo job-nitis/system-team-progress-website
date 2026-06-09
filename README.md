@@ -5,11 +5,13 @@ Static website for showing yearly System Team project progress.
 ## What is included
 
 - `index.html` - the full website in one file
-- `google-apps-script.js` - optional Google Sheets backend script
+- `google-apps-script-progress-only.js` - Apps Script for the `ProgressRows` sheet tab
+- `google-apps-script-highlight-data-only.js` - Apps Script for the `Highlight information` sheet tab and Drive picture upload
 - Year tabs for switching between project years
 - Editable progress summary table
 - `Add Project`, `Edit`, and `Delete` actions for table rows
 - Highlight cards with month filter, image upload, topic, and detail
+- Highlight data saved to Google Sheets and pictures saved to Google Drive when Apps Script is deployed
 - Project cards with status, owner, overall project, and progress
 - Summary metrics for total, completed, active, and watch projects
 - Timeline and decision sections for annual reporting
@@ -47,11 +49,19 @@ The progress table saves edits in the browser immediately using `localStorage`.
 Deleting a project removes it from the active year after a confirmation popup.
 The website also loads table rows from Google Sheets on page load, when the year changes, and once every minute while open.
 
+Highlight data uses a spreadsheet named `Highlight data` with a sheet tab named `Highlight information` and these columns:
+
+```text
+ID | Year | Month | Topic | Detail | Image URL | Created At
+```
+
+Highlight pictures are uploaded to the configured Google Drive folder in `google-apps-script-highlight-data-only.js`.
+
 For team/shared storage, use Google Sheets:
 
 1. Create a Google Sheet.
 2. Open `Extensions` > `Apps Script`.
-3. Paste the code from `google-apps-script.js`.
+3. Paste the code from `google-apps-script-highlight-data-only.js` for Highlight data, or `google-apps-script-progress-only.js` for ProgressRows.
 4. Deploy it as a web app.
 5. Copy the web app URL.
 6. In `index.html`, find:

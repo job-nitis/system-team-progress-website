@@ -1,6 +1,7 @@
-// Use this older script only for the System Team Progress table.
-// It reads and writes the ProgressRows sheet tab, but does not handle Highlight data or image uploads.
+// Use this script only for the System Team Progress table.
+// It reads and writes the ProgressRows sheet tab and uploads project pictures to the SYSTEM WEBSITE Drive folder.
 const SHEET_NAME = "ProgressRows";
+const PROJECT_IMAGE_FOLDER_ID = "1J4M5xA3rZoZc-ZDg8MSKpy8zlD-QDdXU";
 const HEADERS = [
   "Year",
   "ID",
@@ -15,6 +16,9 @@ const HEADERS = [
   "FAT/SAT",
   "Close MOC",
   "Overall Plan",
+  "Project Image URL",
+  "Update Plan",
+  "Update Actual",
   "Updated At"
 ];
 
@@ -35,9 +39,7 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
 
-  return ContentService
-    .createTextOutput(payload)
-    .setMimeType(ContentService.MimeType.JSON);
+  return jsonResponse(JSON.parse(payload));
 }
 
 function doPost(e) {
@@ -47,7 +49,7 @@ function doPost(e) {
 
   const payload = JSON.parse(e.postData.contents);
   const year = String(payload.year || "");
-  const incomingRows = (payload.rows || []).map((row) => ({ ...row, year }));
+  const incomingRows = (payload.rows || []).map((row) => prepareIncomingRow(row, year));
   const otherRows = readRows("").filter((row) => String(row.year) !== year);
   const allRows = otherRows.concat(incomingRows);
   const sheet = getSheet();
@@ -59,10 +61,32 @@ function doPost(e) {
   return jsonResponse({ ok: true, rows: incomingRows.length });
 }
 
-function jsonResponse(payload) {
-  return ContentService
-    .createTextOutput(JSON.stringify(payload))
-    .setMimeType(ContentService.MimeType.JSON);
+function prepareIncomingRow(row, year) {
+  const imageUrl = row.projectImage
+    ? saveProjectImage(row.id || `project-${Date.now()}`, row.projectImage)
+    : row.projectImageUrl || "";
+
+  return {
+    ...row,
+    year,
+    projectImageUrl: imageUrl,
+    updatePlan: normalizeMilestones(row.updatePlan),
+    updateActual: normalizeMilestones(row.updateActual)
+  };
+}
+
+function saveProjectImage(id, dataUrl) {
+  const matches = String(dataUrl).match(/^data:(.+);base64,(.+)$/);
+  if (!matches) return "";
+
+  const contentType = matches[1];
+  const extension = contentType.split("/")[1] || "png";
+  const bytes = Utilities.base64Decode(matches[2]);
+  const blob = Utilities.newBlob(bytes, contentType, `${id}.${extension}`);
+  const file = DriveApp.getFolderById(PROJECT_IMAGE_FOLDER_ID).createFile(blob);
+
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  return `https://drive.google.com/uc?export=view&id=${file.getId()}`;
 }
 
 function readRows(year) {
@@ -91,7 +115,10 @@ function sheetValuesToRow(values) {
     delivery: values[9],
     fatSat: values[10],
     closeMoc: values[11],
-    overallPlan: values[12]
+    overallPlan: values[12],
+    projectImageUrl: values[13],
+    updatePlan: parseMilestoneText(values[14]),
+    updateActual: parseMilestoneText(values[15])
   };
 }
 
@@ -110,8 +137,57 @@ function rowToSheetValues(row) {
     row.fatSat || "",
     row.closeMoc || "",
     row.overallPlan || "",
+    row.projectImageUrl || "",
+    milestoneText(row.updatePlan),
+    milestoneText(row.updateActual),
     new Date()
   ];
+}
+
+function normalizeMilestones(value) {
+  if (typeof value === "string") return parseMilestoneText(value);
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => ({
+      task: String(item && item.task ? item.task : "").trim(),
+      months: normalizeMonths(item && item.months ? item.months : [])
+    }))
+    .filter((item) => item.task);
+}
+
+function normalizeMonths(months) {
+  const source = Array.isArray(months) ? months : String(months || "").split(",");
+  return Array.from(new Set(
+    source
+      .map((month) => Number(String(month).trim()))
+      .filter((month) => month >= 1 && month <= 12)
+  )).sort((a, b) => a - b);
+}
+
+function parseMilestoneText(text) {
+  return String(text || "")
+    .split("\n")
+    .map((line) => {
+      const parts = line.split("|");
+      return {
+        task: String(parts[0] || "").trim(),
+        months: normalizeMonths(parts[1] || "")
+      };
+    })
+    .filter((item) => item.task);
+}
+
+function milestoneText(milestones) {
+  return normalizeMilestones(milestones)
+    .map((item) => `${item.task} | ${item.months.join(",")}`)
+    .join("\n");
+}
+
+function jsonResponse(payload) {
+  return ContentService
+    .createTextOutput(JSON.stringify(payload))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function getSheet() {
