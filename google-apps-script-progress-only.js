@@ -97,7 +97,15 @@ function saveProjectImage(id, dataUrl) {
   const file = DriveApp.getFolderById(PROJECT_IMAGE_FOLDER_ID).createFile(blob);
 
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return `https://drive.google.com/uc?export=view&id=${file.getId()}`;
+  return `https://drive.google.com/thumbnail?id=${file.getId()}&sz=w1600`;
+}
+
+function authorizeDriveAccess() {
+  const folder = DriveApp.getFolderById(PROJECT_IMAGE_FOLDER_ID);
+  const file = folder.createFile("drive-authorization-test.txt", "Drive authorization test");
+
+  file.setTrashed(true);
+  return folder.getName();
 }
 
 function readRows(year) {

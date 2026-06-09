@@ -1628,14 +1628,27 @@
     }
 
     function normalizeImageUrls(value) {
+      const normalizeOne = (url) => driveImageUrl(String(url || "").trim());
+
       if (Array.isArray(value)) {
-        return value.map((item) => String(item || "").trim()).filter(Boolean);
+        return value.map(normalizeOne).filter(Boolean);
       }
 
-      return String(value || "")
+      const text = String(value || "").trim();
+      if (!text) return [];
+      if (text.startsWith("data:")) return [text];
+
+      return text
         .split(/\n|,/)
-        .map((item) => item.trim())
+        .map(normalizeOne)
         .filter(Boolean);
+    }
+
+    function driveImageUrl(url) {
+      if (!url) return "";
+      const idMatch = url.match(/[?&]id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
+      if (!idMatch || !/drive\.google\.com/.test(url)) return url;
+      return `https://drive.google.com/thumbnail?id=${encodeURIComponent(decodeURIComponent(idMatch[1]))}&sz=w1600`;
     }
 
     function persistedImageUrls(value) {
@@ -1776,13 +1789,8 @@
         })
       })
       .then(() => {
-        tableStorageStatus.textContent = "Saved locally and sent table to Google Sheets";
-        rowsForActiveYear().forEach((row) => {
-          row.pendingProjectImage = false;
-          row.projectImage = "";
-          row.pendingProjectImages = [];
-        });
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRowsForLocalStorage()));
+        tableStorageStatus.textContent = "Saved to Google Sheets, loading Drive pictures";
+        setTimeout(() => loadRowsFromGoogleSheet(state.activeYear), 1500);
       })
       .catch(() => {
         tableStorageStatus.textContent = "Saved locally, Google Sheets sync failed";
@@ -2381,9 +2389,10 @@
         await saveHighlightToGoogleSheet(highlight);
         highlight.uploadImages = [];
         saveHighlights();
-        tableStorageStatus.textContent = highlightMode === "edit" ? "Saved highlight changes to Google Drive and Google Sheets" : "Saved highlight to Google Drive and Google Sheets";
+        tableStorageStatus.textContent = "Saved highlight, loading Drive pictures";
         highlightMonthSelect.value = highlightMonthInput.value;
         renderHighlights();
+        setTimeout(() => loadHighlightsFromGoogleSheet(state.activeYear), 1500);
         closeHighlightDialog();
       } catch (error) {
         tableStorageStatus.textContent = "Could not save highlight pictures. Try smaller images.";
