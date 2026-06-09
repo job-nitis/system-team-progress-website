@@ -699,6 +699,7 @@
       width: 100%;
       aspect-ratio: 16 / 9;
       overflow: hidden;
+      position: relative;
       display: grid;
       place-items: center;
       color: var(--muted);
@@ -713,6 +714,62 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+    }
+
+    .image-gallery {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: #eef2f7;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .image-gallery img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .gallery-button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 999px;
+      color: #ffffff;
+      background: rgba(24, 33, 47, 0.72);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .gallery-button.prev {
+      left: 8px;
+    }
+
+    .gallery-button.next {
+      right: 8px;
+    }
+
+    .gallery-counter {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      padding: 3px 7px;
+      color: #ffffff;
+      background: rgba(24, 33, 47, 0.72);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
     }
 
     .project-plan-block {
@@ -838,6 +895,12 @@
 
     .highlight-body {
       padding: 14px;
+    }
+
+    .highlight-card-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
     }
 
     .highlight-month {
@@ -1111,7 +1174,7 @@
         </div>
         <div class="form-field">
           <label for="editProjectImage">Project Picture</label>
-          <input id="editProjectImage" name="projectImage" type="file" accept="image/*">
+          <input id="editProjectImage" name="projectImage" type="file" accept="image/*" multiple>
         </div>
         <div class="form-field">
           <label for="editTechPrep">Tech. Preparation</label>
@@ -1195,6 +1258,7 @@
   <div class="dialog-backdrop" id="highlightDialog" role="dialog" aria-modal="true" aria-labelledby="highlightDialogTitle">
     <form class="edit-dialog" id="highlightForm">
       <h3 id="highlightDialogTitle">Create Highlight</h3>
+      <input type="hidden" id="highlightIdInput">
       <div class="form-grid">
         <div class="form-field">
           <label for="highlightMonthInput">Month</label>
@@ -1202,7 +1266,7 @@
         </div>
         <div class="form-field">
           <label for="highlightImageInput">Picture</label>
-          <input id="highlightImageInput" name="image" type="file" accept="image/*">
+          <input id="highlightImageInput" name="image" type="file" accept="image/*" multiple>
         </div>
         <div class="form-field full">
           <label for="highlightTopicInput">Topic</label>
@@ -1215,7 +1279,7 @@
       </div>
       <div class="dialog-actions">
         <button class="action-button secondary" type="button" id="cancelHighlightButton">Cancel</button>
-        <button class="action-button" type="submit">Create</button>
+        <button class="action-button" type="submit" id="saveHighlightButton">Create</button>
       </div>
     </form>
   </div>
@@ -1455,6 +1519,8 @@
     const highlightMonthInput = document.querySelector("#highlightMonthInput");
     const addHighlightButton = document.querySelector("#addHighlightButton");
     const cancelHighlightButton = document.querySelector("#cancelHighlightButton");
+    const saveHighlightButton = document.querySelector("#saveHighlightButton");
+    const highlightIdInput = document.querySelector("#highlightIdInput");
     const addRowButton = document.querySelector("#addRowButton");
     const resetTableButton = document.querySelector("#resetTableButton");
     const cancelEditButton = document.querySelector("#cancelEditButton");
@@ -1468,6 +1534,8 @@
     let highlights = loadHighlights();
     let pendingDeleteRowId = "";
     let editMode = "update";
+    let highlightMode = "create";
+    const galleryState = {};
 
     function loadHighlights() {
       const saved = localStorage.getItem(HIGHLIGHT_STORAGE_KEY);
@@ -1494,7 +1562,12 @@
         body: JSON.stringify({
           type: "highlight",
           year: state.activeYear,
-          ...highlight
+          id: highlight.id,
+          month: highlight.month,
+          topic: highlight.topic,
+          detail: highlight.detail,
+          imageUrls: persistedImageUrls(highlight.imageUrls || highlight.image),
+          images: highlight.uploadImages || []
         })
       });
     }
@@ -1514,7 +1587,10 @@
             month: item.month,
             topic: item.topic,
             detail: item.detail,
-            image: item.imageUrl || item.image || ""
+            image: item.imageUrl || item.image || "",
+            imageUrls: normalizeImageUrls(item.imageUrls || item.imageUrl || item.image),
+            pendingImages: [],
+            uploadImages: []
           }));
           saveHighlights();
           renderHighlights();
@@ -1539,6 +1615,46 @@
 
     function clearProjectImageInput() {
       document.querySelector("#editProjectImage").value = "";
+    }
+
+    function normalizeImageUrls(value) {
+      if (Array.isArray(value)) {
+        return value.map((item) => String(item || "").trim()).filter(Boolean);
+      }
+
+      return String(value || "")
+        .split(/\n|,/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function persistedImageUrls(value) {
+      return normalizeImageUrls(value).filter((url) => !url.startsWith("data:"));
+    }
+
+    function imagesForDisplay(urls, pending = []) {
+      return [...normalizeImageUrls(urls), ...normalizeImageUrls(pending)];
+    }
+
+    function imageGallery(galleryId, images, altText, emptyText, extraClass = "") {
+      const normalized = normalizeImageUrls(images);
+      const index = Math.min(galleryState[galleryId] || 0, Math.max(normalized.length - 1, 0));
+      galleryState[galleryId] = index;
+
+      if (!normalized.length) {
+        return `<div class="image-gallery ${extraClass}">${emptyText}</div>`;
+      }
+
+      return `
+        <div class="image-gallery ${extraClass}" data-gallery-id="${escapeHtml(galleryId)}">
+          <img src="${normalized[index]}" alt="${escapeHtml(altText)}">
+          ${normalized.length > 1 ? `
+            <button class="gallery-button prev" type="button" data-gallery-action="prev" data-gallery-id="${escapeHtml(galleryId)}" aria-label="Previous picture">&#8249;</button>
+            <button class="gallery-button next" type="button" data-gallery-action="next" data-gallery-id="${escapeHtml(galleryId)}" aria-label="Next picture">&#8250;</button>
+            <span class="gallery-counter">${index + 1}/${normalized.length}</span>
+          ` : ""}
+        </div>
+      `;
     }
 
     function loadProgressRows() {
@@ -1567,7 +1683,9 @@
         sapPr: row.sapPr ?? legacy.sapPr,
         po: row.po ?? legacy.po,
         projectImageUrl: row.projectImageUrl || row.imageUrl || "",
+        projectImageUrls: persistedImageUrls(row.projectImageUrls || row.projectImageUrl || row.imageUrl),
         projectImage: row.projectImage || "",
+        pendingProjectImages: normalizeImageUrls(row.pendingProjectImages || row.projectImage),
         pendingProjectImage: Boolean(row.pendingProjectImage),
         updatePlan: normalizeMilestones(row.updatePlan ?? row.actualPlan),
         updateActual: normalizeMilestones(row.updateActual ?? row.progressPlan)
@@ -1662,9 +1780,22 @@
 
     function rowsForGoogleSheet() {
       return rowsForActiveYear().map((row) => ({
-        ...row,
+        id: row.id,
+        project: row.project,
+        owner: row.owner,
+        techPrep: row.techPrep,
+        tor: row.tor,
+        pr: row.pr,
+        sapPr: row.sapPr,
+        po: row.po,
+        delivery: row.delivery,
+        fatSat: row.fatSat,
+        closeMoc: row.closeMoc,
+        overallPlan: row.overallPlan,
         updatePlan: normalizeMilestones(row.updatePlan),
         updateActual: normalizeMilestones(row.updateActual),
+        projectImageUrls: persistedImageUrls(row.projectImageUrls || row.projectImageUrl),
+        projectImages: row.pendingProjectImage ? row.pendingProjectImages || [] : [],
         projectImage: row.pendingProjectImage ? row.projectImage : ""
       }));
     }
@@ -1806,26 +1937,50 @@
 
       highlightGrid.innerHTML = visibleHighlights.map((item) => `
         <article class="highlight-card">
-          ${item.image ? `<img class="highlight-image" src="${item.image}" alt="${escapeHtml(item.topic)}">` : `<div class="highlight-image" aria-hidden="true"></div>`}
+          ${imageGallery(`highlight-${item.id}`, imagesForDisplay(item.imageUrls || item.image, item.pendingImages), item.topic, "HIGHLIGHT")}
           <div class="highlight-body">
             <span class="highlight-month">${monthLabel(item.month)}</span>
             <h4>${formatCellText(item.topic)}</h4>
             <p>${formatCellText(item.detail)}</p>
+            <div class="highlight-card-actions">
+              <button class="edit-button" type="button" data-highlight-action="edit" data-highlight-id="${escapeHtml(item.id)}">Edit</button>
+            </div>
           </div>
         </article>
       `).join("");
     }
 
     function openHighlightDialog() {
+      highlightMode = "create";
       highlightForm.reset();
+      highlightIdInput.value = "";
+      document.querySelector("#highlightDialogTitle").textContent = "Create Highlight";
+      saveHighlightButton.textContent = "Create";
       const selectedMonth = highlightMonthSelect.value === "all" ? "01" : highlightMonthSelect.value;
       highlightMonthInput.value = selectedMonth || "01";
       highlightDialog.classList.add("is-open");
       document.querySelector("#highlightTopicInput").focus();
     }
 
+    function openEditHighlightDialog(highlightId) {
+      const highlight = highlights.find((item) => item.id === highlightId);
+      if (!highlight) return;
+
+      highlightMode = "edit";
+      highlightForm.reset();
+      highlightIdInput.value = highlight.id;
+      highlightMonthInput.value = highlight.month || "01";
+      document.querySelector("#highlightTopicInput").value = highlight.topic || "";
+      document.querySelector("#highlightDetailInput").value = highlight.detail || "";
+      document.querySelector("#highlightDialogTitle").textContent = "Edit Highlight";
+      saveHighlightButton.textContent = "Save";
+      highlightDialog.classList.add("is-open");
+      document.querySelector("#highlightTopicInput").focus();
+    }
+
     function closeHighlightDialog() {
       highlightDialog.classList.remove("is-open");
+      highlightMode = "create";
     }
 
     function readImageAsDataUrl(file) {
@@ -1842,8 +1997,13 @@
       });
     }
 
+    function readImagesAsDataUrls(fileList) {
+      return Promise.all(Array.from(fileList || []).map(readImageAsDataUrl));
+    }
+
     function projectCardsFromRows(rows) {
       return rows.map((row) => ({
+        id: row.id,
         name: row.project || "Untitled project",
         description: row.overallPlan || "No overall plan added yet.",
         status: rowStatus(row),
@@ -1853,7 +2013,7 @@
         quarter: selectedYear().year,
         impact: row.overallPlan || "Waiting for update.",
         overallProject: row.overallPlan || "Waiting for update.",
-        projectImageUrl: row.projectImageUrl || row.projectImage || "",
+        projectImages: imagesForDisplay(row.projectImageUrls || row.projectImageUrl || row.projectImage, row.pendingProjectImages),
         updatePlan: normalizeMilestones(row.updatePlan),
         updateActual: normalizeMilestones(row.updateActual)
       }));
@@ -2064,7 +2224,7 @@
             <span class="status ${statusClass[project.status] || "on-track"}">${project.status}</span>
           </div>
           <div class="project-image">
-            ${project.projectImageUrl ? `<img src="${project.projectImageUrl}" alt="${escapeHtml(project.name)}">` : "PROJECT PICTURE"}
+            ${imageGallery(`project-${project.id}`, project.projectImages, project.name, "PROJECT PICTURE")}
           </div>
           <div class="progress-wrap">
             <div class="progress-meta">
@@ -2109,29 +2269,71 @@
     addHighlightButton.addEventListener("click", openHighlightDialog);
     cancelHighlightButton.addEventListener("click", closeHighlightDialog);
 
+    function handleGalleryClick(event) {
+      const button = event.target.closest("[data-gallery-action][data-gallery-id]");
+      if (!button) return false;
+
+      event.preventDefault();
+      event.stopPropagation();
+      const galleryId = button.dataset.galleryId;
+      const gallery = button.closest(".image-gallery");
+      const total = Number(gallery?.querySelector(".gallery-counter")?.textContent?.split("/")[1] || 1);
+      const current = galleryState[galleryId] || 0;
+      galleryState[galleryId] = button.dataset.galleryAction === "next"
+        ? (current + 1) % total
+        : (current - 1 + total) % total;
+      renderDashboard();
+      return true;
+    }
+
+    projectGrid.addEventListener("click", handleGalleryClick);
+
+    highlightGrid.addEventListener("click", (event) => {
+      if (handleGalleryClick(event)) return;
+
+      const editButton = event.target.closest("[data-highlight-action='edit'][data-highlight-id]");
+      if (!editButton) return;
+      openEditHighlightDialog(editButton.dataset.highlightId);
+    });
+
     highlightDialog.addEventListener("click", (event) => {
       if (event.target === highlightDialog) closeHighlightDialog();
     });
 
     highlightForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const imageFile = document.querySelector("#highlightImageInput").files[0];
-      const image = await readImageAsDataUrl(imageFile);
-      const highlight = {
-        id: `highlight-${Date.now()}`,
+      const pendingImages = await readImagesAsDataUrls(document.querySelector("#highlightImageInput").files);
+      const highlightId = highlightIdInput.value || `highlight-${Date.now()}`;
+      let highlight = highlights.find((item) => item.id === highlightId);
+
+      if (!highlight) {
+        highlight = {
+          id: highlightId,
+          imageUrls: [],
+          pendingImages: [],
+          uploadImages: []
+        };
+        highlights.unshift(highlight);
+      }
+
+      Object.assign(highlight, {
+        id: highlightId,
         year: state.activeYear,
         month: highlightMonthInput.value,
         topic: document.querySelector("#highlightTopicInput").value.trim(),
         detail: document.querySelector("#highlightDetailInput").value.trim(),
-        image
-      };
-
-      highlights.unshift(highlight);
+        imageUrls: persistedImageUrls(highlight.imageUrls || highlight.image),
+        pendingImages: [...normalizeImageUrls(highlight.pendingImages), ...pendingImages],
+        uploadImages: pendingImages,
+        image: ""
+      });
 
       saveHighlights();
-      tableStorageStatus.textContent = "Saving highlight to Google Drive and Google Sheets";
+      tableStorageStatus.textContent = highlightMode === "edit" ? "Saving highlight changes to Google Drive and Google Sheets" : "Saving highlight to Google Drive and Google Sheets";
       await saveHighlightToGoogleSheet(highlight);
-      tableStorageStatus.textContent = "Saved highlight to Google Drive and Google Sheets";
+      highlight.uploadImages = [];
+      saveHighlights();
+      tableStorageStatus.textContent = highlightMode === "edit" ? "Saved highlight changes to Google Drive and Google Sheets" : "Saved highlight to Google Drive and Google Sheets";
       highlightMonthSelect.value = highlightMonthInput.value;
       renderHighlights();
       closeHighlightDialog();
@@ -2186,7 +2388,9 @@
           closeMoc: "empty",
           overallPlan: "",
           projectImageUrl: "",
+          projectImageUrls: [],
           projectImage: "",
+          pendingProjectImages: [],
           pendingProjectImage: false,
           updatePlan: [],
           updateActual: []
@@ -2210,11 +2414,12 @@
       row.updatePlan = parseMilestoneText(editUpdatePlan.value);
       row.updateActual = parseMilestoneText(editUpdateActual.value);
 
-      const projectImageFile = document.querySelector("#editProjectImage").files[0];
-      if (projectImageFile) {
-        const image = await readImageAsDataUrl(projectImageFile);
-        row.projectImage = image;
-        row.projectImageUrl = image;
+      const projectImages = await readImagesAsDataUrls(document.querySelector("#editProjectImage").files);
+      if (projectImages.length) {
+        row.projectImageUrls = persistedImageUrls(row.projectImageUrls || row.projectImageUrl);
+        row.pendingProjectImages = [...normalizeImageUrls(row.pendingProjectImages), ...projectImages];
+        row.projectImage = projectImages[0];
+        row.projectImageUrl = row.projectImageUrls[0] || projectImages[0];
         row.pendingProjectImage = true;
       }
 

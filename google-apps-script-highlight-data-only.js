@@ -8,7 +8,7 @@ const HIGHLIGHT_HEADERS = [
   "Month",
   "Topic",
   "Detail",
-  "Image URL",
+  "Image URLs",
   "Created At"
 ];
 
@@ -44,19 +44,37 @@ function doPost(e) {
 function saveHighlight(payload) {
   const sheet = getHighlightSheet();
   const id = payload.id || `highlight-${Date.now()}`;
-  const imageUrl = payload.image ? saveHighlightImage(id, payload.image) : "";
+  const existingRowNumber = findHighlightRowNumber(sheet, id);
+  const existingRow = existingRowNumber ? highlightValuesToRow(sheet.getRange(existingRowNumber, 1, 1, HIGHLIGHT_HEADERS.length).getValues()[0]) : null;
+  const payloadImageUrls = normalizeImageUrls(payload.imageUrls);
+  const existingImageUrls = normalizeImageUrls((existingRow && existingRow.imageUrls) || (existingRow && existingRow.imageUrl));
+  const imageUrls = (payloadImageUrls.length ? payloadImageUrls : existingImageUrls)
+    .concat(saveHighlightImages(id, payload.images || payload.image || []));
   const row = {
     id,
     year: String(payload.year || ""),
     month: String(payload.month || ""),
     topic: payload.topic || "",
     detail: payload.detail || "",
-    imageUrl,
-    createdAt: new Date()
+    imageUrl: imageUrls[0] || "",
+    imageUrls,
+    createdAt: existingRow && existingRow.createdAt ? existingRow.createdAt : new Date()
   };
 
-  sheet.appendRow(highlightToSheetValues(row));
+  if (existingRowNumber) {
+    sheet.getRange(existingRowNumber, 1, 1, HIGHLIGHT_HEADERS.length).setValues([highlightToSheetValues(row)]);
+  } else {
+    sheet.appendRow(highlightToSheetValues(row));
+  }
+
   return jsonResponse({ ok: true, highlight: row });
+}
+
+function saveHighlightImages(id, images) {
+  const list = Array.isArray(images) ? images : [images];
+  return list
+    .map((image, index) => saveHighlightImage(`${id}-${index + 1}`, image))
+    .filter(Boolean);
 }
 
 function saveHighlightImage(id, dataUrl) {
@@ -86,13 +104,16 @@ function readHighlights(year) {
 }
 
 function highlightValuesToRow(values) {
+  const imageUrls = normalizeImageUrls(values[5]);
+
   return {
     id: values[0],
     year: values[1],
     month: values[2],
     topic: values[3],
     detail: values[4],
-    imageUrl: values[5],
+    imageUrl: imageUrls[0] || "",
+    imageUrls,
     createdAt: values[6]
   };
 }
@@ -104,9 +125,34 @@ function highlightToSheetValues(row) {
     row.month || "",
     row.topic || "",
     row.detail || "",
-    row.imageUrl || "",
+    imageUrlsText(row.imageUrls || row.imageUrl),
     row.createdAt || new Date()
   ];
+}
+
+function findHighlightRowNumber(sheet, id) {
+  const values = sheet.getDataRange().getValues();
+
+  for (let index = 1; index < values.length; index += 1) {
+    if (String(values[index][0]) === String(id)) return index + 1;
+  }
+
+  return 0;
+}
+
+function normalizeImageUrls(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  return String(value || "")
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function imageUrlsText(value) {
+  return normalizeImageUrls(value).join("\n");
 }
 
 function jsonResponse(payload) {

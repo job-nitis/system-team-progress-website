@@ -16,9 +16,9 @@ const HEADERS = [
   "FAT/SAT",
   "Close MOC",
   "Overall Plan",
-  "Project Image URL",
-  "Update Plan",
-  "Update Actual",
+  "Project Image URLs",
+  "Plan",
+  "Actual",
   "Updated At"
 ];
 
@@ -49,8 +49,9 @@ function doPost(e) {
 
   const payload = JSON.parse(e.postData.contents);
   const year = String(payload.year || "");
-  const incomingRows = (payload.rows || []).map((row) => prepareIncomingRow(row, year));
-  const otherRows = readRows("").filter((row) => String(row.year) !== year);
+  const existingRows = readRows("");
+  const incomingRows = (payload.rows || []).map((row) => prepareIncomingRow(row, year, existingRows));
+  const otherRows = existingRows.filter((row) => String(row.year) !== year);
   const allRows = otherRows.concat(incomingRows);
   const sheet = getSheet();
 
@@ -61,18 +62,28 @@ function doPost(e) {
   return jsonResponse({ ok: true, rows: incomingRows.length });
 }
 
-function prepareIncomingRow(row, year) {
-  const imageUrl = row.projectImage
-    ? saveProjectImage(row.id || `project-${Date.now()}`, row.projectImage)
-    : row.projectImageUrl || "";
+function prepareIncomingRow(row, year, existingRows) {
+  const newImageUrls = saveProjectImages(row.id || `project-${Date.now()}`, row.projectImages || row.projectImage || []);
+  const existingRow = (existingRows || []).find((item) => String(item.id) === String(row.id));
+  const incomingImageUrls = normalizeImageUrls(row.projectImageUrls || row.projectImageUrl);
+  const existingImageUrls = normalizeImageUrls((existingRow && existingRow.projectImageUrls) || (existingRow && existingRow.projectImageUrl));
+  const imageUrls = (incomingImageUrls.length ? incomingImageUrls : existingImageUrls).concat(newImageUrls);
 
   return {
     ...row,
     year,
-    projectImageUrl: imageUrl,
+    projectImageUrl: imageUrls[0] || "",
+    projectImageUrls: imageUrls,
     updatePlan: normalizeMilestones(row.updatePlan),
     updateActual: normalizeMilestones(row.updateActual)
   };
+}
+
+function saveProjectImages(id, images) {
+  const list = Array.isArray(images) ? images : [images];
+  return list
+    .map((image, index) => saveProjectImage(`${id}-${index + 1}`, image))
+    .filter(Boolean);
 }
 
 function saveProjectImage(id, dataUrl) {
@@ -117,6 +128,7 @@ function sheetValuesToRow(values) {
     closeMoc: values[11],
     overallPlan: values[12],
     projectImageUrl: values[13],
+    projectImageUrls: normalizeImageUrls(values[13]),
     updatePlan: parseMilestoneText(values[14]),
     updateActual: parseMilestoneText(values[15])
   };
@@ -137,11 +149,26 @@ function rowToSheetValues(row) {
     row.fatSat || "",
     row.closeMoc || "",
     row.overallPlan || "",
-    row.projectImageUrl || "",
+    imageUrlsText(row.projectImageUrls || row.projectImageUrl),
     milestoneText(row.updatePlan),
     milestoneText(row.updateActual),
     new Date()
   ];
+}
+
+function normalizeImageUrls(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  return String(value || "")
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function imageUrlsText(value) {
+  return normalizeImageUrls(value).join("\n");
 }
 
 function normalizeMilestones(value) {
