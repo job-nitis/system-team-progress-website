@@ -48,6 +48,8 @@ function doPost(e) {
   }
 
   const payload = JSON.parse(e.postData.contents);
+  if (payload.action === "deleteImage") return deleteProjectImage(payload.id, payload.imageUrl);
+
   const year = String(payload.year || "");
   const existingRows = readRows("");
   const incomingRows = (payload.rows || []).map((row) => prepareIncomingRow(row, year, existingRows));
@@ -62,12 +64,32 @@ function doPost(e) {
   return jsonResponse({ ok: true, rows: incomingRows.length });
 }
 
+function deleteProjectImage(id, imageUrl) {
+  const sheet = getSheet();
+  const rowNumber = findProjectRowNumber(sheet, id);
+
+  if (!rowNumber) {
+    return jsonResponse({ ok: false, error: "Project not found", id });
+  }
+
+  const row = sheetValuesToRow(sheet.getRange(rowNumber, 1, 1, HEADERS.length).getValues()[0]);
+  const targetUrl = normalizeDriveImageUrl(imageUrl);
+  row.projectImageUrls = normalizeImageUrls(row.projectImageUrls || row.projectImageUrl)
+    .filter((url) => normalizeDriveImageUrl(url) !== targetUrl);
+  row.projectImageUrl = row.projectImageUrls[0] || "";
+  sheet.getRange(rowNumber, 1, 1, HEADERS.length).setValues([rowToSheetValues(row)]);
+  trashDriveFile(imageUrl);
+
+  return jsonResponse({ ok: true, id, imageUrls: row.projectImageUrls });
+}
+
 function prepareIncomingRow(row, year, existingRows) {
   const newImageUrls = saveProjectImages(row.id || `project-${Date.now()}`, row.projectImages || row.projectImage || []);
   const existingRow = (existingRows || []).find((item) => String(item.id) === String(row.id));
   const incomingImageUrls = normalizeImageUrls(row.projectImageUrls || row.projectImageUrl);
   const existingImageUrls = normalizeImageUrls((existingRow && existingRow.projectImageUrls) || (existingRow && existingRow.projectImageUrl));
-  const imageUrls = (incomingImageUrls.length ? incomingImageUrls : existingImageUrls).concat(newImageUrls);
+  const hasIncomingImageUrls = row.projectImageUrls !== undefined || row.projectImageUrl !== undefined;
+  const imageUrls = (hasIncomingImageUrls ? incomingImageUrls : existingImageUrls).concat(newImageUrls);
 
   return {
     ...row,
@@ -162,6 +184,38 @@ function rowToSheetValues(row) {
     milestoneText(row.updateActual),
     new Date()
   ];
+}
+
+function findProjectRowNumber(sheet, id) {
+  const values = sheet.getDataRange().getValues();
+
+  for (let index = 1; index < values.length; index += 1) {
+    if (String(values[index][1]) === String(id)) return index + 1;
+  }
+
+  return 0;
+}
+
+function normalizeDriveImageUrl(url) {
+  const id = driveFileId(url);
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1600` : String(url || "").trim();
+}
+
+function driveFileId(url) {
+  const text = String(url || "");
+  const match = text.match(/[?&]id=([^&]+)/) || text.match(/\/d\/([^/]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+function trashDriveFile(url) {
+  const id = driveFileId(url);
+  if (!id) return;
+
+  try {
+    DriveApp.getFileById(id).setTrashed(true);
+  } catch (error) {
+    // The sheet row is still updated when the file is already gone or inaccessible.
+  }
 }
 
 function normalizeImageUrls(value) {

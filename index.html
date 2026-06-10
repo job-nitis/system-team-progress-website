@@ -544,6 +544,50 @@
       resize: vertical;
     }
 
+    .existing-images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .existing-images:empty {
+      display: none;
+    }
+
+    .existing-image {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      background: #eef2f7;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .existing-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .remove-image-button {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 999px;
+      color: #ffffff;
+      background: rgba(185, 28, 28, 0.88);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
     .dialog-actions {
       display: flex;
       justify-content: flex-end;
@@ -1259,6 +1303,7 @@
         <div class="form-field">
           <label for="editProjectImage">Project Picture</label>
           <input id="editProjectImage" name="projectImage" type="file" accept="image/*" multiple>
+          <div class="existing-images" id="projectExistingImages" aria-label="Existing project pictures"></div>
         </div>
         <div class="form-field">
           <label for="editTechPrep">Tech. Preparation</label>
@@ -1351,6 +1396,7 @@
         <div class="form-field">
           <label for="highlightImageInput">Picture</label>
           <input id="highlightImageInput" name="image" type="file" accept="image/*" multiple>
+          <div class="existing-images" id="highlightExistingImages" aria-label="Existing highlight pictures"></div>
         </div>
         <div class="form-field full">
           <label for="highlightTopicInput">Topic</label>
@@ -1623,6 +1669,8 @@
     const tableStorageStatus = document.querySelector("#tableStorageStatus");
     const editUpdatePlan = document.querySelector("#editUpdatePlan");
     const editUpdateActual = document.querySelector("#editUpdateActual");
+    const projectExistingImages = document.querySelector("#projectExistingImages");
+    const highlightExistingImages = document.querySelector("#highlightExistingImages");
     const imageLightbox = document.querySelector("#imageLightbox");
     const lightboxImage = document.querySelector("#lightboxImage");
     const lightboxCounter = document.querySelector("#lightboxCounter");
@@ -1693,6 +1741,21 @@
         body: JSON.stringify({
           action: "delete",
           id: highlightId
+        })
+      });
+    }
+
+    function deleteHighlightImageFromGoogleSheet(highlightId, imageUrl) {
+      if (!HIGHLIGHT_APPS_SCRIPT_URL) return Promise.resolve();
+
+      return fetch(HIGHLIGHT_APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "deleteImage",
+          id: highlightId,
+          imageUrl
         })
       });
     }
@@ -1809,6 +1872,23 @@
       `;
     }
 
+    function editableImageThumbs(images, scope) {
+      return normalizeImageUrls(images).map((url) => `
+        <div class="existing-image">
+          <img src="${escapeHtml(url)}" alt="Existing picture">
+          <button class="remove-image-button" type="button" data-remove-image="${escapeHtml(scope)}" data-image-url="${escapeHtml(url)}" aria-label="Delete picture">X</button>
+        </div>
+      `).join("");
+    }
+
+    function renderProjectExistingImages(row) {
+      projectExistingImages.innerHTML = editableImageThumbs(row ? row.projectImageUrls || row.projectImageUrl : [], "project");
+    }
+
+    function renderHighlightExistingImages(highlight) {
+      highlightExistingImages.innerHTML = editableImageThumbs(highlight ? highlight.imageUrls || highlight.image : [], "highlight");
+    }
+
     function loadProgressRows() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (!saved) return normalizeProgressRows(structuredClone(defaultProgressRows));
@@ -1923,6 +2003,21 @@
       })
       .catch(() => {
         tableStorageStatus.textContent = "Saved locally, Google Sheets sync failed";
+      });
+    }
+
+    function deleteProjectImageFromGoogleSheet(rowId, imageUrl) {
+      if (!PROGRESS_APPS_SCRIPT_URL) return Promise.resolve();
+
+      return fetch(PROGRESS_APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "deleteImage",
+          id: rowId,
+          imageUrl
+        })
       });
     }
 
@@ -2115,6 +2210,7 @@
       highlightMode = "create";
       highlightForm.reset();
       highlightIdInput.value = "";
+      renderHighlightExistingImages(null);
       document.querySelector("#highlightDialogTitle").textContent = "Create Highlight";
       saveHighlightButton.textContent = "Create";
       const selectedMonth = highlightMonthSelect.value === "all" ? "01" : normalizeMonthValue(highlightMonthSelect.value);
@@ -2133,6 +2229,7 @@
       highlightMonthInput.value = normalizeMonthValue(highlight.month) || "01";
       document.querySelector("#highlightTopicInput").value = highlight.topic || "";
       document.querySelector("#highlightDetailInput").value = highlight.detail || "";
+      renderHighlightExistingImages(highlight);
       document.querySelector("#highlightDialogTitle").textContent = "Edit Highlight";
       saveHighlightButton.textContent = "Save";
       highlightDialog.classList.add("is-open");
@@ -2142,6 +2239,7 @@
     function closeHighlightDialog() {
       highlightDialog.classList.remove("is-open");
       highlightMode = "create";
+      renderHighlightExistingImages(null);
     }
 
     async function deleteHighlight(highlightId) {
@@ -2160,6 +2258,54 @@
         setTimeout(() => loadHighlightsFromGoogleSheet(state.activeYear), 1000);
       } catch (error) {
         tableStorageStatus.textContent = "Could not delete highlight from Google Sheets";
+      }
+    }
+
+    async function removeProjectExistingImage(imageUrl) {
+      const rowId = document.querySelector("#editRowId").value;
+      const row = rowsForActiveYear().find((item) => item.id === rowId);
+      if (!row) return;
+
+      const targetUrl = driveImageUrl(imageUrl);
+      row.projectImageUrls = persistedImageUrls(row.projectImageUrls || row.projectImageUrl)
+        .filter((url) => driveImageUrl(url) !== targetUrl);
+      row.projectImageUrl = row.projectImageUrls[0] || "";
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRowsForLocalStorage()));
+      renderProjectExistingImages(row);
+      renderDashboard();
+      tableStorageStatus.textContent = "Deleting project picture from Google Drive";
+
+      try {
+        await deleteProjectImageFromGoogleSheet(row.id, targetUrl);
+        tableStorageStatus.textContent = "Deleted project picture";
+        setTimeout(() => loadRowsFromGoogleSheet(state.activeYear), 1000);
+      } catch (error) {
+        tableStorageStatus.textContent = "Could not delete project picture from Google Drive";
+      }
+    }
+
+    async function removeHighlightExistingImage(imageUrl) {
+      const highlightId = highlightIdInput.value;
+      const highlight = highlights.find((item) => item.id === highlightId);
+      if (!highlight) return;
+
+      const targetUrl = driveImageUrl(imageUrl);
+      highlight.imageUrls = persistedImageUrls(highlight.imageUrls || highlight.image)
+        .filter((url) => driveImageUrl(url) !== targetUrl);
+      highlight.image = highlight.imageUrls[0] || "";
+
+      saveHighlights();
+      renderHighlightExistingImages(highlight);
+      renderHighlights();
+      tableStorageStatus.textContent = "Deleting highlight picture from Google Drive";
+
+      try {
+        await deleteHighlightImageFromGoogleSheet(highlight.id, targetUrl);
+        tableStorageStatus.textContent = "Deleted highlight picture";
+        setTimeout(() => loadHighlightsFromGoogleSheet(state.activeYear), 1000);
+      } catch (error) {
+        tableStorageStatus.textContent = "Could not delete highlight picture from Google Drive";
       }
     }
 
@@ -2320,6 +2466,7 @@
       document.querySelector("#editCloseMoc").value = row.closeMoc || "empty";
       document.querySelector("#editOverallPlan").value = row.overallPlan || "";
       clearProjectImageInput();
+      renderProjectExistingImages(row);
       editUpdatePlan.value = milestoneText(row.updatePlan);
       editUpdateActual.value = milestoneText(row.updateActual);
       editDialog.classList.add("is-open");
@@ -2341,6 +2488,7 @@
       document.querySelector("#editCloseMoc").value = "empty";
       document.querySelector("#editOverallPlan").value = "";
       clearProjectImageInput();
+      renderProjectExistingImages(null);
       editUpdatePlan.value = "";
       editUpdateActual.value = "";
       editDialog.classList.add("is-open");
@@ -2350,6 +2498,7 @@
     function closeEditDialog() {
       editDialog.classList.remove("is-open");
       editMode = "update";
+      renderProjectExistingImages(null);
     }
 
     function openDeleteDialog(rowId) {
@@ -2569,8 +2718,10 @@
       if (event.key === "ArrowRight") moveLightbox("next");
     });
 
-    highlightDialog.addEventListener("click", (event) => {
-      if (event.target === highlightDialog) closeHighlightDialog();
+    highlightForm.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-remove-image='highlight'][data-image-url]");
+      if (!button) return;
+      removeHighlightExistingImage(button.dataset.imageUrl);
     });
 
     highlightForm.addEventListener("submit", async (event) => {
@@ -2641,8 +2792,10 @@
 
     cancelEditButton.addEventListener("click", closeEditDialog);
 
-    editDialog.addEventListener("click", (event) => {
-      if (event.target === editDialog) closeEditDialog();
+    editForm.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-remove-image='project'][data-image-url]");
+      if (!button) return;
+      removeProjectExistingImage(button.dataset.imageUrl);
     });
 
     cancelDeleteButton.addEventListener("click", closeDeleteDialog);

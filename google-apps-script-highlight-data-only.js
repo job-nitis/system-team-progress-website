@@ -39,8 +39,28 @@ function doPost(e) {
 
   const payload = JSON.parse(e.postData.contents);
   if (payload.action === "delete") return deleteHighlight(payload.id);
+  if (payload.action === "deleteImage") return deleteHighlightImage(payload.id, payload.imageUrl);
 
   return saveHighlight(payload);
+}
+
+function deleteHighlightImage(id, imageUrl) {
+  const sheet = getHighlightSheet();
+  const rowNumber = findHighlightRowNumber(sheet, id);
+
+  if (!rowNumber) {
+    return jsonResponse({ ok: false, error: "Highlight not found", id });
+  }
+
+  const row = highlightValuesToRow(sheet.getRange(rowNumber, 1, 1, HIGHLIGHT_HEADERS.length).getValues()[0]);
+  const targetUrl = normalizeDriveImageUrl(imageUrl);
+  row.imageUrls = normalizeImageUrls(row.imageUrls || row.imageUrl)
+    .filter((url) => normalizeDriveImageUrl(url) !== targetUrl);
+  row.imageUrl = row.imageUrls[0] || "";
+  sheet.getRange(rowNumber, 1, 1, HIGHLIGHT_HEADERS.length).setValues([highlightToSheetValues(row)]);
+  trashDriveFile(imageUrl);
+
+  return jsonResponse({ ok: true, id, imageUrls: row.imageUrls });
 }
 
 function deleteHighlight(id) {
@@ -62,7 +82,8 @@ function saveHighlight(payload) {
   const existingRow = existingRowNumber ? highlightValuesToRow(sheet.getRange(existingRowNumber, 1, 1, HIGHLIGHT_HEADERS.length).getValues()[0]) : null;
   const payloadImageUrls = normalizeImageUrls(payload.imageUrls);
   const existingImageUrls = normalizeImageUrls((existingRow && existingRow.imageUrls) || (existingRow && existingRow.imageUrl));
-  const imageUrls = (payloadImageUrls.length ? payloadImageUrls : existingImageUrls)
+  const hasPayloadImageUrls = payload.imageUrls !== undefined || payload.imageUrl !== undefined;
+  const imageUrls = (hasPayloadImageUrls ? payloadImageUrls : existingImageUrls)
     .concat(saveHighlightImages(id, payload.images || payload.image || []));
   const row = {
     id,
@@ -160,6 +181,28 @@ function findHighlightRowNumber(sheet, id) {
   }
 
   return 0;
+}
+
+function normalizeDriveImageUrl(url) {
+  const id = driveFileId(url);
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1600` : String(url || "").trim();
+}
+
+function driveFileId(url) {
+  const text = String(url || "");
+  const match = text.match(/[?&]id=([^&]+)/) || text.match(/\/d\/([^/]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+}
+
+function trashDriveFile(url) {
+  const id = driveFileId(url);
+  if (!id) return;
+
+  try {
+    DriveApp.getFileById(id).setTrashed(true);
+  } catch (error) {
+    // The sheet row is still updated when the file is already gone or inaccessible.
+  }
 }
 
 function normalizeImageUrls(value) {
