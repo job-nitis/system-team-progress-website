@@ -732,6 +732,7 @@
     .image-gallery img {
       width: 100%;
       height: 100%;
+      cursor: zoom-in;
       object-fit: cover;
     }
 
@@ -769,6 +770,88 @@
       background: rgba(24, 33, 47, 0.72);
       border-radius: 999px;
       font-size: 11px;
+      font-weight: 800;
+    }
+
+    .lightbox-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      background: rgba(8, 15, 28, 0.86);
+    }
+
+    .lightbox-backdrop.is-open {
+      display: grid;
+    }
+
+    .lightbox-dialog {
+      position: relative;
+      width: min(96vw, 1180px);
+      height: min(88vh, 760px);
+      display: grid;
+      place-items: center;
+    }
+
+    .lightbox-dialog img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 8px;
+      object-fit: contain;
+      background: #0b1220;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    }
+
+    .lightbox-close,
+    .lightbox-nav {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      border: 0;
+      color: #ffffff;
+      background: rgba(24, 33, 47, 0.78);
+      cursor: pointer;
+    }
+
+    .lightbox-close {
+      top: 10px;
+      right: 10px;
+      min-width: 72px;
+      height: 36px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .lightbox-nav {
+      top: 50%;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      transform: translateY(-50%);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .lightbox-nav.prev {
+      left: 10px;
+    }
+
+    .lightbox-nav.next {
+      right: 10px;
+    }
+
+    .lightbox-counter {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      padding: 5px 9px;
+      color: #ffffff;
+      background: rgba(24, 33, 47, 0.78);
+      border-radius: 999px;
+      font-size: 12px;
       font-weight: 800;
     }
 
@@ -900,6 +983,7 @@
     .highlight-card-actions {
       display: flex;
       justify-content: flex-end;
+      gap: 8px;
       margin-top: 12px;
     }
 
@@ -1284,6 +1368,16 @@
     </form>
   </div>
 
+  <div class="lightbox-backdrop" id="imageLightbox" role="dialog" aria-modal="true" aria-label="Picture preview">
+    <div class="lightbox-dialog">
+      <button class="lightbox-close" type="button" id="lightboxClose">Close</button>
+      <button class="lightbox-nav prev" type="button" data-lightbox-action="prev" aria-label="Previous picture">&#8249;</button>
+      <img id="lightboxImage" alt="">
+      <button class="lightbox-nav next" type="button" data-lightbox-action="next" aria-label="Next picture">&#8250;</button>
+      <span class="lightbox-counter" id="lightboxCounter"></span>
+    </div>
+  </div>
+
   <script>
     const projectYears = [
       {
@@ -1529,6 +1623,10 @@
     const tableStorageStatus = document.querySelector("#tableStorageStatus");
     const editUpdatePlan = document.querySelector("#editUpdatePlan");
     const editUpdateActual = document.querySelector("#editUpdateActual");
+    const imageLightbox = document.querySelector("#imageLightbox");
+    const lightboxImage = document.querySelector("#lightboxImage");
+    const lightboxCounter = document.querySelector("#lightboxCounter");
+    const lightboxClose = document.querySelector("#lightboxClose");
 
     let progressRows = loadProgressRows();
     let highlights = loadHighlights();
@@ -1536,6 +1634,9 @@
     let editMode = "update";
     let highlightMode = "create";
     const galleryState = {};
+    const galleryImages = {};
+    let lightboxGalleryId = "";
+    let lightboxIndex = 0;
 
     function loadHighlights() {
       const saved = localStorage.getItem(HIGHLIGHT_STORAGE_KEY);
@@ -1582,6 +1683,20 @@
       });
     }
 
+    function deleteHighlightFromGoogleSheet(highlightId) {
+      if (!HIGHLIGHT_APPS_SCRIPT_URL) return Promise.resolve();
+
+      return fetch(HIGHLIGHT_APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "delete",
+          id: highlightId
+        })
+      });
+    }
+
     function loadHighlightsFromGoogleSheet(year = state.activeYear) {
       if (!HIGHLIGHT_APPS_SCRIPT_URL) return;
 
@@ -1594,7 +1709,7 @@
           highlights = (payload.rows || []).map((item) => ({
             id: item.id,
             year: item.year,
-            month: item.month,
+            month: normalizeMonthValue(item.month),
             topic: item.topic,
             detail: item.detail,
             image: item.imageUrl || item.image || "",
@@ -1619,8 +1734,21 @@
       document.body.appendChild(script);
     }
 
+    function normalizeMonthValue(value) {
+      const text = String(value || "").trim();
+      if (!text || text === "all") return text;
+
+      const number = Number(text);
+      if (Number.isFinite(number) && number >= 1 && number <= 12) {
+        return String(number).padStart(2, "0");
+      }
+
+      return text.padStart(2, "0");
+    }
+
     function monthLabel(monthValue) {
-      return (monthOptions.find(([value]) => value === monthValue) || ["", "Unknown"])[1];
+      const normalizedMonth = normalizeMonthValue(monthValue);
+      return (monthOptions.find(([value]) => value === normalizedMonth) || ["", ""])[1];
     }
 
     function clearProjectImageInput() {
@@ -1663,6 +1791,7 @@
       const normalized = normalizeImageUrls(images);
       const index = Math.min(galleryState[galleryId] || 0, Math.max(normalized.length - 1, 0));
       galleryState[galleryId] = index;
+      galleryImages[galleryId] = normalized;
 
       if (!normalized.length) {
         return `<div class="image-gallery ${extraClass}">${emptyText}</div>`;
@@ -1670,7 +1799,7 @@
 
       return `
         <div class="image-gallery ${extraClass}" data-gallery-id="${escapeHtml(galleryId)}">
-          <img src="${normalized[index]}" alt="${escapeHtml(altText)}">
+          <img src="${normalized[index]}" alt="${escapeHtml(altText)}" data-gallery-open="true">
           ${normalized.length > 1 ? `
             <button class="gallery-button prev" type="button" data-gallery-action="prev" data-gallery-id="${escapeHtml(galleryId)}" aria-label="Previous picture">&#8249;</button>
             <button class="gallery-button next" type="button" data-gallery-action="next" data-gallery-id="${escapeHtml(galleryId)}" aria-label="Next picture">&#8250;</button>
@@ -1958,8 +2087,8 @@
     }
 
     function renderHighlights() {
-      const selectedMonth = highlightMonthSelect.value || "all";
-      const visibleHighlights = highlights.filter((item) => selectedMonth === "all" || item.month === selectedMonth);
+      const selectedMonth = normalizeMonthValue(highlightMonthSelect.value || "all");
+      const visibleHighlights = highlights.filter((item) => selectedMonth === "all" || normalizeMonthValue(item.month) === selectedMonth);
 
       if (!visibleHighlights.length) {
         highlightGrid.innerHTML = `<div class="empty-state">No highlight activity for this month.</div>`;
@@ -1975,6 +2104,7 @@
             <p>${formatCellText(item.detail)}</p>
             <div class="highlight-card-actions">
               <button class="edit-button" type="button" data-highlight-action="edit" data-highlight-id="${escapeHtml(item.id)}">Edit</button>
+              <button class="delete-button" type="button" data-highlight-action="delete" data-highlight-id="${escapeHtml(item.id)}">Delete</button>
             </div>
           </div>
         </article>
@@ -1987,7 +2117,7 @@
       highlightIdInput.value = "";
       document.querySelector("#highlightDialogTitle").textContent = "Create Highlight";
       saveHighlightButton.textContent = "Create";
-      const selectedMonth = highlightMonthSelect.value === "all" ? "01" : highlightMonthSelect.value;
+      const selectedMonth = highlightMonthSelect.value === "all" ? "01" : normalizeMonthValue(highlightMonthSelect.value);
       highlightMonthInput.value = selectedMonth || "01";
       highlightDialog.classList.add("is-open");
       document.querySelector("#highlightTopicInput").focus();
@@ -2000,7 +2130,7 @@
       highlightMode = "edit";
       highlightForm.reset();
       highlightIdInput.value = highlight.id;
-      highlightMonthInput.value = highlight.month || "01";
+      highlightMonthInput.value = normalizeMonthValue(highlight.month) || "01";
       document.querySelector("#highlightTopicInput").value = highlight.topic || "";
       document.querySelector("#highlightDetailInput").value = highlight.detail || "";
       document.querySelector("#highlightDialogTitle").textContent = "Edit Highlight";
@@ -2012,6 +2142,25 @@
     function closeHighlightDialog() {
       highlightDialog.classList.remove("is-open");
       highlightMode = "create";
+    }
+
+    async function deleteHighlight(highlightId) {
+      const highlight = highlights.find((item) => item.id === highlightId);
+      if (!highlight) return;
+      if (!window.confirm(`Delete "${highlight.topic || "this highlight"}"?`)) return;
+
+      highlights = highlights.filter((item) => item.id !== highlightId);
+      saveHighlights();
+      renderHighlights();
+      tableStorageStatus.textContent = "Deleting highlight from Google Sheets";
+
+      try {
+        await deleteHighlightFromGoogleSheet(highlightId);
+        tableStorageStatus.textContent = "Deleted highlight";
+        setTimeout(() => loadHighlightsFromGoogleSheet(state.activeYear), 1000);
+      } catch (error) {
+        tableStorageStatus.textContent = "Could not delete highlight from Google Sheets";
+      }
     }
 
     function readImageAsDataUrl(file) {
@@ -2320,7 +2469,57 @@
     addHighlightButton.addEventListener("click", openHighlightDialog);
     cancelHighlightButton.addEventListener("click", closeHighlightDialog);
 
+    function openLightbox(galleryId, index = galleryState[galleryId] || 0) {
+      const images = galleryImages[galleryId] || [];
+      if (!images.length) return;
+
+      lightboxGalleryId = galleryId;
+      lightboxIndex = Math.min(index, images.length - 1);
+      imageLightbox.classList.add("is-open");
+      renderLightbox();
+    }
+
+    function renderLightbox() {
+      const images = galleryImages[lightboxGalleryId] || [];
+      if (!images.length) {
+        closeLightbox();
+        return;
+      }
+
+      lightboxIndex = (lightboxIndex + images.length) % images.length;
+      lightboxImage.src = images[lightboxIndex];
+      lightboxImage.alt = "Picture preview";
+      lightboxCounter.textContent = `${lightboxIndex + 1}/${images.length}`;
+      imageLightbox.querySelectorAll(".lightbox-nav").forEach((button) => {
+        button.hidden = images.length <= 1;
+      });
+    }
+
+    function moveLightbox(direction) {
+      const images = galleryImages[lightboxGalleryId] || [];
+      if (!images.length) return;
+      lightboxIndex = direction === "next" ? lightboxIndex + 1 : lightboxIndex - 1;
+      renderLightbox();
+    }
+
+    function closeLightbox() {
+      imageLightbox.classList.remove("is-open");
+      lightboxImage.removeAttribute("src");
+      lightboxGalleryId = "";
+      lightboxIndex = 0;
+    }
+
     function handleGalleryClick(event) {
+      const image = event.target.closest("[data-gallery-open]");
+      if (image) {
+        const gallery = image.closest(".image-gallery[data-gallery-id]");
+        if (!gallery) return false;
+        event.preventDefault();
+        event.stopPropagation();
+        openLightbox(gallery.dataset.galleryId, galleryState[gallery.dataset.galleryId] || 0);
+        return true;
+      }
+
       const button = event.target.closest("[data-gallery-action][data-gallery-id]");
       if (!button) return false;
 
@@ -2342,9 +2541,32 @@
     highlightGrid.addEventListener("click", (event) => {
       if (handleGalleryClick(event)) return;
 
+      const deleteButton = event.target.closest("[data-highlight-action='delete'][data-highlight-id]");
+      if (deleteButton) {
+        deleteHighlight(deleteButton.dataset.highlightId);
+        return;
+      }
+
       const editButton = event.target.closest("[data-highlight-action='edit'][data-highlight-id]");
       if (!editButton) return;
       openEditHighlightDialog(editButton.dataset.highlightId);
+    });
+
+    imageLightbox.addEventListener("click", (event) => {
+      if (event.target === imageLightbox) closeLightbox();
+
+      const button = event.target.closest("[data-lightbox-action]");
+      if (!button) return;
+      moveLightbox(button.dataset.lightboxAction);
+    });
+
+    lightboxClose.addEventListener("click", closeLightbox);
+
+    window.addEventListener("keydown", (event) => {
+      if (!imageLightbox.classList.contains("is-open")) return;
+      if (event.key === "Escape") closeLightbox();
+      if (event.key === "ArrowLeft") moveLightbox("prev");
+      if (event.key === "ArrowRight") moveLightbox("next");
     });
 
     highlightDialog.addEventListener("click", (event) => {
@@ -2375,7 +2597,7 @@
         Object.assign(highlight, {
           id: highlightId,
           year: state.activeYear,
-          month: highlightMonthInput.value,
+          month: normalizeMonthValue(highlightMonthInput.value),
           topic: document.querySelector("#highlightTopicInput").value.trim(),
           detail: document.querySelector("#highlightDetailInput").value.trim(),
           imageUrls: persistedImageUrls(highlight.imageUrls || highlight.image),
@@ -2390,7 +2612,7 @@
         highlight.uploadImages = [];
         saveHighlights();
         tableStorageStatus.textContent = "Saved highlight, loading Drive pictures";
-        highlightMonthSelect.value = highlightMonthInput.value;
+        highlightMonthSelect.value = normalizeMonthValue(highlightMonthInput.value);
         renderHighlights();
         setTimeout(() => loadHighlightsFromGoogleSheet(state.activeYear), 1500);
         closeHighlightDialog();

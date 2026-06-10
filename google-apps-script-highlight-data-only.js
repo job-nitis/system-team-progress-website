@@ -38,7 +38,21 @@ function doPost(e) {
   }
 
   const payload = JSON.parse(e.postData.contents);
+  if (payload.action === "delete") return deleteHighlight(payload.id);
+
   return saveHighlight(payload);
+}
+
+function deleteHighlight(id) {
+  const sheet = getHighlightSheet();
+  const rowNumber = findHighlightRowNumber(sheet, id);
+
+  if (!rowNumber) {
+    return jsonResponse({ ok: false, error: "Highlight not found", id });
+  }
+
+  sheet.deleteRow(rowNumber);
+  return jsonResponse({ ok: true, deleted: id });
 }
 
 function saveHighlight(payload) {
