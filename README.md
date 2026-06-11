@@ -7,8 +7,10 @@ Static website for showing yearly System Team project progress.
 - `index.html` - the full website in one file
 - `google-apps-script-progress-only.js` - Apps Script for the `ProgressRows` sheet tab
 - `google-apps-script-highlight-data-only.js` - Apps Script for the `Highlight information` sheet tab and Drive picture upload
+- `google-apps-script-license-time-only.js` - Apps Script for the `License detail` sheet tab
 - Year tabs for switching between project years
 - Editable progress summary table
+- Editable license table with remaining-time color status
 - `Add Project`, `Edit`, and `Delete` actions for table rows
 - Highlight cards with month filter, image upload, topic, and detail
 - Highlight data saved to Google Sheets and pictures saved to Google Drive when Apps Script is deployed
@@ -56,6 +58,14 @@ ID | Year | Month | Topic | Detail | Image URL | Created At
 ```
 
 Highlight pictures are uploaded to the configured Google Drive folder in `google-apps-script-highlight-data-only.js`.
+
+License data uses a spreadsheet named `License Time` with a sheet tab named `License detail` and these columns:
+
+```text
+ID | License Name | Expired Date | Remaining Time | Updated At
+```
+
+The website and Apps Script calculate Remaining Time automatically from Expired Date.
 
 For team/shared storage, use Google Sheets:
 

@@ -6,17 +6,18 @@
   <title>SYSTEM TEAM WEBSITE</title>
   <style>
     :root {
-      --ink: #18212f;
-      --muted: #667085;
-      --line: #d9e0ea;
-      --paper: #f6f8fb;
+      --ink: #111827;
+      --muted: #64748b;
+      --line: #d7dee9;
+      --paper: #eef3f8;
       --panel: #ffffff;
-      --teal: #087f8c;
-      --blue: #2856b6;
-      --green: #238456;
-      --amber: #b7791f;
-      --red: #bd3d37;
-      --shadow: 0 18px 42px rgba(24, 33, 47, 0.11);
+      --teal: #0f8b8d;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --amber: #d99a12;
+      --red: #dc2626;
+      --navy: #0f1f33;
+      --shadow: 0 22px 55px rgba(15, 31, 51, 0.12);
     }
 
     * {
@@ -25,9 +26,11 @@
 
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
       color: var(--ink);
-      background: var(--paper);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(15, 139, 141, 0.12), transparent 26%),
+        linear-gradient(180deg, #f8fbff 0%, var(--paper) 42%, #f7fafc 100%);
       line-height: 1.5;
     }
 
@@ -50,9 +53,10 @@
       justify-content: space-between;
       gap: 18px;
       padding: 14px clamp(18px, 3vw, 42px);
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.86);
       border-bottom: 1px solid var(--line);
-      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 28px rgba(15, 31, 51, 0.06);
+      backdrop-filter: blur(16px);
     }
 
     .brand {
@@ -68,8 +72,8 @@
       display: grid;
       place-items: center;
       color: #ffffff;
-      background: var(--ink);
-      border-radius: 8px;
+      background: linear-gradient(135deg, var(--navy), var(--teal));
+      border-radius: 10px;
       font-weight: 800;
       letter-spacing: 0;
     }
@@ -92,8 +96,9 @@
       gap: 10px;
       padding: 8px 10px;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 10px;
       background: #ffffff;
+      box-shadow: 0 8px 20px rgba(15, 31, 51, 0.05);
     }
 
     .year-picker label {
@@ -108,7 +113,7 @@
       border-radius: 6px;
       padding: 8px 34px 8px 10px;
       color: var(--ink);
-      background: #eef2f7;
+      background: #f1f5f9;
       cursor: pointer;
       font: inherit;
       font-weight: 700;
@@ -129,8 +134,11 @@
       min-height: 360px;
       padding: clamp(24px, 4vw, 44px);
       color: #ffffff;
-      background: #132033;
-      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(15, 31, 51, 0.98), rgba(20, 83, 100, 0.94)),
+        #132033;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 14px;
       box-shadow: var(--shadow);
     }
 
@@ -180,7 +188,8 @@
       padding: 18px;
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.18);
-      border-radius: 8px;
+      border-radius: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 
     .current-label {
@@ -223,7 +232,8 @@
       padding: 18px;
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(15, 31, 51, 0.06);
     }
 
     .stat strong {
@@ -242,10 +252,10 @@
     .summary-section {
       margin: 22px 0;
       padding: 18px;
-      background: var(--panel);
+      background: rgba(255, 255, 255, 0.94);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 10px 24px rgba(24, 33, 47, 0.06);
+      border-radius: 12px;
+      box-shadow: 0 14px 36px rgba(15, 31, 51, 0.08);
     }
 
     .summary-toolbar {
@@ -275,24 +285,26 @@
 
     .action-button {
       border: 0;
-      border-radius: 6px;
-      padding: 9px 12px;
+      border-radius: 8px;
+      padding: 10px 13px;
       color: #ffffff;
-      background: var(--teal);
+      background: linear-gradient(135deg, var(--teal), #0e7490);
       cursor: pointer;
       font-size: 13px;
       font-weight: 700;
+      box-shadow: 0 8px 18px rgba(15, 139, 141, 0.22);
     }
 
     .action-button.secondary {
       color: var(--ink);
       background: #eef2f7;
+      box-shadow: none;
     }
 
     .table-scroll {
       overflow-x: auto;
-      border: 1px solid var(--ink);
-      border-radius: 6px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
       background: #ffffff;
     }
 
@@ -306,14 +318,15 @@
 
     .progress-table th,
     .progress-table td {
-      border: 2px solid #161a21;
+      border: 1px solid #1f2937;
       padding: 8px;
       text-align: center;
       vertical-align: middle;
     }
 
     .progress-table th {
-      background: #ffffff;
+      color: #0f172a;
+      background: #f8fafc;
       font-weight: 700;
     }
 
@@ -345,6 +358,38 @@
 
     .progress-table .col-action {
       width: 118px;
+    }
+
+    .license-table {
+      min-width: 760px;
+    }
+
+    .license-table .col-license-name {
+      width: 340px;
+      text-align: left;
+    }
+
+    .license-table .col-expired-date,
+    .license-table .col-remaining {
+      width: 170px;
+    }
+
+    .license-remaining {
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    .license-remaining.red {
+      background: #dc2626;
+    }
+
+    .license-remaining.yellow {
+      color: #1f2937;
+      background: #facc15;
+    }
+
+    .license-remaining.green {
+      background: #16a34a;
     }
 
     .vertical-header {
@@ -1205,6 +1250,32 @@
         </aside>
       </section>
 
+      <section class="summary-section" aria-labelledby="licenseTableTitle">
+        <div class="summary-toolbar">
+          <div>
+            <h3 id="licenseTableTitle">License Time</h3>
+            <p id="licenseStorageStatus">Saved in this browser</p>
+          </div>
+          <div class="table-actions">
+            <button class="action-button" type="button" id="addLicenseButton">Add License</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table class="progress-table license-table">
+            <thead>
+              <tr>
+                <th class="col-no">No</th>
+                <th class="col-license-name">License Name</th>
+                <th class="col-expired-date">Expired Date</th>
+                <th class="col-remaining">Remaining Time</th>
+                <th class="col-action">Action</th>
+              </tr>
+            </thead>
+            <tbody id="licenseTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="summary-section" aria-labelledby="summaryTableTitle">
         <div class="summary-toolbar">
           <div>
@@ -1285,6 +1356,27 @@
 
       <p class="footer-note">System Team Annual Progress View</p>
     </main>
+  </div>
+
+  <div class="dialog-backdrop" id="licenseDialog" role="dialog" aria-modal="true" aria-labelledby="licenseDialogTitle">
+    <form class="edit-dialog" id="licenseForm">
+      <h3 id="licenseDialogTitle">Add License</h3>
+      <input type="hidden" id="licenseIdInput">
+      <div class="form-grid">
+        <div class="form-field full">
+          <label for="licenseNameInput">License Name</label>
+          <input id="licenseNameInput" name="licenseName" required>
+        </div>
+        <div class="form-field">
+          <label for="licenseExpiredInput">Expired Date</label>
+          <input id="licenseExpiredInput" name="expiredDate" type="date" required>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="action-button secondary" type="button" id="cancelLicenseButton">Cancel</button>
+        <button class="action-button" type="submit" id="saveLicenseButton">Save</button>
+      </div>
+    </form>
   </div>
 
   <div class="dialog-backdrop" id="editDialog" role="dialog" aria-modal="true" aria-labelledby="editDialogTitle">
@@ -1614,8 +1706,10 @@
 
     const STORAGE_KEY = "system-team-progress-table-v1";
     const HIGHLIGHT_STORAGE_KEY = "system-team-highlights-v1";
+    const LICENSE_STORAGE_KEY = "system-team-license-time-v1";
     const PROGRESS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyP9IOgobN2e3fGiMP6hTmAyYkSuBfheTgx0eiIuIlk5wqKzNUsv4x9EpwrlT6owxgVrw/exec";
     const HIGHLIGHT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3R3iJCwLumpaz7d6VyS4E54aCbde9y1uP-PGyMrmg3KGBimVq5Y7AZw_aJyCzyulI/exec";
+    const LICENSE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw25juQC6L_-L-crFs0Eed3HrQZ-pKnhyea6JFLI6NECygUZX5GYa8f6oiX0r_LQft75Q/exec";
 
     const monthOptions = [
       ["all", "All"],
@@ -1646,6 +1740,17 @@
     };
 
     const yearSelect = document.querySelector("#yearSelect");
+    const licenseTableBody = document.querySelector("#licenseTableBody");
+    const licenseStorageStatus = document.querySelector("#licenseStorageStatus");
+    const addLicenseButton = document.querySelector("#addLicenseButton");
+    const licenseDialog = document.querySelector("#licenseDialog");
+    const licenseForm = document.querySelector("#licenseForm");
+    const licenseDialogTitle = document.querySelector("#licenseDialogTitle");
+    const licenseIdInput = document.querySelector("#licenseIdInput");
+    const licenseNameInput = document.querySelector("#licenseNameInput");
+    const licenseExpiredInput = document.querySelector("#licenseExpiredInput");
+    const cancelLicenseButton = document.querySelector("#cancelLicenseButton");
+    const saveLicenseButton = document.querySelector("#saveLicenseButton");
     const projectGrid = document.querySelector("#projectGrid");
     const progressTableBody = document.querySelector("#progressTableBody");
     const editDialog = document.querySelector("#editDialog");
@@ -1677,6 +1782,7 @@
     const lightboxClose = document.querySelector("#lightboxClose");
 
     let progressRows = loadProgressRows();
+    let licenseRows = loadLicenseRows();
     let highlights = loadHighlights();
     let pendingDeleteRowId = "";
     let editMode = "update";
@@ -1685,6 +1791,82 @@
     const galleryImages = {};
     let lightboxGalleryId = "";
     let lightboxIndex = 0;
+
+    function loadLicenseRows() {
+      const saved = localStorage.getItem(LICENSE_STORAGE_KEY);
+      if (!saved) return [];
+
+      try {
+        return JSON.parse(saved).map(normalizeLicenseRow);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function normalizeLicenseRow(row) {
+      return {
+        id: String(row?.id || `license-${Date.now()}`),
+        name: String(row?.name || row?.licenseName || "").trim(),
+        expiredDate: formatDateForInput(row?.expiredDate || row?.expiryDate || ""),
+        updatedAt: row?.updatedAt || ""
+      };
+    }
+
+    function saveLicenseRows() {
+      localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(licenseRows.map(normalizeLicenseRow)));
+      licenseStorageStatus.textContent = LICENSE_APPS_SCRIPT_URL ? "Saved locally, sending licenses to Google Sheets" : "Saved in this browser";
+
+      if (!LICENSE_APPS_SCRIPT_URL) return;
+
+      fetch(LICENSE_APPS_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          rows: licenseRows.map(normalizeLicenseRow)
+        })
+      })
+      .then(() => {
+        licenseStorageStatus.textContent = "Saved to Google Sheets";
+        setTimeout(loadLicenseRowsFromGoogleSheet, 1000);
+      })
+      .catch(() => {
+        licenseStorageStatus.textContent = "Saved locally, license sync failed";
+      });
+    }
+
+    function loadLicenseRowsFromGoogleSheet() {
+      if (!LICENSE_APPS_SCRIPT_URL) return;
+
+      const callbackName = `systemTeamLicenseCallback_${Date.now()}`;
+      const script = document.createElement("script");
+      const separator = LICENSE_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+
+      licenseStorageStatus.textContent = "Loading licenses from Google Sheets";
+
+      window[callbackName] = (payload) => {
+        if (payload && payload.ok) {
+          licenseRows = (payload.rows || []).map(normalizeLicenseRow);
+          localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(licenseRows));
+          licenseStorageStatus.textContent = "Loaded licenses from Google Sheets";
+          renderLicenseTable();
+        } else {
+          licenseStorageStatus.textContent = "Could not load licenses from Google Sheets";
+        }
+
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.onerror = () => {
+        licenseStorageStatus.textContent = "Could not load licenses from Google Sheets";
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.src = `${LICENSE_APPS_SCRIPT_URL}${separator}callback=${encodeURIComponent(callbackName)}`;
+      document.body.appendChild(script);
+    }
 
     function loadHighlights() {
       const saved = localStorage.getItem(HIGHLIGHT_STORAGE_KEY);
@@ -2101,6 +2283,61 @@
       return escapeHtml(value).replaceAll("\n", "<br>");
     }
 
+    function formatDateForInput(value) {
+      if (!value) return "";
+      const text = String(value).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+
+      const date = new Date(text);
+      if (Number.isNaN(date.getTime())) return "";
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function displayDate(value) {
+      const inputDate = formatDateForInput(value);
+      if (!inputDate) return "";
+      const [year, month, day] = inputDate.split("-");
+      return `${day}/${month}/${year}`;
+    }
+
+    function daysUntil(dateValue) {
+      const inputDate = formatDateForInput(dateValue);
+      if (!inputDate) return null;
+
+      const [year, month, day] = inputDate.split("-").map(Number);
+      const todayParts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Bangkok",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(new Date());
+      const todayPart = (type) => Number(todayParts.find((part) => part.type === type)?.value || 0);
+      const todayYear = todayPart("year");
+      const todayMonth = todayPart("month");
+      const todayDay = todayPart("day");
+      const today = Date.UTC(todayYear, todayMonth - 1, todayDay);
+      const expired = Date.UTC(year, month - 1, day);
+
+      return Math.ceil((expired - today) / 86400000);
+    }
+
+    function remainingTimeLabel(days) {
+      if (days === null) return "";
+      if (days < 0) return `Expired ${Math.abs(days)} days`;
+      if (days === 0) return "Expires today";
+      return `${days} days`;
+    }
+
+    function remainingTimeClass(days) {
+      if (days === null || days < 30) return "red";
+      if (days < 60) return "yellow";
+      return "green";
+    }
+
     function progressCellClass(value) {
       if (value === "done") return "cell-done";
       if (value === "progress") return "cell-progress";
@@ -2412,6 +2649,64 @@
       return progressRows[state.activeYear];
     }
 
+    function renderLicenseTable() {
+      if (!licenseRows.length) {
+        licenseTableBody.innerHTML = `
+          <tr>
+            <td colspan="5">No license data</td>
+          </tr>
+        `;
+        return;
+      }
+
+      licenseTableBody.innerHTML = licenseRows.map((license, index) => {
+        const days = daysUntil(license.expiredDate);
+        return `
+          <tr>
+            <td>${index + 1}</td>
+            <td class="col-license-name">
+              <span class="project-name">${formatCellText(license.name)}</span>
+            </td>
+            <td>${formatCellText(displayDate(license.expiredDate))}</td>
+            <td class="license-remaining ${remainingTimeClass(days)}">${formatCellText(remainingTimeLabel(days))}</td>
+            <td>
+              <div class="row-actions">
+                <button class="edit-button" type="button" data-license-action="edit" data-license-id="${escapeHtml(license.id)}">Edit</button>
+                <button class="delete-button" type="button" data-license-action="delete" data-license-id="${escapeHtml(license.id)}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function openLicenseDialog(licenseId = "") {
+      const license = licenseRows.find((item) => item.id === licenseId);
+      licenseForm.reset();
+      licenseIdInput.value = license?.id || "";
+      licenseNameInput.value = license?.name || "";
+      licenseExpiredInput.value = license?.expiredDate || "";
+      licenseDialogTitle.textContent = license ? "Edit License" : "Add License";
+      saveLicenseButton.textContent = "Save";
+      licenseDialog.classList.add("is-open");
+      licenseNameInput.focus();
+    }
+
+    function closeLicenseDialog() {
+      licenseDialog.classList.remove("is-open");
+      licenseForm.reset();
+    }
+
+    function deleteLicense(licenseId) {
+      const license = licenseRows.find((item) => item.id === licenseId);
+      if (!license) return;
+      if (!window.confirm(`Delete "${license.name || "this license"}"?`)) return;
+
+      licenseRows = licenseRows.filter((item) => item.id !== licenseId);
+      saveLicenseRows();
+      renderLicenseTable();
+    }
+
     function renderProgressTable() {
       const rows = rowsForActiveYear();
 
@@ -2603,6 +2898,7 @@
       `).join("");
 
       renderYearOptions();
+      renderLicenseTable();
       renderProgressTable();
       renderHighlights();
     }
@@ -2612,6 +2908,46 @@
       renderDashboard();
       loadRowsFromGoogleSheet(state.activeYear);
       loadHighlightsFromGoogleSheet(state.activeYear);
+    });
+
+    addLicenseButton.addEventListener("click", () => openLicenseDialog());
+    cancelLicenseButton.addEventListener("click", closeLicenseDialog);
+
+    licenseTableBody.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-license-action][data-license-id]");
+      if (!button) return;
+
+      if (button.dataset.licenseAction === "edit") openLicenseDialog(button.dataset.licenseId);
+      if (button.dataset.licenseAction === "delete") deleteLicense(button.dataset.licenseId);
+    });
+
+    licenseForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const licenseId = licenseIdInput.value || `license-${Date.now()}`;
+      const existing = licenseRows.find((item) => item.id === licenseId);
+      const nextLicense = normalizeLicenseRow({
+        id: licenseId,
+        name: licenseNameInput.value,
+        expiredDate: licenseExpiredInput.value,
+        updatedAt: new Date().toISOString()
+      });
+
+      if (existing) {
+        Object.assign(existing, nextLicense);
+      } else {
+        licenseRows.push(nextLicense);
+      }
+
+      licenseRows = licenseRows.map(normalizeLicenseRow).sort((a, b) => {
+        const aDays = daysUntil(a.expiredDate);
+        const bDays = daysUntil(b.expiredDate);
+        return (aDays ?? 999999) - (bDays ?? 999999);
+      });
+
+      saveLicenseRows();
+      renderLicenseTable();
+      closeLicenseDialog();
     });
 
     highlightMonthSelect.addEventListener("change", renderHighlights);
@@ -2931,8 +3267,10 @@
     resizeCanvas();
     renderHighlightMonthOptions();
     renderDashboard();
+    loadLicenseRowsFromGoogleSheet();
     loadRowsFromGoogleSheet(state.activeYear);
     loadHighlightsFromGoogleSheet(state.activeYear);
+    setInterval(loadLicenseRowsFromGoogleSheet, 60000);
     setInterval(() => loadRowsFromGoogleSheet(state.activeYear), 60000);
     setInterval(() => loadHighlightsFromGoogleSheet(state.activeYear), 60000);
     animationFrame = requestAnimationFrame(drawSystemMap);
