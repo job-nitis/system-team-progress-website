@@ -1851,7 +1851,9 @@
           licenseStorageStatus.textContent = "Loaded licenses from Google Sheets";
           renderLicenseTable();
         } else {
-          licenseStorageStatus.textContent = "Could not load licenses from Google Sheets";
+          licenseStorageStatus.textContent = payload && payload.error
+            ? `License load error: ${payload.error}`
+            : "Could not load licenses from Google Sheets";
         }
 
         delete window[callbackName];

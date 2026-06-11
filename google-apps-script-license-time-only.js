@@ -1,5 +1,8 @@
 // Use this script only for License Time.
 // It reads and writes the "License detail" sheet tab in the License Time spreadsheet.
+// If this Apps Script is not created from Extensions > Apps Script inside the spreadsheet,
+// paste the spreadsheet ID between the quotes below.
+const LICENSE_SPREADSHEET_ID = "";
 const LICENSE_SHEET_NAME = "License detail";
 const LICENSE_HEADERS = [
   "ID",
@@ -11,38 +14,45 @@ const LICENSE_HEADERS = [
 const LICENSE_TIME_ZONE = "Asia/Bangkok";
 
 function doGet(e) {
-  const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
-  const rows = readLicenseRows();
-  const payload = JSON.stringify({
-    ok: true,
-    message: "License Time API is running",
-    rows
-  });
-
-  if (callback) {
-    return ContentService
-      .createTextOutput(`${callback}(${payload});`)
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  try {
+    const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
+    const rows = readLicenseRows();
+    return callbackResponse(callback, {
+      ok: true,
+      message: "License Time API is running",
+      rows
+    });
+  } catch (error) {
+    const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
+    return callbackResponse(callback, {
+      ok: false,
+      error: String(error && error.message ? error.message : error)
+    });
   }
-
-  return jsonResponse(JSON.parse(payload));
 }
 
 function doPost(e) {
-  if (!e || !e.postData || !e.postData.contents) {
-    return jsonResponse({ ok: false, error: "No POST data received" });
+  try {
+    if (!e || !e.postData || !e.postData.contents) {
+      return jsonResponse({ ok: false, error: "No POST data received" });
+    }
+
+    const payload = JSON.parse(e.postData.contents);
+    const rows = Array.isArray(payload.rows) ? payload.rows.map(normalizeLicenseRow) : [];
+    const sheet = getLicenseSheet();
+
+    sheet.clearContents();
+    sheet.appendRow(LICENSE_HEADERS);
+    rows.forEach((row) => sheet.appendRow(licenseToSheetValues(row)));
+    formatLicenseSheet(sheet);
+
+    return jsonResponse({ ok: true, rows: rows.length });
+  } catch (error) {
+    return jsonResponse({
+      ok: false,
+      error: String(error && error.message ? error.message : error)
+    });
   }
-
-  const payload = JSON.parse(e.postData.contents);
-  const rows = Array.isArray(payload.rows) ? payload.rows.map(normalizeLicenseRow) : [];
-  const sheet = getLicenseSheet();
-
-  sheet.clearContents();
-  sheet.appendRow(LICENSE_HEADERS);
-  rows.forEach((row) => sheet.appendRow(licenseToSheetValues(row)));
-  formatLicenseSheet(sheet);
-
-  return jsonResponse({ ok: true, rows: rows.length });
 }
 
 function readLicenseRows() {
@@ -170,12 +180,31 @@ function jsonResponse(payload) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+function callbackResponse(callback, payload) {
+  const text = JSON.stringify(payload);
+
+  if (callback) {
+    return ContentService
+      .createTextOutput(`${callback}(${text});`)
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+
+  return jsonResponse(payload);
+}
+
 function getLicenseSheet() {
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const spreadsheet = LICENSE_SPREADSHEET_ID
+    ? SpreadsheetApp.openById(LICENSE_SPREADSHEET_ID)
+    : SpreadsheetApp.getActiveSpreadsheet();
+
+  if (!spreadsheet) {
+    throw new Error("No active spreadsheet. Create this script from Extensions > Apps Script in the License Time spreadsheet, or set LICENSE_SPREADSHEET_ID.");
+  }
+
   const sheet = spreadsheet.getSheetByName(LICENSE_SHEET_NAME) || spreadsheet.insertSheet(LICENSE_SHEET_NAME);
 
-  if (sheet.getLastRow() === 0) {
-    sheet.appendRow(LICENSE_HEADERS);
+  if (sheet.getLastRow() === 0 || sheet.getRange(1, 1).getValue() === "") {
+    sheet.getRange(1, 1, 1, LICENSE_HEADERS.length).setValues([LICENSE_HEADERS]);
   }
 
   return sheet;
