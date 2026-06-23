@@ -2726,7 +2726,7 @@
       return months.length ? Math.max(...months) : 0;
     }
 
-    function milestoneStatus(planMonth, actualMonth) {
+    function milestoneStatus(planMonth, actualMonth, isCurrentStep = false) {
       if (actualMonth) {
         const delay = monthIndex(actualMonth) - monthIndex(planMonth || actualMonth);
         if (delay <= 0) {
@@ -2750,6 +2750,15 @@
           label: "Delayed",
           progress: 100,
           remark: "Completed more than 1 month late."
+        };
+      }
+
+      if (isCurrentStep) {
+        return {
+          color: "blue",
+          label: "On going",
+          progress: 0,
+          remark: "On going."
         };
       }
 
@@ -2788,13 +2797,20 @@
         ...plans.map((item) => item.task),
         ...actuals.map((item) => item.task)
       ]));
+      let foundCurrentStep = false;
 
-      return names.map((name) => {
+      return names.map((name, index) => {
         const plan = plans.find((item) => item.task === name) || null;
         const actual = actualMap.get(name.toLowerCase()) || null;
         const planMonth = milestoneCompletionMonth(plan);
         const actualMonth = milestoneCompletionMonth(actual);
-        const status = milestoneStatus(planMonth, actualMonth);
+        const previousStepsComplete = names
+          .slice(0, index)
+          .every((previousName) => milestoneCompletionMonth(actualMap.get(previousName.toLowerCase())) > 0);
+        const isCurrentStep = !actualMonth && !foundCurrentStep && (index === 0 || previousStepsComplete);
+        const status = milestoneStatus(planMonth, actualMonth, isCurrentStep);
+
+        if (isCurrentStep) foundCurrentStep = true;
 
         return {
           name,
