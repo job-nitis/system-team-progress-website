@@ -2753,16 +2753,16 @@
         };
       }
 
-      if (isCurrentStep) {
-        return {
-          color: "blue",
-          label: "On going",
-          progress: 0,
-          remark: "On going."
-        };
-      }
-
       if (!planMonth || currentBangkokMonthIndex() <= monthIndex(planMonth)) {
+        if (isCurrentStep) {
+          return {
+            color: "blue",
+            label: "On going",
+            progress: 0,
+            remark: "On going."
+          };
+        }
+
         return {
           color: "blue",
           label: "Not started",
