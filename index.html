@@ -946,75 +946,119 @@
 
     .project-plan-block {
       display: grid;
-      gap: 8px;
+      gap: 10px;
+      padding: 12px;
+      background: #0a0f18;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      color: #ffffff;
     }
 
-    .project-plan-title {
+    .milestone-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .milestone-head h5 {
       margin: 0;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
+      color: #ffffff;
+      font-size: 14px;
     }
 
-    .project-month-table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
+    .milestone-summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(64px, 1fr));
+      gap: 6px;
+      min-width: min(340px, 100%);
+    }
+
+    .milestone-summary span {
+      display: grid;
+      gap: 2px;
+      padding: 7px;
+      color: #cbd5e1;
+      background: #111827;
+      border: 1px solid #273244;
+      border-radius: 6px;
       font-size: 10px;
     }
 
-    .project-month-table .milestone-action-col {
-      width: 42%;
-    }
-
-    .project-month-table th,
-    .project-month-table td {
-      height: 26px;
-      border: 1px solid var(--ink);
-      padding: 3px;
-      text-align: center;
-      vertical-align: middle;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .project-month-table th {
-      background: #072b63;
+    .milestone-summary strong {
       color: #ffffff;
-      font-weight: 800;
+      font-size: 16px;
+      line-height: 1;
     }
 
-    .project-month-table .milestone-title {
-      background: #072b63;
-      color: #ffffff;
+    .milestone-status-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
       font-size: 12px;
     }
 
-    .project-month-table .milestone-task {
-      background: #ffffff;
-      color: var(--ink);
-      font-size: 11px;
-      font-weight: 400;
-      text-align: left;
-      overflow: visible;
-      overflow-wrap: anywhere;
-      text-overflow: clip;
-      white-space: normal;
+    .milestone-status-table th,
+    .milestone-status-table td {
+      border-bottom: 1px solid #1f2937;
+      padding: 9px 8px;
+      vertical-align: middle;
     }
 
-    .project-month-table .milestone-task-header {
-      overflow: visible;
-      overflow-wrap: anywhere;
-      text-overflow: clip;
-      white-space: normal;
-    }
-
-    .project-month-table .milestone-fill {
-      background: #0b7bbb;
+    .milestone-status-table th {
       color: #ffffff;
+      text-align: left;
       font-weight: 800;
+    }
+
+    .milestone-status-table td {
+      color: #f8fafc;
+    }
+
+    .milestone-status-table .milestone-date,
+    .milestone-status-table .milestone-progress,
+    .milestone-status-table .milestone-status-cell {
+      text-align: center;
+      white-space: normal;
+    }
+
+    .traffic-icon {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 0 12px currentColor;
+      vertical-align: middle;
+    }
+
+    .traffic-icon.green {
+      color: #4ade80;
+      background: #4ade80;
+    }
+
+    .traffic-icon.yellow {
+      color: #facc15;
+      background: #facc15;
+    }
+
+    .traffic-icon.red {
+      color: #ef4444;
+      background: #ef4444;
+    }
+
+    .traffic-icon.blue {
+      color: #60a5fa;
+      background: #60a5fa;
+    }
+
+    .milestone-progress {
+      font-weight: 800;
+    }
+
+    .milestone-remark {
+      color: #cbd5e1;
+      font-size: 11px;
+      line-height: 1.35;
     }
 
     .highlight-section {
@@ -1174,6 +1218,11 @@
         flex-direction: column;
       }
 
+      .milestone-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
     }
 
     @media (max-width: 640px) {
@@ -1210,6 +1259,14 @@
 
       .form-grid {
         grid-template-columns: 1fr;
+      }
+
+      .milestone-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .milestone-status-table {
+        min-width: 680px;
       }
     }
   </style>
@@ -1451,11 +1508,11 @@
         </div>
         <div class="form-field full">
           <label for="editUpdatePlan">Plan</label>
-          <textarea id="editUpdatePlan" name="updatePlan" placeholder="Activity | 1,2,3"></textarea>
+          <textarea id="editUpdatePlan" name="updatePlan" placeholder="Procurement | Apr-26"></textarea>
         </div>
         <div class="form-field full">
           <label for="editUpdateActual">Actual</label>
-          <textarea id="editUpdateActual" name="updateActual" placeholder="Activity | 1,2,3"></textarea>
+          <textarea id="editUpdateActual" name="updateActual" placeholder="Procurement | Apr-26"></textarea>
         </div>
       </div>
       <div class="dialog-actions">
@@ -2130,9 +2187,49 @@
       const source = Array.isArray(months) ? months : String(months || "").split(",");
       return Array.from(new Set(
         source
-          .map((month) => Number(String(month).trim()))
+          .map(parseMonthValue)
           .filter((month) => month >= 1 && month <= 12)
       )).sort((a, b) => a - b);
+    }
+
+    function parseMonthValue(value) {
+      const text = String(value || "").trim();
+      if (!text || text === "-") return 0;
+
+      const number = Number(text);
+      if (Number.isFinite(number)) return number;
+
+      const isoMatch = text.match(/\b\d{4}[-/](\d{1,2})\b/);
+      if (isoMatch) return Number(isoMatch[1]);
+
+      const monthNames = {
+        jan: 1,
+        january: 1,
+        feb: 2,
+        february: 2,
+        mar: 3,
+        march: 3,
+        apr: 4,
+        april: 4,
+        may: 5,
+        jun: 6,
+        june: 6,
+        jul: 7,
+        july: 7,
+        aug: 8,
+        august: 8,
+        sep: 9,
+        sept: 9,
+        september: 9,
+        oct: 10,
+        october: 10,
+        nov: 11,
+        november: 11,
+        dec: 12,
+        december: 12
+      };
+      const nameMatch = text.toLowerCase().match(/[a-z]+/);
+      return nameMatch ? monthNames[nameMatch[0]] || 0 : 0;
     }
 
     function parseMilestoneText(text) {
@@ -2604,40 +2701,158 @@
       }));
     }
 
-    function projectMonthTable(title, milestones) {
-      const normalized = normalizeMilestones(milestones);
+    function monthCompletionLabel(month, year = state.activeYear) {
+      if (!month) return "-";
+      const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      return `${names[month - 1]}-${String(year).slice(-2)}`;
+    }
+
+    function monthIndex(month, year = state.activeYear) {
+      return Number(year) * 12 + Number(month || 0);
+    }
+
+    function currentBangkokMonthIndex() {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Bangkok",
+        year: "numeric",
+        month: "numeric"
+      }).formatToParts(new Date());
+      const part = (type) => Number(parts.find((item) => item.type === type)?.value || 0);
+      return monthIndex(part("month"), part("year"));
+    }
+
+    function milestoneCompletionMonth(item) {
+      const months = normalizeMonths(item?.months);
+      return months.length ? Math.max(...months) : 0;
+    }
+
+    function milestoneStatus(planMonth, actualMonth) {
+      if (actualMonth) {
+        const delay = monthIndex(actualMonth) - monthIndex(planMonth || actualMonth);
+        if (delay <= 0) {
+          return {
+            color: "green",
+            label: "Completed",
+            progress: 100,
+            remark: "Completed on time or earlier."
+          };
+        }
+        if (delay <= 1) {
+          return {
+            color: "yellow",
+            label: "Delayed",
+            progress: 100,
+            remark: "Completed less than 1 month late."
+          };
+        }
+        return {
+          color: "red",
+          label: "Delayed",
+          progress: 100,
+          remark: "Completed more than 1 month late."
+        };
+      }
+
+      if (!planMonth || currentBangkokMonthIndex() <= monthIndex(planMonth)) {
+        return {
+          color: "blue",
+          label: "Not started",
+          progress: 0,
+          remark: "Not started."
+        };
+      }
+
+      const delay = currentBangkokMonthIndex() - monthIndex(planMonth);
+      if (delay <= 1) {
+        return {
+          color: "yellow",
+          label: "In progress",
+          progress: 0,
+          remark: "Delayed less than 1 month."
+        };
+      }
+
+      return {
+        color: "red",
+        label: "Delayed",
+        progress: 0,
+        remark: "Delayed more than 1 month."
+      };
+    }
+
+    function milestoneTrackingRows(planMilestones, actualMilestones) {
+      const plans = normalizeMilestones(planMilestones);
+      const actuals = normalizeMilestones(actualMilestones);
+      const actualMap = new Map(actuals.map((item) => [item.task.toLowerCase(), item]));
+      const names = Array.from(new Set([
+        ...plans.map((item) => item.task),
+        ...actuals.map((item) => item.task)
+      ]));
+
+      return names.map((name) => {
+        const plan = plans.find((item) => item.task === name) || null;
+        const actual = actualMap.get(name.toLowerCase()) || null;
+        const planMonth = milestoneCompletionMonth(plan);
+        const actualMonth = milestoneCompletionMonth(actual);
+        const status = milestoneStatus(planMonth, actualMonth);
+
+        return {
+          name,
+          planMonth,
+          actualMonth,
+          ...status
+        };
+      });
+    }
+
+    function milestoneSummary(rows) {
+      return {
+        total: rows.length,
+        completed: rows.filter((row) => row.color === "green").length,
+        inProgress: rows.filter((row) => row.color === "blue").length,
+        delayed: rows.filter((row) => row.color === "yellow" || row.color === "red").length
+      };
+    }
+
+    function projectMilestoneTable(project) {
+      const rows = milestoneTrackingRows(project.updatePlan, project.updateActual);
+      const summary = milestoneSummary(rows);
+
       return `
         <div class="project-plan-block">
-          <table class="project-month-table">
-            <colgroup>
-              <col class="milestone-action-col">
-              ${Array.from({ length: 12 }, () => "<col>").join("")}
-            </colgroup>
+          <div class="milestone-head">
+            <h5>Milestone Status</h5>
+            <div class="milestone-summary" aria-label="Milestone summary">
+              <span><strong>${summary.total}</strong>Total Milestones</span>
+              <span><strong>${summary.completed}</strong>Completed</span>
+              <span><strong>${summary.inProgress}</strong>In Progress</span>
+              <span><strong>${summary.delayed}</strong>Delayed</span>
+            </div>
+          </div>
+          <table class="milestone-status-table">
             <thead>
               <tr>
-                <th class="milestone-title" colspan="13">${title}</th>
+                <th>Milestone</th>
+                <th>Plan</th>
+                <th>Actual</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Remark</th>
               </tr>
-              <tr>
-                <th class="milestone-task-header" rowspan="2">Activity</th>
-                <th colspan="3">Q1</th>
-                <th colspan="3">Q2</th>
-                <th colspan="3">Q3</th>
-                <th colspan="3">Q4</th>
-              </tr>
-              <tr>${Array.from({ length: 12 }, (_, index) => `<th>${index + 1}</th>`).join("")}</tr>
             </thead>
             <tbody>
-              ${normalized.length ? normalized.map((item) => `
+              ${rows.length ? rows.map((item) => `
                 <tr>
-                  <td class="milestone-task">${formatCellText(item.task)}</td>
-                  ${Array.from({ length: 12 }, (_, index) => `
-                    <td class="${item.months.includes(index + 1) ? "milestone-fill" : ""}"></td>
-                  `).join("")}
+                  <td>${formatCellText(item.name)}</td>
+                  <td class="milestone-date">${monthCompletionLabel(item.planMonth)}</td>
+                  <td class="milestone-date">${monthCompletionLabel(item.actualMonth)}</td>
+                  <td class="milestone-status-cell"><span class="traffic-icon ${item.color}" title="${escapeHtml(item.label)}"></span></td>
+                  <td class="milestone-progress">${item.progress}%</td>
+                  <td class="milestone-remark">${formatCellText(item.remark)}</td>
                 </tr>
               `).join("") : `
                 <tr>
-                  <td class="milestone-task"></td>
-                  ${Array.from({ length: 12 }, () => "<td></td>").join("")}
+                  <td colspan="6">No milestones added.</td>
                 </tr>
               `}
             </tbody>
@@ -2890,8 +3105,7 @@
               <span style="width: ${project.progress}%"></span>
             </div>
           </div>
-          ${projectMonthTable(`${state.activeYear} Plan`, project.updatePlan)}
-          ${projectMonthTable(`${state.activeYear} Actual`, project.updateActual)}
+          ${projectMilestoneTable(project)}
           <ul class="meta-list">
             <li><strong>${formatCellText(project.owner)}</strong>Owner</li>
             <li><strong>${formatCellText(project.overallProject)}</strong>Overall Project</li>

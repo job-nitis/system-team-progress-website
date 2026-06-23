@@ -249,9 +249,49 @@ function normalizeMonths(months) {
   const source = Array.isArray(months) ? months : String(months || "").split(",");
   return Array.from(new Set(
     source
-      .map((month) => Number(String(month).trim()))
+      .map(parseMonthValue)
       .filter((month) => month >= 1 && month <= 12)
   )).sort((a, b) => a - b);
+}
+
+function parseMonthValue(value) {
+  const text = String(value || "").trim();
+  if (!text || text === "-") return 0;
+
+  const number = Number(text);
+  if (!Number.isNaN(number)) return number;
+
+  const isoMatch = text.match(/\b\d{4}[-/](\d{1,2})\b/);
+  if (isoMatch) return Number(isoMatch[1]);
+
+  const monthNames = {
+    jan: 1,
+    january: 1,
+    feb: 2,
+    february: 2,
+    mar: 3,
+    march: 3,
+    apr: 4,
+    april: 4,
+    may: 5,
+    jun: 6,
+    june: 6,
+    jul: 7,
+    july: 7,
+    aug: 8,
+    august: 8,
+    sep: 9,
+    sept: 9,
+    september: 9,
+    oct: 10,
+    october: 10,
+    nov: 11,
+    november: 11,
+    dec: 12,
+    december: 12
+  };
+  const nameMatch = text.toLowerCase().match(/[a-z]+/);
+  return nameMatch ? monthNames[nameMatch[0]] || 0 : 0;
 }
 
 function parseMilestoneText(text) {
