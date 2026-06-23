@@ -2721,6 +2721,10 @@
       return monthIndex(part("month"), part("year"));
     }
 
+    function currentProjectMonthIndex() {
+      return monthIndex(currentBangkokMonth(), state.activeYear);
+    }
+
     function milestoneCompletionMonth(item) {
       const months = normalizeMonths(item?.months);
       return months.length ? Math.max(...months) : 0;
@@ -2753,39 +2757,38 @@
         };
       }
 
-      if (!planMonth || currentBangkokMonthIndex() <= monthIndex(planMonth)) {
-        if (isCurrentStep) {
+      if (planMonth && currentProjectMonthIndex() > monthIndex(planMonth)) {
+        const delay = currentProjectMonthIndex() - monthIndex(planMonth);
+        if (delay <= 1) {
           return {
-            color: "blue",
-            label: "On going",
+            color: "yellow",
+            label: "Delayed",
             progress: 0,
-            remark: "On going."
+            remark: "Delayed less than 1 month."
           };
         }
-
         return {
-          color: "blue",
-          label: "Not started",
+          color: "red",
+          label: "Delayed",
           progress: 0,
-          remark: "Not started."
+          remark: "Delayed more than 1 month."
         };
       }
 
-      const delay = currentBangkokMonthIndex() - monthIndex(planMonth);
-      if (delay <= 1) {
+      if (isCurrentStep) {
         return {
-          color: "yellow",
-          label: "In progress",
+          color: "blue",
+          label: "On going",
           progress: 0,
-          remark: "Delayed less than 1 month."
+          remark: "On going."
         };
       }
 
       return {
-        color: "red",
-        label: "Delayed",
+        color: "blue",
+        label: "Not started",
         progress: 0,
-        remark: "Delayed more than 1 month."
+        remark: "Not started."
       };
     }
 
