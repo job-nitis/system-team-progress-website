@@ -8,11 +8,13 @@ Static website for showing yearly System Team project progress.
 - `google-apps-script-progress-only.js` - Apps Script for the `ProgressRows` sheet tab
 - `google-apps-script-highlight-data-only.js` - Apps Script for the `Highlight information` sheet tab and Drive picture upload
 - `google-apps-script-license-time-only.js` - Apps Script for the `License detail` sheet tab
+- `google-apps-script-users-only.js` - Apps Script for the `Users` sheet tab and email permission lookup
 - Year tabs for switching between project years
 - Editable progress summary table
 - Editable license table with remaining-time color status
 - `Add Project`, `Edit`, and `Delete` actions for table rows
 - Highlight cards with month filter, image upload, topic, and detail
+- Email login with Viewer, Editor, and Admin role controls
 - Highlight data saved to Google Sheets and pictures saved to Google Drive when Apps Script is deployed
 - Project cards with status, owner, overall project, and progress
 - Summary metrics for total, completed, active, and watch projects
@@ -66,6 +68,20 @@ ID | License Name | Expired Date | Remaining Time | Updated At
 ```
 
 The website and Apps Script calculate Remaining Time automatically from Expired Date.
+
+User permission data uses a spreadsheet named `System Website User` with a sheet tab named `Users` and these columns:
+
+```text
+Email | Name | Role | Active
+```
+
+Roles:
+
+```text
+Viewer = view only
+Editor = add and edit
+Admin = add, edit, and delete
+```
 
 For team/shared storage, use Google Sheets:
 

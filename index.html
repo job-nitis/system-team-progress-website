@@ -330,6 +330,59 @@
       font-weight: 700;
     }
 
+    .topbar-tools {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .auth-panel {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(15, 31, 51, 0.05);
+    }
+
+    .auth-user {
+      min-width: 132px;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .auth-user span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .auth-button {
+      border: 0;
+      border-radius: 7px;
+      padding: 8px 10px;
+      color: #ffffff;
+      background: var(--navy);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .auth-button.secondary {
+      color: var(--ink);
+      background: #eef2f7;
+    }
+
+    .permission-hidden {
+      display: none !important;
+    }
+
     .progress-table td {
       min-height: 68px;
     }
@@ -587,6 +640,14 @@
     .form-field textarea {
       min-height: 92px;
       resize: vertical;
+    }
+
+    .form-status {
+      min-height: 18px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
     }
 
     .existing-images {
@@ -1248,6 +1309,21 @@
         width: 100%;
       }
 
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .topbar-tools {
+        justify-content: stretch;
+      }
+
+      .auth-panel,
+      .year-picker {
+        justify-content: space-between;
+        width: 100%;
+      }
+
       .section-head {
         align-items: start;
         flex-direction: column;
@@ -1281,9 +1357,16 @@
           <p>Instrument Plant Maintenance Division - PTT Gas Separation Plant</p>
         </div>
       </div>
-      <div class="year-picker">
-        <label for="yearSelect">Year</label>
-        <select id="yearSelect" aria-label="Project year"></select>
+      <div class="topbar-tools">
+        <div class="year-picker">
+          <label for="yearSelect">Year</label>
+          <select id="yearSelect" aria-label="Project year"></select>
+        </div>
+        <div class="auth-panel">
+          <div class="auth-user" id="authUserText">Not signed in<span>Viewer mode</span></div>
+          <button class="auth-button" type="button" id="loginButton">Login</button>
+          <button class="auth-button secondary" type="button" id="logoutButton">Logout</button>
+        </div>
       </div>
     </header>
 
@@ -1413,6 +1496,22 @@
 
       <p class="footer-note">System Team Annual Progress View</p>
     </main>
+  </div>
+
+  <div class="dialog-backdrop" id="loginDialog" role="dialog" aria-modal="true" aria-labelledby="loginDialogTitle">
+    <form class="confirm-dialog" id="loginForm">
+      <h3 id="loginDialogTitle">Login</h3>
+      <p>Enter your approved email to unlock your website permission.</p>
+      <div class="form-field">
+        <label for="loginEmailInput">Email</label>
+        <input id="loginEmailInput" name="email" type="email" required>
+      </div>
+      <p id="loginStatusText" class="form-status"></p>
+      <div class="dialog-actions">
+        <button class="action-button secondary" type="button" id="cancelLoginButton">Cancel</button>
+        <button class="action-button" type="submit" id="confirmLoginButton">Login</button>
+      </div>
+    </form>
   </div>
 
   <div class="dialog-backdrop" id="licenseDialog" role="dialog" aria-modal="true" aria-labelledby="licenseDialogTitle">
@@ -1764,9 +1863,11 @@
     const STORAGE_KEY = "system-team-progress-table-v1";
     const HIGHLIGHT_STORAGE_KEY = "system-team-highlights-v1";
     const LICENSE_STORAGE_KEY = "system-team-license-time-v1";
+    const USER_STORAGE_KEY = "system-team-current-user-v1";
     const PROGRESS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyP9IOgobN2e3fGiMP6hTmAyYkSuBfheTgx0eiIuIlk5wqKzNUsv4x9EpwrlT6owxgVrw/exec";
     const HIGHLIGHT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3R3iJCwLumpaz7d6VyS4E54aCbde9y1uP-PGyMrmg3KGBimVq5Y7AZw_aJyCzyulI/exec";
     const LICENSE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw25juQC6L_-L-crFs0Eed3HrQZ-pKnhyea6JFLI6NECygUZX5GYa8f6oiX0r_LQft75Q/exec";
+    const USER_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzPdDus7JcJsjBNzYpFt9L5fFh1T3GJhOaOH1st-yvXBFXpzJWceRJtqd1X_ePJ7frR7g/exec";
 
     const monthOptions = [
       ["all", "All"],
@@ -1797,6 +1898,15 @@
     };
 
     const yearSelect = document.querySelector("#yearSelect");
+    const authUserText = document.querySelector("#authUserText");
+    const loginButton = document.querySelector("#loginButton");
+    const logoutButton = document.querySelector("#logoutButton");
+    const loginDialog = document.querySelector("#loginDialog");
+    const loginForm = document.querySelector("#loginForm");
+    const loginEmailInput = document.querySelector("#loginEmailInput");
+    const loginStatusText = document.querySelector("#loginStatusText");
+    const cancelLoginButton = document.querySelector("#cancelLoginButton");
+    const confirmLoginButton = document.querySelector("#confirmLoginButton");
     const licenseTableBody = document.querySelector("#licenseTableBody");
     const licenseStorageStatus = document.querySelector("#licenseStorageStatus");
     const addLicenseButton = document.querySelector("#addLicenseButton");
@@ -1841,6 +1951,7 @@
     let progressRows = loadProgressRows();
     let licenseRows = loadLicenseRows();
     let highlights = loadHighlights();
+    let currentUser = loadCurrentUser();
     let pendingDeleteRowId = "";
     let editMode = "update";
     let highlightMode = "create";
@@ -1848,6 +1959,118 @@
     const galleryImages = {};
     let lightboxGalleryId = "";
     let lightboxIndex = 0;
+
+    function loadCurrentUser() {
+      const saved = localStorage.getItem(USER_STORAGE_KEY);
+      if (!saved) return null;
+
+      try {
+        return normalizeUser(JSON.parse(saved));
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function normalizeUser(user) {
+      if (!user) return null;
+      const role = String(user.role || "Viewer").trim();
+
+      return {
+        email: String(user.email || "").trim().toLowerCase(),
+        name: String(user.name || "").trim(),
+        role: ["Admin", "Editor", "Viewer"].includes(role) ? role : "Viewer",
+        active: user.active === true || String(user.active).toUpperCase() === "TRUE"
+      };
+    }
+
+    function saveCurrentUser(user) {
+      currentUser = normalizeUser(user);
+      if (currentUser && currentUser.active) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem(USER_STORAGE_KEY);
+        currentUser = null;
+      }
+      applyPermissionState();
+    }
+
+    function canEdit() {
+      return currentUser && currentUser.active && ["Admin", "Editor"].includes(currentUser.role);
+    }
+
+    function canDelete() {
+      return currentUser && currentUser.active && currentUser.role === "Admin";
+    }
+
+    function requireEditPermission() {
+      if (canEdit()) return true;
+      window.alert("Your role can view only. Please login as Editor or Admin to change data.");
+      return false;
+    }
+
+    function requireDeletePermission() {
+      if (canDelete()) return true;
+      window.alert("Delete action is for Admin only.");
+      return false;
+    }
+
+    function openLoginDialog() {
+      loginStatusText.textContent = "";
+      loginEmailInput.value = currentUser?.email || "";
+      loginDialog.classList.add("is-open");
+      loginEmailInput.focus();
+    }
+
+    function closeLoginDialog() {
+      loginDialog.classList.remove("is-open");
+      loginForm.reset();
+      loginStatusText.textContent = "";
+    }
+
+    function loadUserFromGoogleSheet(email) {
+      return new Promise((resolve, reject) => {
+        if (!USER_APPS_SCRIPT_URL) {
+          reject(new Error("Users web app URL is not set"));
+          return;
+        }
+
+        const callbackName = `systemTeamUserCallback_${Date.now()}`;
+        const script = document.createElement("script");
+        const separator = USER_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+
+        window[callbackName] = (payload) => {
+          delete window[callbackName];
+          script.remove();
+          if (payload && payload.ok && payload.user) resolve(normalizeUser(payload.user));
+          else reject(new Error((payload && payload.error) || "Email not found or inactive"));
+        };
+
+        script.onerror = () => {
+          delete window[callbackName];
+          script.remove();
+          reject(new Error("Could not load user permission"));
+        };
+
+        script.src = `${USER_APPS_SCRIPT_URL}${separator}email=${encodeURIComponent(email)}&callback=${encodeURIComponent(callbackName)}`;
+        document.body.appendChild(script);
+      });
+    }
+
+    function applyPermissionState() {
+      const userLabel = currentUser && currentUser.active
+        ? `${currentUser.name || currentUser.email}<span>${currentUser.role}</span>`
+        : "Not signed in<span>Viewer mode</span>";
+      authUserText.innerHTML = userLabel;
+      loginButton.hidden = Boolean(currentUser && currentUser.active);
+      logoutButton.hidden = !currentUser;
+      addLicenseButton.classList.toggle("permission-hidden", !canEdit());
+      addRowButton.classList.toggle("permission-hidden", !canEdit());
+      addHighlightButton.classList.toggle("permission-hidden", !canEdit());
+      resetTableButton.classList.toggle("permission-hidden", !canDelete());
+      renderLicenseTable();
+      renderProgressTable();
+      renderHighlights();
+    }
 
     function loadLicenseRows() {
       const saved = localStorage.getItem(LICENSE_STORAGE_KEY);
@@ -2534,8 +2757,8 @@
             <h4>${formatCellText(item.topic)}</h4>
             <p>${formatCellText(item.detail)}</p>
             <div class="highlight-card-actions">
-              <button class="edit-button" type="button" data-highlight-action="edit" data-highlight-id="${escapeHtml(item.id)}">Edit</button>
-              <button class="delete-button" type="button" data-highlight-action="delete" data-highlight-id="${escapeHtml(item.id)}">Delete</button>
+              ${canEdit() ? `<button class="edit-button" type="button" data-highlight-action="edit" data-highlight-id="${escapeHtml(item.id)}">Edit</button>` : ""}
+              ${canDelete() ? `<button class="delete-button" type="button" data-highlight-action="delete" data-highlight-id="${escapeHtml(item.id)}">Delete</button>` : ""}
             </div>
           </div>
         </article>
@@ -2579,6 +2802,7 @@
     }
 
     async function deleteHighlight(highlightId) {
+      if (!requireDeletePermission()) return;
       const highlight = highlights.find((item) => item.id === highlightId);
       if (!highlight) return;
       if (!window.confirm(`Delete "${highlight.topic || "this highlight"}"?`)) return;
@@ -2598,6 +2822,7 @@
     }
 
     async function removeProjectExistingImage(imageUrl) {
+      if (!requireDeletePermission()) return;
       const rowId = document.querySelector("#editRowId").value;
       const row = rowsForActiveYear().find((item) => item.id === rowId);
       if (!row) return;
@@ -2622,6 +2847,7 @@
     }
 
     async function removeHighlightExistingImage(imageUrl) {
+      if (!requireDeletePermission()) return;
       const highlightId = highlightIdInput.value;
       const highlight = highlights.find((item) => item.id === highlightId);
       if (!highlight) return;
@@ -2907,8 +3133,8 @@
             <td class="license-remaining ${remainingTimeClass(days)}">${formatCellText(remainingTimeLabel(days))}</td>
             <td>
               <div class="row-actions">
-                <button class="edit-button" type="button" data-license-action="edit" data-license-id="${escapeHtml(license.id)}">Edit</button>
-                <button class="delete-button" type="button" data-license-action="delete" data-license-id="${escapeHtml(license.id)}">Delete</button>
+                ${canEdit() ? `<button class="edit-button" type="button" data-license-action="edit" data-license-id="${escapeHtml(license.id)}">Edit</button>` : ""}
+                ${canDelete() ? `<button class="delete-button" type="button" data-license-action="delete" data-license-id="${escapeHtml(license.id)}">Delete</button>` : ""}
               </div>
             </td>
           </tr>
@@ -2934,6 +3160,7 @@
     }
 
     function deleteLicense(licenseId) {
+      if (!requireDeletePermission()) return;
       const license = licenseRows.find((item) => item.id === licenseId);
       if (!license) return;
       if (!window.confirm(`Delete "${license.name || "this license"}"?`)) return;
@@ -2971,8 +3198,8 @@
           <td class="col-wide">${formatCellText(row.overallPlan)}</td>
           <td>
             <div class="row-actions">
-              <button class="edit-button" type="button" data-action="edit" data-row-id="${escapeHtml(row.id)}">Edit</button>
-              <button class="delete-button" type="button" data-action="delete" data-row-id="${escapeHtml(row.id)}">Delete</button>
+              ${canEdit() ? `<button class="edit-button" type="button" data-action="edit" data-row-id="${escapeHtml(row.id)}">Edit</button>` : ""}
+              ${canDelete() ? `<button class="delete-button" type="button" data-action="delete" data-row-id="${escapeHtml(row.id)}">Delete</button>` : ""}
             </div>
           </td>
         </tr>
@@ -3047,6 +3274,7 @@
     }
 
     function deleteProgressRow() {
+      if (!requireDeletePermission()) return;
       if (!pendingDeleteRowId) return;
       progressRows[state.activeYear] = rowsForActiveYear().filter((row) => row.id !== pendingDeleteRowId);
       saveProgressRows();
@@ -3145,19 +3373,52 @@
       loadHighlightsFromGoogleSheet(state.activeYear);
     });
 
-    addLicenseButton.addEventListener("click", () => openLicenseDialog());
+    loginButton.addEventListener("click", openLoginDialog);
+    logoutButton.addEventListener("click", () => {
+      saveCurrentUser(null);
+      renderDashboard();
+      openLoginDialog();
+    });
+    cancelLoginButton.addEventListener("click", closeLoginDialog);
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      confirmLoginButton.disabled = true;
+      confirmLoginButton.textContent = "Checking";
+      loginStatusText.textContent = "Checking permission";
+
+      try {
+        const user = await loadUserFromGoogleSheet(loginEmailInput.value.trim());
+        if (!user || !user.active) throw new Error("Email is not active");
+        saveCurrentUser(user);
+        loginStatusText.textContent = `Logged in as ${user.role}`;
+        closeLoginDialog();
+        renderDashboard();
+      } catch (error) {
+        loginStatusText.textContent = error.message || "Login failed";
+      } finally {
+        confirmLoginButton.disabled = false;
+        confirmLoginButton.textContent = "Login";
+      }
+    });
+
+    addLicenseButton.addEventListener("click", () => {
+      if (!requireEditPermission()) return;
+      openLicenseDialog();
+    });
     cancelLicenseButton.addEventListener("click", closeLicenseDialog);
 
     licenseTableBody.addEventListener("click", (event) => {
       const button = event.target.closest("[data-license-action][data-license-id]");
       if (!button) return;
 
-      if (button.dataset.licenseAction === "edit") openLicenseDialog(button.dataset.licenseId);
-      if (button.dataset.licenseAction === "delete") deleteLicense(button.dataset.licenseId);
+      if (button.dataset.licenseAction === "edit" && requireEditPermission()) openLicenseDialog(button.dataset.licenseId);
+      if (button.dataset.licenseAction === "delete" && requireDeletePermission()) deleteLicense(button.dataset.licenseId);
     });
 
     licenseForm.addEventListener("submit", (event) => {
       event.preventDefault();
+      if (!requireEditPermission()) return;
 
       const licenseId = licenseIdInput.value || `license-${Date.now()}`;
       const existing = licenseRows.find((item) => item.id === licenseId);
@@ -3186,7 +3447,10 @@
     });
 
     highlightMonthSelect.addEventListener("change", renderHighlights);
-    addHighlightButton.addEventListener("click", openHighlightDialog);
+    addHighlightButton.addEventListener("click", () => {
+      if (!requireEditPermission()) return;
+      openHighlightDialog();
+    });
     cancelHighlightButton.addEventListener("click", closeHighlightDialog);
 
     function openLightbox(galleryId, index = galleryState[galleryId] || 0) {
@@ -3263,12 +3527,14 @@
 
       const deleteButton = event.target.closest("[data-highlight-action='delete'][data-highlight-id]");
       if (deleteButton) {
+        if (!requireDeletePermission()) return;
         deleteHighlight(deleteButton.dataset.highlightId);
         return;
       }
 
       const editButton = event.target.closest("[data-highlight-action='edit'][data-highlight-id]");
       if (!editButton) return;
+      if (!requireEditPermission()) return;
       openEditHighlightDialog(editButton.dataset.highlightId);
     });
 
@@ -3292,11 +3558,13 @@
     highlightForm.addEventListener("click", (event) => {
       const button = event.target.closest("[data-remove-image='highlight'][data-image-url]");
       if (!button) return;
+      if (!requireDeletePermission()) return;
       removeHighlightExistingImage(button.dataset.imageUrl);
     });
 
     highlightForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!requireEditPermission()) return;
       saveHighlightButton.disabled = true;
       saveHighlightButton.textContent = "Saving";
       tableStorageStatus.textContent = "Preparing highlight pictures";
@@ -3349,13 +3617,17 @@
     progressTableBody.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-action][data-row-id]");
       if (!button) return;
-      if (button.dataset.action === "edit") openEditDialog(button.dataset.rowId);
-      if (button.dataset.action === "delete") openDeleteDialog(button.dataset.rowId);
+      if (button.dataset.action === "edit" && requireEditPermission()) openEditDialog(button.dataset.rowId);
+      if (button.dataset.action === "delete" && requireDeletePermission()) openDeleteDialog(button.dataset.rowId);
     });
 
-    addRowButton.addEventListener("click", addProgressRow);
+    addRowButton.addEventListener("click", () => {
+      if (!requireEditPermission()) return;
+      addProgressRow();
+    });
 
     resetTableButton.addEventListener("click", () => {
+      if (!requireDeletePermission()) return;
       progressRows[state.activeYear] = structuredClone(defaultProgressRows[state.activeYear] || []);
       saveProgressRows();
       renderDashboard();
@@ -3366,6 +3638,7 @@
     editForm.addEventListener("click", (event) => {
       const button = event.target.closest("[data-remove-image='project'][data-image-url]");
       if (!button) return;
+      if (!requireDeletePermission()) return;
       removeProjectExistingImage(button.dataset.imageUrl);
     });
 
@@ -3378,6 +3651,7 @@
 
     editForm.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (!requireEditPermission()) return;
       const editSaveButton = editForm.querySelector("button[type='submit']");
       editSaveButton.disabled = true;
       editSaveButton.textContent = "Saving";
@@ -3502,6 +3776,8 @@
     resizeCanvas();
     renderHighlightMonthOptions();
     renderDashboard();
+    applyPermissionState();
+    if (!currentUser) openLoginDialog();
     loadLicenseRowsFromGoogleSheet();
     loadRowsFromGoogleSheet(state.activeYear);
     loadHighlightsFromGoogleSheet(state.activeYear);
