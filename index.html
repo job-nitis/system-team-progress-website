@@ -1959,6 +1959,8 @@
     const galleryImages = {};
     let lightboxGalleryId = "";
     let lightboxIndex = 0;
+    let inactivityTimer = 0;
+    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
 
     function loadCurrentUser() {
       const saved = localStorage.getItem(USER_STORAGE_KEY);
@@ -1992,6 +1994,28 @@
         currentUser = null;
       }
       applyPermissionState();
+      resetInactivityTimer();
+    }
+
+    function logoutUser(showMessage = "") {
+      saveCurrentUser(null);
+      closeLicenseDialog();
+      closeEditDialog();
+      closeHighlightDialog();
+      closeDeleteDialog();
+      closeLightbox();
+      renderDashboard();
+      openLoginDialog();
+      loginStatusText.textContent = showMessage;
+    }
+
+    function resetInactivityTimer() {
+      window.clearTimeout(inactivityTimer);
+      if (!currentUser || !currentUser.active) return;
+
+      inactivityTimer = window.setTimeout(() => {
+        logoutUser("Logged out after 30 minutes without activity.");
+      }, INACTIVITY_LIMIT_MS);
     }
 
     function canEdit() {
@@ -3375,9 +3399,7 @@
 
     loginButton.addEventListener("click", openLoginDialog);
     logoutButton.addEventListener("click", () => {
-      saveCurrentUser(null);
-      renderDashboard();
-      openLoginDialog();
+      logoutUser("");
     });
     cancelLoginButton.addEventListener("click", closeLoginDialog);
 
@@ -3773,10 +3795,15 @@
       resizeCanvas();
     });
 
+    ["click", "keydown", "scroll", "touchstart", "pointerdown"].forEach((eventName) => {
+      window.addEventListener(eventName, resetInactivityTimer, { passive: true });
+    });
+
     resizeCanvas();
     renderHighlightMonthOptions();
     renderDashboard();
     applyPermissionState();
+    resetInactivityTimer();
     if (!currentUser) openLoginDialog();
     loadLicenseRowsFromGoogleSheet();
     loadRowsFromGoogleSheet(state.activeYear);
