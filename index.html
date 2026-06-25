@@ -2026,6 +2026,10 @@
       return currentUser && currentUser.active && currentUser.role === "Admin";
     }
 
+    function currentActorEmail() {
+      return currentUser && currentUser.active ? currentUser.email : "";
+    }
+
     function requireEditPermission() {
       if (canEdit()) return true;
       window.alert("Your role can view only. Please login as Editor or Admin to change data.");
@@ -2081,10 +2085,11 @@
     }
 
     function applyPermissionState() {
-      const userLabel = currentUser && currentUser.active
-        ? `${currentUser.name || currentUser.email}<span>${currentUser.role}</span>`
-        : "Not signed in<span>Viewer mode</span>";
-      authUserText.innerHTML = userLabel;
+      authUserText.textContent = "";
+      const label = document.createTextNode(currentUser && currentUser.active ? currentUser.name || currentUser.email : "Not signed in");
+      const role = document.createElement("span");
+      role.textContent = currentUser && currentUser.active ? currentUser.role : "Viewer mode";
+      authUserText.append(label, role);
       loginButton.hidden = Boolean(currentUser && currentUser.active);
       logoutButton.hidden = !currentUser;
       addLicenseButton.classList.toggle("permission-hidden", !canEdit());
@@ -2127,6 +2132,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
+          actorEmail: currentActorEmail(),
           rows: licenseRows.map(normalizeLicenseRow)
         })
       })
@@ -2207,6 +2213,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
+          actorEmail: currentActorEmail(),
           type: "highlight",
           year: state.activeYear,
           id: highlight.id,
@@ -2227,6 +2234,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
+          actorEmail: currentActorEmail(),
           action: "delete",
           id: highlightId
         })
@@ -2241,6 +2249,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
+          actorEmail: currentActorEmail(),
           action: "deleteImage",
           id: highlightId,
           imageUrl
@@ -2306,8 +2315,20 @@
       document.querySelector("#editProjectImage").value = "";
     }
 
+    function safeImageUrl(url) {
+      const text = String(url || "").trim();
+      if (/^data:image\/(jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(text)) return text;
+
+      try {
+        const parsed = new URL(text);
+        return ["http:", "https:"].includes(parsed.protocol) ? parsed.href : "";
+      } catch (error) {
+        return "";
+      }
+    }
+
     function normalizeImageUrls(value) {
-      const normalizeOne = (url) => driveImageUrl(String(url || "").trim());
+      const normalizeOne = (url) => safeImageUrl(driveImageUrl(String(url || "").trim()));
 
       if (Array.isArray(value)) {
         return value.map(normalizeOne).filter(Boolean);
@@ -2315,7 +2336,7 @@
 
       const text = String(value || "").trim();
       if (!text) return [];
-      if (text.startsWith("data:")) return [text];
+      if (text.startsWith("data:")) return [safeImageUrl(text)].filter(Boolean);
 
       return text
         .split(/\n|,/)
@@ -2350,7 +2371,7 @@
 
       return `
         <div class="image-gallery ${extraClass}" data-gallery-id="${escapeHtml(galleryId)}">
-          <img src="${normalized[index]}" alt="${escapeHtml(altText)}" data-gallery-open="true">
+          <img src="${escapeHtml(normalized[index])}" alt="${escapeHtml(altText)}" data-gallery-open="true">
           ${normalized.length > 1 ? `
             <button class="gallery-button prev" type="button" data-gallery-action="prev" data-gallery-id="${escapeHtml(galleryId)}" aria-label="Previous picture">&#8249;</button>
             <button class="gallery-button next" type="button" data-gallery-action="next" data-gallery-id="${escapeHtml(galleryId)}" aria-label="Next picture">&#8250;</button>
@@ -2521,6 +2542,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
+          actorEmail: currentActorEmail(),
           year: state.activeYear,
           rows: rowsForGoogleSheet()
         })
@@ -2542,6 +2564,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
+          actorEmail: currentActorEmail(),
           action: "deleteImage",
           id: rowId,
           imageUrl

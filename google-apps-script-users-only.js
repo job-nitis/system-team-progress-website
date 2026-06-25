@@ -59,16 +59,22 @@ function userValuesToRow(values) {
 }
 
 function callbackResponse(callback, payload) {
-  const text = JSON.stringify(payload);
+  const safeCallback = String(callback || "");
 
-  if (callback) {
+  if (safeCallback) {
+    if (!/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(safeCallback)) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ ok: false, error: "Invalid callback" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     return ContentService
-      .createTextOutput(`${callback}(${text});`)
+      .createTextOutput(`${safeCallback}(${JSON.stringify(payload)});`)
       .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
 
   return ContentService
-    .createTextOutput(text)
+    .createTextOutput(JSON.stringify(payload))
     .setMimeType(ContentService.MimeType.JSON);
 }
 

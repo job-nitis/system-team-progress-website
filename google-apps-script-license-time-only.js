@@ -4,6 +4,7 @@
 // paste the spreadsheet ID between the quotes below.
 const LICENSE_SPREADSHEET_ID = "";
 const LICENSE_SHEET_NAME = "License detail";
+const USER_PERMISSION_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzPdDus7JcJsjBNzYpFt9L5fFh1T3GJhOaOH1st-yvXBFXpzJWceRJtqd1X_ePJ7frR7g/exec";
 const LICENSE_HEADERS = [
   "ID",
   "License Name",
@@ -38,8 +39,11 @@ function doPost(e) {
     }
 
     const payload = JSON.parse(e.postData.contents);
+    assertPermission(payload, "edit");
     const rows = Array.isArray(payload.rows) ? payload.rows.map(normalizeLicenseRow) : [];
     const sheet = getLicenseSheet();
+    const existingRows = readLicenseRows();
+    if (hasDeletedRows(existingRows, rows)) assertPermission(payload, "delete");
 
     sheet.clearContents();
     sheet.appendRow(LICENSE_HEADERS);
@@ -80,12 +84,17 @@ function licenseToSheetValues(row) {
   const days = daysUntil(row.expiredDate);
 
   return [
-    row.id || "",
-    row.name || "",
-    row.expiredDate || "",
+    safeSheetValue(row.id),
+    safeSheetValue(row.name),
+    safeSheetValue(row.expiredDate),
     remainingTimeLabel(days),
     row.updatedAt || new Date()
   ];
+}
+
+function hasDeletedRows(existingRows, incomingRows) {
+  const incomingIds = new Set(incomingRows.map((row) => String(row && row.id ? row.id : "")));
+  return existingRows.some((row) => row.id && !incomingIds.has(String(row.id)));
 }
 
 function normalizeLicenseRow(row) {
@@ -180,16 +189,51 @@ function jsonResponse(payload) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function callbackResponse(callback, payload) {
-  const text = JSON.stringify(payload);
+function assertPermission(payload, action) {
+  const user = lookupUser(payload && payload.actorEmail);
+  const role = user && user.role;
 
-  if (callback) {
-    return ContentService
-      .createTextOutput(`${callback}(${text});`)
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  if (action === "delete" && role !== "Admin") {
+    throw new Error("Admin permission required");
   }
 
-  return jsonResponse(payload);
+  if (action === "edit" && !["Admin", "Editor"].includes(role)) {
+    throw new Error("Editor permission required");
+  }
+}
+
+function lookupUser(email) {
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  if (!cleanEmail) throw new Error("Login email is required");
+  if (!USER_PERMISSION_WEB_APP_URL) throw new Error("User permission URL is not set");
+
+  const response = UrlFetchApp.fetch(`${USER_PERMISSION_WEB_APP_URL}?email=${encodeURIComponent(cleanEmail)}`, {
+    muteHttpExceptions: true
+  });
+  const payload = JSON.parse(response.getContentText() || "{}");
+  if (!payload.ok || !payload.user || !payload.user.active) {
+    throw new Error("User is not approved or inactive");
+  }
+
+  return payload.user;
+}
+
+function safeSheetValue(value) {
+  const text = String(value || "").slice(0, 5000);
+  return /^[=+\-@]/.test(text) ? `'${text}` : text;
+}
+
+function callbackResponse(callback, payload) {
+  const safeCallback = String(callback || "");
+  if (!safeCallback) return jsonResponse(payload);
+
+  if (!/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(safeCallback)) {
+    return jsonResponse({ ok: false, error: "Invalid callback" });
+  }
+
+  return ContentService
+    .createTextOutput(`${safeCallback}(${JSON.stringify(payload)});`)
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
 }
 
 function getLicenseSheet() {

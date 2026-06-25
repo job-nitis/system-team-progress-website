@@ -56,7 +56,7 @@ The website also loads table rows from Google Sheets on page load, when the year
 Highlight data uses a spreadsheet named `Highlight data` with a sheet tab named `Highlight information` and these columns:
 
 ```text
-ID | Year | Month | Topic | Detail | Image URL | Created At
+ID | Year | Month | Topic | Detail | Image URLs | Created At
 ```
 
 Highlight pictures are uploaded to the configured Google Drive folder in `google-apps-script-highlight-data-only.js`.
@@ -98,11 +98,27 @@ const GOOGLE_APPS_SCRIPT_URL = "";
 
 Paste your web app URL between the quotes.
 
-The Google Sheet will store these columns:
+The progress Google Sheet will store these columns:
 
 ```text
-Year | ID | Initiative Project | Owner | Tech Preparation | TOR | PR | SAP PR | PO | Delivery | FAT/SAT | Close MOC | Overall Plan | Updated At
+Year | ID | Initiative Project | Owner | Tech Preparation | TOR | PR | SAP PR | PO | Delivery | FAT/SAT | Close MOC | Overall Plan | Project Image URLs | Plan | Actual | Updated At
 ```
+
+## Cybersecurity notes
+
+The website now sends the logged-in email to the Apps Script write endpoints, and each write endpoint checks the `System Website User` spreadsheet before saving data.
+
+Permission rules:
+
+```text
+Viewer = can view only
+Editor = can add and edit
+Admin = can add, edit, delete rows, and delete pictures
+```
+
+The Apps Script files also validate JSONP callback names, limit image uploads to JPEG, PNG, or WebP under 5 MB, and protect spreadsheet cells from formula injection by prefixing text that starts with `=`, `+`, `-`, or `@`.
+
+Important limitation: email-only login is not strong authentication. A stronger security design should use Microsoft or Google sign-in and verify the identity token on the backend before accepting writes.
 
 ## How to publish with GitHub Pages
 

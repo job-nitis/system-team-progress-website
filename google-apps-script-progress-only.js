@@ -2,6 +2,9 @@
 // It reads and writes the ProgressRows sheet tab and uploads project pictures to the SYSTEM WEBSITE Drive folder.
 const SHEET_NAME = "ProgressRows";
 const PROJECT_IMAGE_FOLDER_ID = "1J4M5xA3rZoZc-ZDg8MSKpy8zlD-QDdXU";
+const USER_PERMISSION_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzPdDus7JcJsjBNzYpFt9L5fFh1T3GJhOaOH1st-yvXBFXpzJWceRJtqd1X_ePJ7frR7g/exec";
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const HEADERS = [
   "Year",
   "ID",
@@ -34,34 +37,50 @@ function doGet(e) {
   });
 
   if (callback) {
-    return ContentService
-      .createTextOutput(`${callback}(${payload});`)
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    return callbackResponse(callback, JSON.parse(payload));
   }
 
   return jsonResponse(JSON.parse(payload));
 }
 
 function doPost(e) {
-  if (!e || !e.postData || !e.postData.contents) {
-    return jsonResponse({ ok: false, error: "No POST data received" });
+  try {
+    if (!e || !e.postData || !e.postData.contents) {
+      return jsonResponse({ ok: false, error: "No POST data received" });
+    }
+
+    const payload = JSON.parse(e.postData.contents);
+    if (payload.action === "deleteImage") {
+      assertPermission(payload, "delete");
+      return deleteProjectImage(payload.id, payload.imageUrl);
+    }
+
+    assertPermission(payload, "edit");
+    const year = String(payload.year || "");
+    const existingRows = readRows("");
+    const incomingRawRows = Array.isArray(payload.rows) ? payload.rows : [];
+    if (hasDeletedRows(existingRows, incomingRawRows, year)) assertPermission(payload, "delete");
+
+    const incomingRows = incomingRawRows.map((row) => prepareIncomingRow(row, year, existingRows));
+    const otherRows = existingRows.filter((row) => String(row.year) !== year);
+    const allRows = otherRows.concat(incomingRows);
+    const sheet = getSheet();
+
+    sheet.clearContents();
+    sheet.appendRow(HEADERS);
+    allRows.forEach((row) => sheet.appendRow(rowToSheetValues(row)));
+
+    return jsonResponse({ ok: true, rows: incomingRows.length });
+  } catch (error) {
+    return jsonResponse({ ok: false, error: String(error && error.message ? error.message : error) });
   }
+}
 
-  const payload = JSON.parse(e.postData.contents);
-  if (payload.action === "deleteImage") return deleteProjectImage(payload.id, payload.imageUrl);
-
-  const year = String(payload.year || "");
-  const existingRows = readRows("");
-  const incomingRows = (payload.rows || []).map((row) => prepareIncomingRow(row, year, existingRows));
-  const otherRows = existingRows.filter((row) => String(row.year) !== year);
-  const allRows = otherRows.concat(incomingRows);
-  const sheet = getSheet();
-
-  sheet.clearContents();
-  sheet.appendRow(HEADERS);
-  allRows.forEach((row) => sheet.appendRow(rowToSheetValues(row)));
-
-  return jsonResponse({ ok: true, rows: incomingRows.length });
+function hasDeletedRows(existingRows, incomingRows, year) {
+  const incomingIds = new Set(incomingRows.map((row) => String(row && row.id ? row.id : "")));
+  return existingRows
+    .filter((row) => String(row.year) === String(year))
+    .some((row) => row.id && !incomingIds.has(String(row.id)));
 }
 
 function deleteProjectImage(id, imageUrl) {
@@ -113,8 +132,12 @@ function saveProjectImage(id, dataUrl) {
   if (!matches) return "";
 
   const contentType = matches[1];
+  if (!ALLOWED_IMAGE_TYPES.includes(contentType)) return "";
+
   const extension = contentType.split("/")[1] || "png";
   const bytes = Utilities.base64Decode(matches[2]);
+  if (bytes.length > MAX_IMAGE_BYTES) return "";
+
   const blob = Utilities.newBlob(bytes, contentType, `${id}.${extension}`);
   const file = DriveApp.getFolderById(PROJECT_IMAGE_FOLDER_ID).createFile(blob);
 
@@ -166,19 +189,19 @@ function sheetValuesToRow(values) {
 
 function rowToSheetValues(row) {
   return [
-    row.year || "",
-    row.id || "",
-    row.project || "",
-    row.owner || "",
-    row.techPrep || "",
-    row.tor || "",
-    row.pr || "",
-    row.sapPr || "",
-    row.po || "",
-    row.delivery || "",
-    row.fatSat || "",
-    row.closeMoc || "",
-    row.overallPlan || "",
+    safeSheetValue(row.year),
+    safeSheetValue(row.id),
+    safeSheetValue(row.project),
+    safeSheetValue(row.owner),
+    safeSheetValue(row.techPrep),
+    safeSheetValue(row.tor),
+    safeSheetValue(row.pr),
+    safeSheetValue(row.sapPr),
+    safeSheetValue(row.po),
+    safeSheetValue(row.delivery),
+    safeSheetValue(row.fatSat),
+    safeSheetValue(row.closeMoc),
+    safeSheetValue(row.overallPlan),
     imageUrlsText(row.projectImageUrls || row.projectImageUrl),
     milestoneText(row.updatePlan),
     milestoneText(row.updateActual),
@@ -317,6 +340,51 @@ function jsonResponse(payload) {
   return ContentService
     .createTextOutput(JSON.stringify(payload))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function callbackResponse(callback, payload) {
+  const safeCallback = String(callback || "");
+  if (!/^[A-Za-z_$][\w$]*(\.[A-Za-z_$][\w$]*)*$/.test(safeCallback)) {
+    return jsonResponse({ ok: false, error: "Invalid callback" });
+  }
+
+  return ContentService
+    .createTextOutput(`${safeCallback}(${JSON.stringify(payload)});`)
+    .setMimeType(ContentService.MimeType.JAVASCRIPT);
+}
+
+function assertPermission(payload, action) {
+  const user = lookupUser(payload && payload.actorEmail);
+  const role = user && user.role;
+
+  if (action === "delete" && role !== "Admin") {
+    throw new Error("Admin permission required");
+  }
+
+  if (action === "edit" && !["Admin", "Editor"].includes(role)) {
+    throw new Error("Editor permission required");
+  }
+}
+
+function lookupUser(email) {
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  if (!cleanEmail) throw new Error("Login email is required");
+  if (!USER_PERMISSION_WEB_APP_URL) throw new Error("User permission URL is not set");
+
+  const response = UrlFetchApp.fetch(`${USER_PERMISSION_WEB_APP_URL}?email=${encodeURIComponent(cleanEmail)}`, {
+    muteHttpExceptions: true
+  });
+  const payload = JSON.parse(response.getContentText() || "{}");
+  if (!payload.ok || !payload.user || !payload.user.active) {
+    throw new Error("User is not approved or inactive");
+  }
+
+  return payload.user;
+}
+
+function safeSheetValue(value) {
+  const text = String(value || "").slice(0, 5000);
+  return /^[=+\-@]/.test(text) ? `'${text}` : text;
 }
 
 function getSheet() {
