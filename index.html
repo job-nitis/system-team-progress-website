@@ -2159,21 +2159,50 @@
 
       if (!LICENSE_APPS_SCRIPT_URL) return;
 
-      fetch(LICENSE_APPS_SCRIPT_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({
-          actorEmail: currentActorEmail(),
-          rows: licenseRows.map(normalizeLicenseRow)
-        })
-      })
+      saveLicenseRowsToGoogleSheet()
       .then(() => {
         licenseStorageStatus.textContent = "Saved to Google Sheets";
         setTimeout(loadLicenseRowsFromGoogleSheet, 1000);
       })
-      .catch(() => {
-        licenseStorageStatus.textContent = "Saved locally, license sync failed";
+      .catch((error) => {
+        licenseStorageStatus.textContent = error.message || "Saved locally, license sync failed";
+      });
+    }
+
+    function saveLicenseRowsToGoogleSheet() {
+      return new Promise((resolve, reject) => {
+        const actorEmail = currentActorEmail();
+        if (!actorEmail) {
+          reject(new Error("Please login before saving License Time"));
+          return;
+        }
+
+        const callbackName = `systemTeamLicenseSaveCallback_${Date.now()}`;
+        const script = document.createElement("script");
+        const separator = LICENSE_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+        const rowsPayload = JSON.stringify(licenseRows.map(normalizeLicenseRow));
+        const url = `${LICENSE_APPS_SCRIPT_URL}${separator}action=save&actorEmail=${encodeURIComponent(actorEmail)}&rows=${encodeURIComponent(rowsPayload)}&callback=${encodeURIComponent(callbackName)}`;
+
+        if (url.length > 18000) {
+          reject(new Error("Too much license data to sync at one time"));
+          return;
+        }
+
+        window[callbackName] = (payload) => {
+          delete window[callbackName];
+          script.remove();
+          if (payload && payload.ok) resolve(payload);
+          else reject(new Error((payload && payload.error) || "License sync failed"));
+        };
+
+        script.onerror = () => {
+          delete window[callbackName];
+          script.remove();
+          reject(new Error("Could not send licenses to Google Sheets"));
+        };
+
+        script.src = url;
+        document.body.appendChild(script);
       });
     }
 

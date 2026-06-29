@@ -17,6 +17,17 @@ const LICENSE_TIME_ZONE = "Asia/Bangkok";
 function doGet(e) {
   try {
     const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
+    const action = e && e.parameter && e.parameter.action ? String(e.parameter.action) : "";
+
+    if (action === "save") {
+      const rowsText = e && e.parameter && e.parameter.rows ? String(e.parameter.rows) : "[]";
+      const payload = {
+        actorEmail: e && e.parameter && e.parameter.actorEmail ? String(e.parameter.actorEmail) : "",
+        rows: JSON.parse(rowsText)
+      };
+      return callbackResponse(callback, saveLicensePayload(payload));
+    }
+
     const rows = readLicenseRows();
     return callbackResponse(callback, {
       ok: true,
@@ -39,24 +50,28 @@ function doPost(e) {
     }
 
     const payload = JSON.parse(e.postData.contents);
-    assertPermission(payload, "edit");
-    const rows = Array.isArray(payload.rows) ? payload.rows.map(normalizeLicenseRow) : [];
-    const sheet = getLicenseSheet();
-    const existingRows = readLicenseRows();
-    if (hasDeletedRows(existingRows, rows)) assertPermission(payload, "delete");
-
-    sheet.clearContents();
-    sheet.appendRow(LICENSE_HEADERS);
-    rows.forEach((row) => sheet.appendRow(licenseToSheetValues(row)));
-    formatLicenseSheet(sheet);
-
-    return jsonResponse({ ok: true, rows: rows.length });
+    return jsonResponse(saveLicensePayload(payload));
   } catch (error) {
     return jsonResponse({
       ok: false,
       error: String(error && error.message ? error.message : error)
     });
   }
+}
+
+function saveLicensePayload(payload) {
+  assertPermission(payload, "edit");
+  const rows = Array.isArray(payload.rows) ? payload.rows.map(normalizeLicenseRow) : [];
+  const sheet = getLicenseSheet();
+  const existingRows = readLicenseRows();
+  if (hasDeletedRows(existingRows, rows)) assertPermission(payload, "delete");
+
+  sheet.clearContents();
+  sheet.appendRow(LICENSE_HEADERS);
+  rows.forEach((row) => sheet.appendRow(licenseToSheetValues(row)));
+  formatLicenseSheet(sheet);
+
+  return { ok: true, rows: rows.length };
 }
 
 function readLicenseRows() {
