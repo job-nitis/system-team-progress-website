@@ -1961,14 +1961,21 @@
     let lightboxIndex = 0;
     let inactivityTimer = 0;
     const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
+    const ACTIVITY_SAVE_INTERVAL_MS = 5000;
 
     function loadCurrentUser() {
       const saved = localStorage.getItem(USER_STORAGE_KEY);
       if (!saved) return null;
 
       try {
-        return normalizeUser(JSON.parse(saved));
+        const user = normalizeUser(JSON.parse(saved));
+        if (!user || !user.active || isSessionExpired(user)) {
+          localStorage.removeItem(USER_STORAGE_KEY);
+          return null;
+        }
+        return user;
       } catch (error) {
+        localStorage.removeItem(USER_STORAGE_KEY);
         return null;
       }
     }
@@ -1976,18 +1983,25 @@
     function normalizeUser(user) {
       if (!user) return null;
       const role = String(user.role || "Viewer").trim();
+      const loginAt = Number(user.loginAt || 0);
+      const lastActivityAt = Number(user.lastActivityAt || 0);
 
       return {
         email: String(user.email || "").trim().toLowerCase(),
         name: String(user.name || "").trim(),
         role: ["Admin", "Editor", "Viewer"].includes(role) ? role : "Viewer",
-        active: user.active === true || String(user.active).toUpperCase() === "TRUE"
+        active: user.active === true || String(user.active).toUpperCase() === "TRUE",
+        loginAt: Number.isFinite(loginAt) ? loginAt : 0,
+        lastActivityAt: Number.isFinite(lastActivityAt) ? lastActivityAt : 0
       };
     }
 
     function saveCurrentUser(user) {
       currentUser = normalizeUser(user);
       if (currentUser && currentUser.active) {
+        const now = Date.now();
+        currentUser.loginAt = currentUser.loginAt || now;
+        currentUser.lastActivityAt = now;
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
       } else {
         localStorage.removeItem(USER_STORAGE_KEY);
@@ -2009,10 +2023,28 @@
       loginStatusText.textContent = showMessage;
     }
 
+    function isSessionExpired(user) {
+      if (!user || !user.active || !user.lastActivityAt) return true;
+      return Date.now() - Number(user.lastActivityAt) >= INACTIVITY_LIMIT_MS;
+    }
+
+    function recordUserActivity(force = false) {
+      if (!currentUser || !currentUser.active) return;
+      const now = Date.now();
+      if (!force && now - Number(currentUser.lastActivityAt || 0) < ACTIVITY_SAVE_INTERVAL_MS) return;
+      currentUser.lastActivityAt = now;
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+    }
+
     function resetInactivityTimer() {
       window.clearTimeout(inactivityTimer);
       if (!currentUser || !currentUser.active) return;
+      if (isSessionExpired(currentUser)) {
+        logoutUser("Logged out after 30 minutes without activity.");
+        return;
+      }
 
+      recordUserActivity();
       inactivityTimer = window.setTimeout(() => {
         logoutUser("Logged out after 30 minutes without activity.");
       }, INACTIVITY_LIMIT_MS);
@@ -3821,6 +3853,12 @@
     ["click", "keydown", "scroll", "touchstart", "pointerdown"].forEach((eventName) => {
       window.addEventListener(eventName, resetInactivityTimer, { passive: true });
     });
+
+    window.addEventListener("focus", resetInactivityTimer);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) resetInactivityTimer();
+    });
+    window.addEventListener("pagehide", () => recordUserActivity(true));
 
     resizeCanvas();
     renderHighlightMonthOptions();
