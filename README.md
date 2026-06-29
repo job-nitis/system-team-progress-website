@@ -8,6 +8,7 @@ Static website for showing yearly System Team project progress.
 - `google-apps-script-progress-only.js` - Apps Script for the `ProgressRows` sheet tab
 - `google-apps-script-highlight-data-only.js` - Apps Script for the `Highlight information` sheet tab and Drive picture upload
 - `google-apps-script-license-time-only.js` - Apps Script for the `License detail` sheet tab
+- `google-apps-script-license-time-appsscript.json` - Apps Script manifest for License Time permissions
 - `google-apps-script-users-only.js` - Apps Script for the `Users` sheet tab and email permission lookup
 - Year tabs for switching between project years
 - Editable progress summary table
@@ -68,6 +69,17 @@ ID | License Name | Expired Date | Remaining Time | Updated At
 ```
 
 The website and Apps Script calculate Remaining Time automatically from Expired Date.
+
+If License Time shows `You do not have permission to call UrlFetchApp.fetch`, open the License Time Apps Script project and do this:
+
+1. Open `Project Settings`.
+2. Turn on `Show "appsscript.json" manifest file in editor`.
+3. Open `appsscript.json`.
+4. Paste the content from `google-apps-script-license-time-appsscript.json`.
+5. Save.
+6. Select and run `authorizeLicensePermissions`.
+7. Approve the permission request.
+8. Deploy a new web app version.
 
 User permission data uses a spreadsheet named `System Website User` with a sheet tab named `Users` and these columns:
 
