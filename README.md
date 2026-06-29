@@ -6,10 +6,13 @@ Static website for showing yearly System Team project progress.
 
 - `index.html` - the full website in one file
 - `google-apps-script-progress-only.js` - Apps Script for the `ProgressRows` sheet tab
+- `google-apps-script-progress-appsscript.json` - Apps Script manifest for Progress permissions
 - `google-apps-script-highlight-data-only.js` - Apps Script for the `Highlight information` sheet tab and Drive picture upload
+- `google-apps-script-highlight-data-appsscript.json` - Apps Script manifest for Highlight permissions
 - `google-apps-script-license-time-only.js` - Apps Script for the `License detail` sheet tab
 - `google-apps-script-license-time-appsscript.json` - Apps Script manifest for License Time permissions
 - `google-apps-script-users-only.js` - Apps Script for the `Users` sheet tab and email permission lookup
+- `google-apps-script-users-appsscript.json` - Apps Script manifest for User permissions
 - Year tabs for switching between project years
 - Editable progress summary table
 - Editable license table with remaining-time color status
@@ -70,14 +73,22 @@ ID | License Name | Expired Date | Remaining Time | Updated At
 
 The website and Apps Script calculate Remaining Time automatically from Expired Date.
 
-If License Time shows `You do not have permission to call UrlFetchApp.fetch`, open the License Time Apps Script project and do this:
+If any Apps Script shows `You do not have permission to call UrlFetchApp.fetch` or a Drive/Spreadsheet permission error, open that Apps Script project and do this:
 
 1. Open `Project Settings`.
 2. Turn on `Show "appsscript.json" manifest file in editor`.
 3. Open `appsscript.json`.
-4. Paste the content from `google-apps-script-license-time-appsscript.json`.
+4. Paste the matching manifest content:
+   - Progress Summary: `google-apps-script-progress-appsscript.json`
+   - Highlight: `google-apps-script-highlight-data-appsscript.json`
+   - License Time: `google-apps-script-license-time-appsscript.json`
+   - User: `google-apps-script-users-appsscript.json`
 5. Save.
-6. Select and run `authorizeLicensePermissions`.
+6. Select and run the matching authorization function:
+   - Progress Summary: `authorizeProgressPermissions`
+   - Highlight: `authorizeHighlightPermissions`
+   - License Time: `authorizeLicensePermissions`
+   - User: `authorizeUserPermissions`
 7. Approve the permission request.
 8. Deploy a new web app version.
 

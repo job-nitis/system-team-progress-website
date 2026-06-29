@@ -15,6 +15,18 @@ const HIGHLIGHT_HEADERS = [
   "Created At"
 ];
 
+function authorizeHighlightPermissions() {
+  const sheet = getHighlightSheet();
+  sheet.getName();
+  const folder = DriveApp.getFolderById(HIGHLIGHT_FOLDER_ID);
+  folder.getName();
+  UrlFetchApp.fetch(`${USER_PERMISSION_WEB_APP_URL}?email=authorization-check@example.com`, {
+    muteHttpExceptions: true
+  });
+
+  return "Highlight permissions are authorized";
+}
+
 function doGet(e) {
   const year = e && e.parameter && e.parameter.year ? String(e.parameter.year) : "";
   const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";

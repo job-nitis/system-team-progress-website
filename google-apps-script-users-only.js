@@ -8,6 +8,13 @@ const USERS_HEADERS = [
   "Active"
 ];
 
+function authorizeUserPermissions() {
+  const sheet = getUsersSheet();
+  sheet.getName();
+
+  return "User permissions are authorized";
+}
+
 function doGet(e) {
   const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
   const email = e && e.parameter && e.parameter.email ? String(e.parameter.email).trim().toLowerCase() : "";
