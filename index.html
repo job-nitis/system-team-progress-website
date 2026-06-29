@@ -209,6 +209,24 @@
       font-weight: 700;
     }
 
+    .export-button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 10px;
+      padding: 0 16px;
+      color: #ffffff;
+      background: var(--teal);
+      box-shadow: 0 8px 20px rgba(8, 135, 140, 0.18);
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .export-button:hover {
+      background: #06777c;
+    }
+
     .hero-aside {
       align-self: stretch;
       display: grid;
@@ -1424,6 +1442,7 @@
           <label for="yearSelect">Year</label>
           <select id="yearSelect" aria-label="Project year"></select>
         </div>
+        <button class="export-button" type="button" id="exportReportButton">Export Report</button>
         <div class="auth-panel">
           <div class="auth-user" id="authUserText">Not signed in<span>Viewer mode</span></div>
           <button class="auth-button" type="button" id="loginButton">Login</button>
@@ -1988,6 +2007,7 @@
     };
 
     const yearSelect = document.querySelector("#yearSelect");
+    const exportReportButton = document.querySelector("#exportReportButton");
     const authUserText = document.querySelector("#authUserText");
     const loginButton = document.querySelector("#loginButton");
     const logoutButton = document.querySelector("#logoutButton");
@@ -3304,6 +3324,237 @@
       `;
     }
 
+    function bangkokDateLabel(date = new Date()) {
+      return new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Asia/Bangkok",
+        day: "2-digit",
+        month: "short",
+        year: "numeric"
+      }).format(date);
+    }
+
+    function reportMonthValue() {
+      return String(currentBangkokMonth()).padStart(2, "0");
+    }
+
+    function reportStyles() {
+      return `
+        @page { size: A4 landscape; margin: 12mm; }
+        * { box-sizing: border-box; }
+        body { margin: 0; color: #111827; background: #ffffff; font-family: Arial, Helvetica, sans-serif; font-size: 11px; line-height: 1.45; }
+        .report-page { display: grid; gap: 14px; }
+        .report-header { display: flex; justify-content: space-between; gap: 18px; padding: 16px 18px; color: #ffffff; background: #12364a; border-radius: 10px; }
+        .report-header h1 { margin: 0; font-size: 26px; }
+        .report-header p { margin: 6px 0 0; color: #dbeafe; }
+        .report-meta { text-align: right; font-weight: 700; }
+        .report-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+        .report-kpi { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; }
+        .report-kpi strong { display: block; font-size: 22px; line-height: 1; }
+        .report-kpi span { display: block; margin-top: 5px; color: #475569; font-weight: 700; }
+        .report-section { break-inside: avoid; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .report-section h2 { margin: 0 0 8px; font-size: 15px; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { border: 1px solid #1f2937; padding: 6px; vertical-align: middle; }
+        th { background: #e2e8f0; font-weight: 800; }
+        td.center, th.center { text-align: center; }
+        .status-pill { display: inline-block; min-width: 64px; padding: 3px 8px; border-radius: 999px; color: #ffffff; text-align: center; font-weight: 800; }
+        .status-ok { background: #15803d; }
+        .status-delay { background: #dc2626; }
+        .status-watch { background: #b45309; }
+        .status-neutral { background: #475569; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .highlight-list, .portfolio-list { display: grid; gap: 8px; }
+        .report-card { display: grid; grid-template-columns: 132px 1fr; gap: 10px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; }
+        .report-card.no-image { grid-template-columns: 1fr; }
+        .report-card img { width: 132px; height: 82px; border-radius: 6px; object-fit: cover; background: #e2e8f0; }
+        .report-card h3 { margin: 0; font-size: 13px; }
+        .report-card p { margin: 5px 0 0; color: #475569; }
+        .muted { color: #64748b; }
+        .print-actions { margin: 0 0 12px; text-align: right; }
+        .print-actions button { border: 0; border-radius: 7px; padding: 9px 14px; color: #ffffff; background: #087f8c; cursor: pointer; font-weight: 800; }
+        @media print { .print-actions { display: none; } body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+      `;
+    }
+
+    function statusBadge(status) {
+      const normalized = String(status || "");
+      const cssClass = normalized === "On track"
+        ? "status-ok"
+        : normalized === "Delay"
+          ? "status-delay"
+          : normalized === "Watch"
+            ? "status-watch"
+            : "status-neutral";
+      return `<span class="status-pill ${cssClass}">${escapeHtml(normalized || "N/A")}</span>`;
+    }
+
+    function reportImage(imageUrls) {
+      const image = normalizeImageUrls(imageUrls)[0] || "";
+      return image ? `<img src="${escapeHtml(image)}" alt="">` : "";
+    }
+
+    function monthlyReportHtml() {
+      const data = selectedYear();
+      const rows = rowsForActiveYear();
+      const projects = projectCardsFromRows(rows);
+      const completed = projects.filter((project) => project.progress >= 100).length;
+      const delayed = projects.filter((project) => project.status === "Delay").length;
+      const active = projects.length - completed;
+      const score = averageProgress(projects);
+      const month = reportMonthValue();
+      const monthText = monthLabel(month) || "Current month";
+      const monthHighlights = highlights
+        .filter((item) => String(item.year || state.activeYear) === String(state.activeYear))
+        .filter((item) => normalizeMonthValue(item.month) === month);
+
+      const licenseRowsHtml = licenseRows.length ? licenseRows.map((license, index) => {
+        const days = daysUntil(license.expiredDate);
+        return `
+          <tr>
+            <td class="center">${index + 1}</td>
+            <td>${formatCellText(license.name)}</td>
+            <td class="center">${formatCellText(displayDate(license.expiredDate))}</td>
+            <td class="center">${formatCellText(remainingTimeLabel(days))}</td>
+          </tr>
+        `;
+      }).join("") : `<tr><td colspan="4" class="center">No license data</td></tr>`;
+
+      const progressRowsHtml = rows.length ? rows.map((row, index) => `
+        <tr>
+          <td class="center">${index + 1}</td>
+          <td>${formatCellText(row.project)}</td>
+          <td>${formatCellText(row.owner)}</td>
+          <td class="center">${statusBadge(rowStatus(row))}</td>
+          <td class="center">${rowPlanProgress(row)}%</td>
+          <td class="center">${rowActualProgress(row)}%</td>
+          <td>${formatCellText(row.overallPlan)}</td>
+        </tr>
+      `).join("") : `<tr><td colspan="7" class="center">No progress rows</td></tr>`;
+
+      const highlightHtml = monthHighlights.length ? monthHighlights.map((item) => {
+        const image = reportImage(item.imageUrls || item.image);
+        return `
+          <article class="report-card ${image ? "" : "no-image"}">
+            ${image}
+            <div>
+              <h3>${formatCellText(item.topic)}</h3>
+              <p>${formatCellText(item.detail)}</p>
+            </div>
+          </article>
+        `;
+      }).join("") : `<p class="muted">No highlight activity recorded for ${escapeHtml(monthText)}.</p>`;
+
+      const portfolioHtml = projects.length ? projects.map((project) => {
+        const image = reportImage(project.projectImages);
+        return `
+          <article class="report-card ${image ? "" : "no-image"}">
+            ${image}
+            <div>
+              <h3>${formatCellText(project.name)} ${statusBadge(project.status)}</h3>
+              <p><strong>Owner:</strong> ${formatCellText(project.owner)}</p>
+              <p><strong>Plan:</strong> ${project.planProgress}% | <strong>Actual:</strong> ${project.progress}%</p>
+              <p>${formatCellText(project.overallProject)}</p>
+            </div>
+          </article>
+        `;
+      }).join("") : `<p class="muted">No project portfolio data.</p>`;
+
+      return `<!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>${escapeHtml(data.year)} ${escapeHtml(monthText)} Monthly Report</title>
+            <style>${reportStyles()}</style>
+          </head>
+          <body>
+            <div class="print-actions"><button type="button" onclick="window.print()">Print / Save PDF</button></div>
+            <main class="report-page">
+              <header class="report-header">
+                <div>
+                  <h1>${escapeHtml(data.year)} ${escapeHtml(monthText)} Monthly Report</h1>
+                  <p>System Team Website - Instrument Plant Maintenance Division - PTT Gas Separation Plant</p>
+                </div>
+                <div class="report-meta">
+                  <div>Generated: ${escapeHtml(bangkokDateLabel())}</div>
+                  <div>Year: ${escapeHtml(data.year)}</div>
+                </div>
+              </header>
+
+              <section class="report-kpis" aria-label="Monthly report summary">
+                <div class="report-kpi"><strong>${projects.length}</strong><span>Total projects</span></div>
+                <div class="report-kpi"><strong>${completed}</strong><span>Completed</span></div>
+                <div class="report-kpi"><strong>${active}</strong><span>Ongoing</span></div>
+                <div class="report-kpi"><strong>${delayed}</strong><span>Delayed</span></div>
+                <div class="report-kpi"><strong>${score}%</strong><span>Overall progress</span></div>
+              </section>
+
+              <section class="report-section">
+                <h2>Progress Summary</h2>
+                <table>
+                  <thead>
+                    <tr>
+                      <th class="center" style="width: 42px;">No</th>
+                      <th>Project</th>
+                      <th style="width: 105px;">Owner</th>
+                      <th class="center" style="width: 92px;">Status</th>
+                      <th class="center" style="width: 70px;">Plan</th>
+                      <th class="center" style="width: 70px;">Actual</th>
+                      <th>Overall Plan</th>
+                    </tr>
+                  </thead>
+                  <tbody>${progressRowsHtml}</tbody>
+                </table>
+              </section>
+
+              <section class="grid-2">
+                <div class="report-section">
+                  <h2>License Time</h2>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th class="center" style="width: 42px;">No</th>
+                        <th>License Name</th>
+                        <th class="center" style="width: 100px;">Expired Date</th>
+                        <th class="center" style="width: 110px;">Remaining</th>
+                      </tr>
+                    </thead>
+                    <tbody>${licenseRowsHtml}</tbody>
+                  </table>
+                </div>
+
+                <div class="report-section">
+                  <h2>${escapeHtml(monthText)} Highlights</h2>
+                  <div class="highlight-list">${highlightHtml}</div>
+                </div>
+              </section>
+
+              <section class="report-section">
+                <h2>Project Portfolio</h2>
+                <div class="portfolio-list">${portfolioHtml}</div>
+              </section>
+            </main>
+            <script>
+              window.addEventListener("load", () => {
+                window.focus();
+                window.setTimeout(() => window.print(), 650);
+              });
+            <\/script>
+          </body>
+        </html>`;
+    }
+
+    function exportMonthlyReport() {
+      const reportWindow = window.open("", "_blank");
+      if (!reportWindow) {
+        window.alert("Please allow pop-ups to export the monthly report.");
+        return;
+      }
+
+      reportWindow.document.open();
+      reportWindow.document.write(monthlyReportHtml());
+      reportWindow.document.close();
+    }
+
     function rowsForActiveYear() {
       if (!progressRows[state.activeYear]) progressRows[state.activeYear] = [];
       return progressRows[state.activeYear];
@@ -3577,6 +3828,7 @@
       loadHighlightsFromGoogleSheet(state.activeYear);
     });
 
+    exportReportButton.addEventListener("click", exportMonthlyReport);
     loginButton.addEventListener("click", openLoginDialog);
     logoutButton.addEventListener("click", () => {
       logoutUser("");
