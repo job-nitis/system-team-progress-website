@@ -151,7 +151,7 @@ function saveHighlightImage(id, dataUrl) {
   const file = DriveApp.getFolderById(HIGHLIGHT_FOLDER_ID).createFile(blob);
 
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return `https://drive.google.com/thumbnail?id=${file.getId()}&sz=w1600`;
+  return `https://drive.google.com/thumbnail?id=${file.getId()}&sz=w2400`;
 }
 
 function authorizeDriveAccess() {
@@ -213,7 +213,7 @@ function findHighlightRowNumber(sheet, id) {
 
 function normalizeDriveImageUrl(url) {
   const id = driveFileId(url);
-  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w1600` : String(url || "").trim();
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w2400` : String(url || "").trim();
 }
 
 function driveFileId(url) {

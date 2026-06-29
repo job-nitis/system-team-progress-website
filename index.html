@@ -950,6 +950,7 @@
       max-height: 100%;
       border-radius: 8px;
       object-fit: contain;
+      image-rendering: auto;
       background: #0b1220;
       box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
     }
@@ -2409,7 +2410,7 @@
       if (!url) return "";
       const idMatch = url.match(/[?&]id=([^&]+)/) || url.match(/\/d\/([^/]+)/);
       if (!idMatch || !/drive\.google\.com/.test(url)) return url;
-      return `https://drive.google.com/thumbnail?id=${encodeURIComponent(decodeURIComponent(idMatch[1]))}&sz=w1600`;
+      return `https://drive.google.com/thumbnail?id=${encodeURIComponent(decodeURIComponent(idMatch[1]))}&sz=w2400`;
     }
 
     function persistedImageUrls(value) {
