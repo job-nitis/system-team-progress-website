@@ -14,6 +14,16 @@ const LICENSE_HEADERS = [
 ];
 const LICENSE_TIME_ZONE = "Asia/Bangkok";
 
+function authorizeLicensePermissions() {
+  const sheet = getLicenseSheet();
+  sheet.getName();
+  UrlFetchApp.fetch(`${USER_PERMISSION_WEB_APP_URL}?email=authorization-check@example.com`, {
+    muteHttpExceptions: true
+  });
+
+  return "License Time permissions are authorized";
+}
+
 function doGet(e) {
   try {
     const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
