@@ -129,10 +129,10 @@
       position: relative;
       overflow: hidden;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
       gap: 24px;
-      min-height: 360px;
-      padding: clamp(24px, 4vw, 44px);
+      min-height: 330px;
+      padding: clamp(24px, 3.4vw, 40px);
       color: #ffffff;
       background:
         linear-gradient(135deg, rgba(15, 31, 51, 0.98), rgba(20, 83, 100, 0.94)),
@@ -180,10 +180,39 @@
       font-size: 17px;
     }
 
+    .hero-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(86px, 1fr));
+      gap: 10px;
+      max-width: 660px;
+      margin-top: 28px;
+    }
+
+    .hero-kpi {
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 8px;
+    }
+
+    .hero-kpi strong {
+      display: block;
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .hero-kpi span {
+      display: block;
+      margin-top: 7px;
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
     .hero-aside {
       align-self: stretch;
       display: grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: auto auto 1fr;
       gap: 14px;
       padding: 18px;
       background: rgba(255, 255, 255, 0.08);
@@ -219,6 +248,30 @@
     .score-caption {
       margin-top: 12px;
       color: #dbe8f2;
+    }
+
+    .hero-focus {
+      display: grid;
+      gap: 9px;
+      padding-top: 4px;
+      color: #dbe8f2;
+      font-size: 13px;
+    }
+
+    .focus-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.13);
+    }
+
+    .focus-row span {
+      color: #b7c8d8;
+    }
+
+    .focus-row strong {
+      text-align: right;
     }
 
     .stats {
@@ -1271,6 +1324,10 @@
         grid-template-columns: 1fr;
       }
 
+      .hero-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .stats {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -1296,6 +1353,10 @@
       .hero {
         min-height: 0;
         padding: 22px;
+      }
+
+      .hero-kpis {
+        grid-template-columns: 1fr;
       }
 
       .project-grid,
@@ -1378,6 +1439,24 @@
           <p class="eyebrow" id="heroEyebrow">Project year</p>
           <h2 id="heroTitle">System Team Progress</h2>
           <p id="heroSummary">A projects-first view for tracking annual system team work, visible progress, delivery risks, and operational impact.</p>
+          <div class="hero-kpis" aria-label="System project snapshot">
+            <div class="hero-kpi">
+              <strong id="heroProjectCount">0</strong>
+              <span>Total projects</span>
+            </div>
+            <div class="hero-kpi">
+              <strong id="heroCompletedCount">0</strong>
+              <span>Completed</span>
+            </div>
+            <div class="hero-kpi">
+              <strong id="heroActiveCount">0</strong>
+              <span>Ongoing</span>
+            </div>
+            <div class="hero-kpi">
+              <strong id="heroDelayCount">0</strong>
+              <span>Delayed</span>
+            </div>
+          </div>
         </div>
         <aside class="hero-aside" aria-label="Current year progress">
           <div class="current-label">
@@ -1387,6 +1466,20 @@
           <div class="current-score">
             <div class="score-number"><span id="overallScore">0</span><span>%</span></div>
             <div class="score-caption" id="scoreCaption">Across active system projects</div>
+          </div>
+          <div class="hero-focus" aria-label="System focus">
+            <div class="focus-row">
+              <span>Current focus</span>
+              <strong id="heroFocusText">Delivery tracking</strong>
+            </div>
+            <div class="focus-row">
+              <span>Risk watch</span>
+              <strong id="heroRiskText">0 delayed</strong>
+            </div>
+            <div class="focus-row">
+              <span>Data source</span>
+              <strong>Google Sheets</strong>
+            </div>
           </div>
         </aside>
       </section>
@@ -3426,6 +3519,12 @@
       document.querySelector("#currentYearLabel").textContent = data.year;
       document.querySelector("#overallScore").textContent = score;
       document.querySelector("#scoreCaption").textContent = `${projects.length} projects tracked for ${data.year}`;
+      document.querySelector("#heroProjectCount").textContent = projects.length;
+      document.querySelector("#heroCompletedCount").textContent = completed;
+      document.querySelector("#heroActiveCount").textContent = active;
+      document.querySelector("#heroDelayCount").textContent = watch;
+      document.querySelector("#heroFocusText").textContent = active ? `${active} projects in progress` : "All tracked work closed";
+      document.querySelector("#heroRiskText").textContent = watch ? `${watch} delayed projects` : "No delayed projects";
       document.querySelector("#metricProjects").textContent = projects.length;
       document.querySelector("#metricCompleted").textContent = completed;
       document.querySelector("#metricActive").textContent = active;
