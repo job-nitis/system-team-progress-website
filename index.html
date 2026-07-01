@@ -1610,10 +1610,14 @@
   <div class="dialog-backdrop" id="loginDialog" role="dialog" aria-modal="true" aria-labelledby="loginDialogTitle">
     <form class="confirm-dialog" id="loginForm">
       <h3 id="loginDialogTitle">Login</h3>
-      <p>Enter your approved email to unlock your website permission.</p>
+      <p>Enter your approved email and password to unlock your website permission.</p>
       <div class="form-field">
         <label for="loginEmailInput">Email</label>
         <input id="loginEmailInput" name="email" type="email" required>
+      </div>
+      <div class="form-field">
+        <label for="loginPasswordInput">Password</label>
+        <input id="loginPasswordInput" name="password" type="password" autocomplete="current-password" required>
       </div>
       <p id="loginStatusText" class="form-status"></p>
       <div class="dialog-actions">
@@ -2014,6 +2018,7 @@
     const loginDialog = document.querySelector("#loginDialog");
     const loginForm = document.querySelector("#loginForm");
     const loginEmailInput = document.querySelector("#loginEmailInput");
+    const loginPasswordInput = document.querySelector("#loginPasswordInput");
     const loginStatusText = document.querySelector("#loginStatusText");
     const cancelLoginButton = document.querySelector("#cancelLoginButton");
     const confirmLoginButton = document.querySelector("#confirmLoginButton");
@@ -2122,6 +2127,9 @@
     }
 
     function logoutUser(showMessage = "") {
+      if (currentUser && currentUser.active) {
+        logAudit("Logout", "User", showMessage || "Manual logout");
+      }
       saveCurrentUser(null);
       closeLicenseDialog();
       closeEditDialog();
@@ -2197,7 +2205,7 @@
       loginStatusText.textContent = "";
     }
 
-    function loadUserFromGoogleSheet(email) {
+    function loadUserFromGoogleSheet(email, password) {
       return new Promise((resolve, reject) => {
         if (!USER_APPS_SCRIPT_URL) {
           reject(new Error("Users web app URL is not set"));
@@ -2221,9 +2229,30 @@
           reject(new Error("Could not load user permission"));
         };
 
-        script.src = `${USER_APPS_SCRIPT_URL}${separator}email=${encodeURIComponent(email)}&callback=${encodeURIComponent(callbackName)}`;
+        script.src = `${USER_APPS_SCRIPT_URL}${separator}email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&callback=${encodeURIComponent(callbackName)}`;
         document.body.appendChild(script);
       });
+    }
+
+    function logAudit(action, moduleName, detail = "") {
+      if (!USER_APPS_SCRIPT_URL || !currentUser || !currentUser.active) return;
+
+      const callbackName = `systemTeamAuditCallback_${Date.now()}_${Math.round(Math.random() * 100000)}`;
+      const script = document.createElement("script");
+      const separator = USER_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+
+      window[callbackName] = () => {
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.onerror = () => {
+        delete window[callbackName];
+        script.remove();
+      };
+
+      script.src = `${USER_APPS_SCRIPT_URL}${separator}action=audit&email=${encodeURIComponent(currentUser.email)}&role=${encodeURIComponent(currentUser.role)}&event=${encodeURIComponent(action)}&module=${encodeURIComponent(moduleName)}&detail=${encodeURIComponent(detail)}&callback=${encodeURIComponent(callbackName)}`;
+      document.body.appendChild(script);
     }
 
     function applyPermissionState() {
@@ -3026,6 +3055,7 @@
       if (!window.confirm(`Delete "${highlight.topic || "this highlight"}"?`)) return;
 
       highlights = highlights.filter((item) => item.id !== highlightId);
+      logAudit("Delete", "Highlight", highlight.topic || highlightId);
       saveHighlights();
       renderHighlights();
       tableStorageStatus.textContent = "Deleting highlight from Google Sheets";
@@ -3050,6 +3080,7 @@
         .filter((url) => driveImageUrl(url) !== targetUrl);
       row.projectImageUrl = row.projectImageUrls[0] || "";
 
+      logAudit("Delete image", "Progress Summary", row.project || row.id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRowsForLocalStorage()));
       renderProjectExistingImages(row);
       renderDashboard();
@@ -3075,6 +3106,7 @@
         .filter((url) => driveImageUrl(url) !== targetUrl);
       highlight.image = highlight.imageUrls[0] || "";
 
+      logAudit("Delete image", "Highlight", highlight.topic || highlight.id);
       saveHighlights();
       renderHighlightExistingImages(highlight);
       renderHighlights();
@@ -3544,6 +3576,7 @@
     }
 
     function exportMonthlyReport() {
+      logAudit("Export", "Monthly Report", `${state.activeYear} ${monthLabel(reportMonthValue()) || "Current month"}`);
       const reportWindow = window.open("", "_blank");
       if (!reportWindow) {
         window.alert("Please allow pop-ups to export the monthly report.");
@@ -3615,6 +3648,7 @@
       if (!window.confirm(`Delete "${license.name || "this license"}"?`)) return;
 
       licenseRows = licenseRows.filter((item) => item.id !== licenseId);
+      logAudit("Delete", "License Time", license.name || licenseId);
       saveLicenseRows();
       renderLicenseTable();
     }
@@ -3725,6 +3759,8 @@
     function deleteProgressRow() {
       if (!requireDeletePermission()) return;
       if (!pendingDeleteRowId) return;
+      const row = rowsForActiveYear().find((item) => item.id === pendingDeleteRowId);
+      logAudit("Delete", "Progress Summary", row ? row.project || pendingDeleteRowId : pendingDeleteRowId);
       progressRows[state.activeYear] = rowsForActiveYear().filter((row) => row.id !== pendingDeleteRowId);
       saveProgressRows();
       renderDashboard();
@@ -3842,7 +3878,7 @@
       loginStatusText.textContent = "Checking permission";
 
       try {
-        const user = await loadUserFromGoogleSheet(loginEmailInput.value.trim());
+        const user = await loadUserFromGoogleSheet(loginEmailInput.value.trim(), loginPasswordInput.value);
         if (!user || !user.active) throw new Error("Email is not active");
         saveCurrentUser(user);
         loginStatusText.textContent = `Logged in as ${user.role}`;
@@ -3876,6 +3912,7 @@
 
       const licenseId = licenseIdInput.value || `license-${Date.now()}`;
       const existing = licenseRows.find((item) => item.id === licenseId);
+      const action = existing ? "Edit" : "Add";
       const nextLicense = normalizeLicenseRow({
         id: licenseId,
         name: licenseNameInput.value,
@@ -3895,6 +3932,7 @@
         return (aDays ?? 999999) - (bDays ?? 999999);
       });
 
+      logAudit(action, "License Time", nextLicense.name || licenseId);
       saveLicenseRows();
       renderLicenseTable();
       closeLicenseDialog();
@@ -4053,6 +4091,7 @@
         saveHighlights();
         tableStorageStatus.textContent = highlightMode === "edit" ? "Saving highlight changes to Google Drive and Google Sheets" : "Saving highlight to Google Drive and Google Sheets";
         await saveHighlightToGoogleSheet(highlight);
+        logAudit(highlightMode === "edit" ? "Edit" : "Add", "Highlight", highlight.topic || highlight.id);
         highlight.uploadImages = [];
         saveHighlights();
         tableStorageStatus.textContent = "Saved highlight, loading Drive pictures";
@@ -4083,6 +4122,7 @@
     resetTableButton.addEventListener("click", () => {
       if (!requireDeletePermission()) return;
       progressRows[state.activeYear] = structuredClone(defaultProgressRows[state.activeYear] || []);
+      logAudit("Reset", "Progress Summary", `${state.activeYear} table reset`);
       saveProgressRows();
       renderDashboard();
     });
@@ -4114,6 +4154,7 @@
       const rowId = document.querySelector("#editRowId").value;
       const rows = rowsForActiveYear();
       let row = rows.find((item) => item.id === rowId);
+      const auditAction = row ? "Edit" : "Add";
 
       try {
         if (!row && editMode === "create") {
@@ -4167,6 +4208,7 @@
         }
 
         saveProgressRows();
+        logAudit(auditAction, "Progress Summary", row.project || row.id);
         renderProgressTable();
         renderDashboard();
         closeEditDialog();
