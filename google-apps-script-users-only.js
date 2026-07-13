@@ -82,6 +82,10 @@ function doGet(e) {
       return callbackResponse(callback, { ok: false, error: "Wrong password" });
     }
 
+    if (action === "verify") {
+      return callbackResponse(callback, { ok: true, user: publicUser(user) });
+    }
+
     updateLastLogin(result.rowNumber);
     appendAudit({
       email: user.email,

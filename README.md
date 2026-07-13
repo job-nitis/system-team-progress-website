@@ -95,7 +95,13 @@ If any Apps Script shows `You do not have permission to call UrlFetchApp.fetch` 
 User permission data uses a spreadsheet named `System Website User` with a sheet tab named `Users` and these columns:
 
 ```text
-Email | Name | Role | Active
+Email | Name | Role | Active | Password | Last Login
+```
+
+The same spreadsheet also uses a sheet tab named `Audit Log` with these columns:
+
+```text
+Time | Email | Role | Action | Module | Detail
 ```
 
 Roles:
@@ -105,6 +111,8 @@ Viewer = view only
 Editor = add and edit
 Admin = add, edit, and delete
 ```
+
+Successful login updates `Last Login`. The website writes audit rows for login, logout, add, edit, delete, image deletion, reset, and monthly report export.
 
 For team/shared storage, use Google Sheets:
 

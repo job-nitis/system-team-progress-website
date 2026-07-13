@@ -33,6 +33,7 @@ function doGet(e) {
       const rowsText = e && e.parameter && e.parameter.rows ? String(e.parameter.rows) : "[]";
       const payload = {
         actorEmail: e && e.parameter && e.parameter.actorEmail ? String(e.parameter.actorEmail) : "",
+        actorPassword: e && e.parameter && e.parameter.actorPassword ? String(e.parameter.actorPassword) : "",
         rows: JSON.parse(rowsText)
       };
       return callbackResponse(callback, saveLicensePayload(payload));
@@ -215,7 +216,7 @@ function jsonResponse(payload) {
 }
 
 function assertPermission(payload, action) {
-  const user = lookupUser(payload && payload.actorEmail);
+  const user = lookupUser(payload && payload.actorEmail, payload && payload.actorPassword);
   const role = user && user.role;
 
   if (action === "delete" && role !== "Admin") {
@@ -227,12 +228,14 @@ function assertPermission(payload, action) {
   }
 }
 
-function lookupUser(email) {
+function lookupUser(email, password) {
   const cleanEmail = String(email || "").trim().toLowerCase();
+  const cleanPassword = String(password || "");
   if (!cleanEmail) throw new Error("Login email is required");
+  if (!cleanPassword) throw new Error("Login password is required");
   if (!USER_PERMISSION_WEB_APP_URL) throw new Error("User permission URL is not set");
 
-  const response = UrlFetchApp.fetch(`${USER_PERMISSION_WEB_APP_URL}?email=${encodeURIComponent(cleanEmail)}`, {
+  const response = UrlFetchApp.fetch(`${USER_PERMISSION_WEB_APP_URL}?action=verify&email=${encodeURIComponent(cleanEmail)}&password=${encodeURIComponent(cleanPassword)}`, {
     muteHttpExceptions: true
   });
   const payload = JSON.parse(response.getContentText() || "{}");

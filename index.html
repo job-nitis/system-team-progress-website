@@ -1977,6 +1977,7 @@
     const HIGHLIGHT_STORAGE_KEY = "system-team-highlights-v1";
     const LICENSE_STORAGE_KEY = "system-team-license-time-v1";
     const USER_STORAGE_KEY = "system-team-current-user-v1";
+    const USER_PASSWORD_STORAGE_KEY = "system-team-current-user-password-v1";
     const PROGRESS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyP9IOgobN2e3fGiMP6hTmAyYkSuBfheTgx0eiIuIlk5wqKzNUsv4x9EpwrlT6owxgVrw/exec";
     const HIGHLIGHT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3R3iJCwLumpaz7d6VyS4E54aCbde9y1uP-PGyMrmg3KGBimVq5Y7AZw_aJyCzyulI/exec";
     const LICENSE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw25juQC6L_-L-crFs0Eed3HrQZ-pKnhyea6JFLI6NECygUZX5GYa8f6oiX0r_LQft75Q/exec";
@@ -2067,6 +2068,11 @@
     let licenseRows = loadLicenseRows();
     let highlights = loadHighlights();
     let currentUser = loadCurrentUser();
+    let currentUserPassword = sessionStorage.getItem(USER_PASSWORD_STORAGE_KEY) || "";
+    if (currentUser && !currentUserPassword) {
+      localStorage.removeItem(USER_STORAGE_KEY);
+      currentUser = null;
+    }
     let pendingDeleteRowId = "";
     let editMode = "update";
     let highlightMode = "create";
@@ -2111,16 +2117,22 @@
       };
     }
 
-    function saveCurrentUser(user) {
+    function saveCurrentUser(user, password = "") {
       currentUser = normalizeUser(user);
       if (currentUser && currentUser.active) {
         const now = Date.now();
         currentUser.loginAt = currentUser.loginAt || now;
         currentUser.lastActivityAt = now;
+        if (password) {
+          currentUserPassword = password;
+          sessionStorage.setItem(USER_PASSWORD_STORAGE_KEY, password);
+        }
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
       } else {
         localStorage.removeItem(USER_STORAGE_KEY);
+        sessionStorage.removeItem(USER_PASSWORD_STORAGE_KEY);
         currentUser = null;
+        currentUserPassword = "";
       }
       applyPermissionState();
       resetInactivityTimer();
@@ -2178,6 +2190,10 @@
 
     function currentActorEmail() {
       return currentUser && currentUser.active ? currentUser.email : "";
+    }
+
+    function currentActorPassword() {
+      return currentUser && currentUser.active ? currentUserPassword : "";
     }
 
     function requireEditPermission() {
@@ -2315,12 +2331,17 @@
           reject(new Error("Please login before saving License Time"));
           return;
         }
+        const actorPassword = currentActorPassword();
+        if (!actorPassword) {
+          reject(new Error("Please login again before saving License Time"));
+          return;
+        }
 
         const callbackName = `systemTeamLicenseSaveCallback_${Date.now()}`;
         const script = document.createElement("script");
         const separator = LICENSE_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
         const rowsPayload = JSON.stringify(licenseRows.map(normalizeLicenseRow));
-        const url = `${LICENSE_APPS_SCRIPT_URL}${separator}action=save&actorEmail=${encodeURIComponent(actorEmail)}&rows=${encodeURIComponent(rowsPayload)}&callback=${encodeURIComponent(callbackName)}`;
+        const url = `${LICENSE_APPS_SCRIPT_URL}${separator}action=save&actorEmail=${encodeURIComponent(actorEmail)}&actorPassword=${encodeURIComponent(actorPassword)}&rows=${encodeURIComponent(rowsPayload)}&callback=${encodeURIComponent(callbackName)}`;
 
         if (url.length > 18000) {
           reject(new Error("Too much license data to sync at one time"));
@@ -2414,6 +2435,7 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           actorEmail: currentActorEmail(),
+          actorPassword: currentActorPassword(),
           type: "highlight",
           year: state.activeYear,
           id: highlight.id,
@@ -2435,6 +2457,7 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           actorEmail: currentActorEmail(),
+          actorPassword: currentActorPassword(),
           action: "delete",
           id: highlightId
         })
@@ -2450,6 +2473,7 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           actorEmail: currentActorEmail(),
+          actorPassword: currentActorPassword(),
           action: "deleteImage",
           id: highlightId,
           imageUrl
@@ -2743,6 +2767,7 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           actorEmail: currentActorEmail(),
+          actorPassword: currentActorPassword(),
           year: state.activeYear,
           rows: rowsForGoogleSheet()
         })
@@ -2765,6 +2790,7 @@
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           actorEmail: currentActorEmail(),
+          actorPassword: currentActorPassword(),
           action: "deleteImage",
           id: rowId,
           imageUrl
@@ -3880,7 +3906,7 @@
       try {
         const user = await loadUserFromGoogleSheet(loginEmailInput.value.trim(), loginPasswordInput.value);
         if (!user || !user.active) throw new Error("Email is not active");
-        saveCurrentUser(user);
+        saveCurrentUser(user, loginPasswordInput.value);
         loginStatusText.textContent = `Logged in as ${user.role}`;
         closeLoginDialog();
         renderDashboard();
