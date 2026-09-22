@@ -1020,7 +1020,7 @@
     }
 
     .status.done {
-      background: var(--blue);
+      background: var(--green);
     }
 
     .status.blocked {
@@ -2224,6 +2224,7 @@
     };
 
     const statusClass = {
+      "Completed": "done",
       "On track": "on-track",
       "Delay": "delay",
       "Watch": "watch",
@@ -3251,7 +3252,9 @@
     }
 
     function rowStatus(row) {
-      return rowActualProgress(row) >= rowPlanProgress(row) ? "On track" : "Delay";
+      const actualProgress = rowActualProgress(row);
+      if (actualProgress >= 100) return "Completed";
+      return actualProgress >= rowPlanProgress(row) ? "On track" : "Delay";
     }
 
     function renderHighlightMonthOptions() {
@@ -3696,7 +3699,7 @@
 
     function statusBadge(status) {
       const normalized = String(status || "");
-      const cssClass = normalized === "On track"
+      const cssClass = ["Completed", "Done", "On track"].includes(normalized)
         ? "status-ok"
         : normalized === "Delay"
           ? "status-delay"
