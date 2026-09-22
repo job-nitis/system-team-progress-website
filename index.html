@@ -19,6 +19,18 @@
       --red: #c2413a;
       --navy: #17343a;
       --shadow: 0 16px 40px rgba(23, 33, 38, 0.09);
+      --content-max-width: 1640px;
+      --page-inline: clamp(20px, 2vw, 36px);
+      --font-body: "Inter", "IBM Plex Sans", "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+      --font-heading: "Inter", "IBM Plex Sans", "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+      --card-radius: 8px;
+      --border-color: #dce3e6;
+      --text-primary: #172126;
+      --text-secondary: #66757d;
+      --section-gap: 22px;
+      --card-padding: 18px;
+      --table-header-size: 13px;
+      --table-content-size: 13.5px;
     }
 
     * {
@@ -33,10 +45,11 @@
 
     body {
       margin: 0;
-      font-family: "Aptos", "Inter", "Segoe UI Variable", "Segoe UI", Arial, sans-serif;
+      font-family: var(--font-body);
+      font-size: 15px;
       color: var(--ink);
       background: var(--paper);
-      line-height: 1.5;
+      line-height: 1.55;
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
     }
@@ -134,8 +147,8 @@
     }
 
     main {
-      width: calc(100% - 32px);
-      max-width: 1416px;
+      width: min(calc(100% - (2 * var(--page-inline))), var(--content-max-width));
+      max-width: none;
       min-width: 0;
       margin: 0 auto;
       padding: 28px 0 48px;
@@ -476,44 +489,8 @@
       min-height: 68px;
     }
 
-    .progress-table .col-no {
-      width: 52px;
-    }
-
-    .progress-table .col-project {
-      width: 240px;
-      text-align: left;
-    }
-
-    .progress-table .col-narrow {
-      width: 72px;
-    }
-
-    .progress-table .col-medium {
-      width: 160px;
-    }
-
-    .progress-table .col-wide {
-      width: 250px;
-      text-align: left;
-    }
-
-    .progress-table .col-action {
-      width: 118px;
-    }
-
     .license-table {
       min-width: 760px;
-    }
-
-    .license-table .col-license-name {
-      width: 340px;
-      text-align: left;
-    }
-
-    .license-table .col-expired-date,
-    .license-table .col-remaining {
-      width: 170px;
     }
 
     .license-remaining {
@@ -1096,6 +1073,10 @@
       font-size: 14px;
       line-height: 1.2;
       text-align: center;
+    }
+
+    .progress-table th.table-header-left {
+      text-align: left;
     }
 
     .portfolio-initiative > .portfolio-section-title {
@@ -2099,10 +2080,6 @@
       line-height: 1.3;
     }
 
-    .progress-table .col-narrow {
-      width: 88px;
-    }
-
     .progress-table tbody tr:last-child td {
       border-bottom: 0;
     }
@@ -2306,6 +2283,384 @@
 
     .empty-state {
       background: #f8faf9;
+    }
+
+    /* Shared readability and data-presentation system */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: var(--font-heading);
+    }
+
+    .brand h1 {
+      font-size: 22px;
+    }
+
+    .hero {
+      min-height: 300px;
+      gap: 28px;
+      padding: 34px;
+    }
+
+    .hero h2 {
+      font-size: 40px;
+      line-height: 1.08;
+    }
+
+    .hero-copy > p:not(.eyebrow) {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .summary-toolbar h3,
+    .section-head h3 {
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .summary-toolbar p,
+    .section-head p {
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .project-card h4 {
+      font-size: 19px;
+      line-height: 1.35;
+    }
+
+    .summary-section {
+      margin: var(--section-gap) 0;
+      padding: var(--card-padding);
+      border-color: var(--border-color);
+      border-radius: var(--card-radius);
+    }
+
+    .stats {
+      margin: var(--section-gap) 0;
+    }
+
+    .project-card,
+    .highlight-card,
+    .panel,
+    .portfolio-layout,
+    .project-plan-block {
+      border-radius: var(--card-radius);
+    }
+
+    .project-card {
+      padding: var(--card-padding);
+    }
+
+    .text-clamp {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+
+    .clamp-1 { -webkit-line-clamp: 1; line-clamp: 1; }
+    .clamp-2 { -webkit-line-clamp: 2; line-clamp: 2; }
+    .clamp-3 { -webkit-line-clamp: 3; line-clamp: 3; }
+    .clamp-4 { -webkit-line-clamp: 4; line-clamp: 4; }
+    .clamp-5 { -webkit-line-clamp: 5; line-clamp: 5; }
+    .clamp-6 { -webkit-line-clamp: 6; line-clamp: 6; }
+
+    .data-value {
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .data-value.is-empty {
+      color: #8a969d;
+      font-size: 13px;
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .table-scroll,
+    .milestone-table-scroll {
+      border-color: var(--border-color);
+      border-radius: var(--card-radius);
+    }
+
+    .progress-table {
+      min-width: 1280px;
+      font-size: var(--table-content-size);
+      line-height: 1.45;
+    }
+
+    .progress-table th,
+    .progress-table td {
+      padding: 12px 13px;
+      vertical-align: middle;
+    }
+
+    .progress-table th {
+      color: #40515a;
+      background: #f3f6f7;
+      font-size: var(--table-header-size);
+      line-height: 1.35;
+      text-align: center;
+    }
+
+    .progress-summary-table col.track-col-no { width: 4%; }
+    .progress-summary-table col.track-col-project { width: 18%; }
+    .progress-summary-table col.track-col-tech { width: 8%; }
+    .progress-summary-table col.track-col-tor { width: 10%; }
+    .progress-summary-table col.track-col-prpo { width: 13%; }
+    .progress-summary-table col.track-col-delivery { width: 7%; }
+    .progress-summary-table col.track-col-fat { width: 7%; }
+    .progress-summary-table col.track-col-moc { width: 7%; }
+    .progress-summary-table col.track-col-plan { width: 20%; }
+    .progress-summary-table col.track-col-action { width: 6%; }
+
+    .progress-summary-table .cell-number,
+    .progress-summary-table .cell-tech,
+    .progress-summary-table .cell-tor,
+    .progress-summary-table .cell-delivery,
+    .progress-summary-table .cell-fat,
+    .progress-summary-table .cell-moc,
+    .progress-summary-table .cell-action {
+      text-align: center;
+    }
+
+    .progress-summary-table .cell-project,
+    .progress-summary-table .cell-prpo,
+    .progress-summary-table .cell-overall-plan {
+      text-align: left;
+    }
+
+    .progress-summary-table tbody tr {
+      height: 82px;
+    }
+
+    .progress-summary-table .project-name {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .progress-summary-table .project-owner {
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
+
+    .stage-cell {
+      height: 72px;
+    }
+
+    .stage-label {
+      height: auto;
+      min-height: 0;
+      padding: 0;
+      font-size: 13px;
+      white-space: normal;
+      text-align: center;
+    }
+
+    .progress-table td.cell-done {
+      color: #17633f;
+      background: #dcf2e5;
+    }
+
+    .progress-table td.cell-progress {
+      color: #835313;
+      background: #fdf0cf;
+    }
+
+    .progress-table td.cell-empty {
+      background: #ffffff;
+    }
+
+    .prpo-stack {
+      gap: 5px;
+      white-space: normal;
+    }
+
+    .prpo-line {
+      grid-template-columns: 52px minmax(0, 1fr);
+      gap: 7px;
+      white-space: normal;
+    }
+
+    .prpo-line strong,
+    .prpo-line span {
+      font-size: 12.5px;
+      line-height: 1.3;
+    }
+
+    .prpo-line span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .license-table {
+      min-width: 820px;
+    }
+
+    .license-table col.license-col-no { width: 6%; }
+    .license-table col.license-col-name { width: 48%; }
+    .license-table col.license-col-expired { width: 16%; }
+    .license-table col.license-col-remaining { width: 16%; }
+    .license-table col.license-col-action { width: 14%; }
+
+    .license-table .cell-license-number,
+    .license-table .cell-expired-date,
+    .license-table .cell-license-remaining,
+    .license-table .cell-license-action {
+      text-align: center;
+    }
+
+    .license-table .cell-license-name {
+      text-align: left;
+    }
+
+    .cell-number,
+    .cell-license-number,
+    .cell-expired-date,
+    .cell-license-remaining,
+    .milestone-date,
+    .milestone-progress {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .license-table tbody tr {
+      height: 62px;
+    }
+
+    .portfolio-layout {
+      grid-template-columns: minmax(270px, 0.42fr) minmax(0, 1fr);
+    }
+
+    .portfolio-detail-upper {
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      gap: 16px;
+    }
+
+    .portfolio-objective,
+    .portfolio-initiative {
+      padding: 18px;
+    }
+
+    .portfolio-objective {
+      align-content: start;
+      gap: 12px;
+      background: #f4f8f8;
+    }
+
+    .portfolio-objective .portfolio-section-title,
+    .portfolio-initiative > .portfolio-section-title {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .objective-data-card {
+      min-width: 0;
+      padding: 13px 14px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--card-radius);
+    }
+
+    .objective-data-card h5,
+    .portfolio-copy-stack .portfolio-field h5,
+    .portfolio-present-status h5 {
+      margin-bottom: 7px;
+      color: #30474d;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .portfolio-copy-stack .portfolio-field,
+    .portfolio-present-status {
+      padding: 14px;
+      border-radius: var(--card-radius);
+    }
+
+    .portfolio-field p {
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .milestone-status-table {
+      min-width: 760px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .milestone-status-table col.milestone-col-name { width: 24%; }
+    .milestone-status-table col.milestone-col-plan { width: 12%; }
+    .milestone-status-table col.milestone-col-actual { width: 12%; }
+    .milestone-status-table col.milestone-col-status { width: 10%; }
+    .milestone-status-table col.milestone-col-progress { width: 12%; }
+    .milestone-status-table col.milestone-col-remark { width: 30%; }
+
+    .milestone-status-table th,
+    .milestone-status-table td {
+      padding: 11px 12px;
+      vertical-align: middle;
+    }
+
+    .milestone-status-table th {
+      font-size: 13px;
+    }
+
+    .milestone-status-table th:nth-child(2),
+    .milestone-status-table th:nth-child(3),
+    .milestone-status-table th:nth-child(4),
+    .milestone-status-table th:nth-child(5) {
+      text-align: center;
+    }
+
+    .milestone-name,
+    .milestone-remark {
+      text-align: left;
+    }
+
+    .milestone-summary span {
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .milestone-summary strong {
+      font-size: 18px;
+    }
+
+    .project-nav-copy span,
+    .project-nav-meta {
+      font-size: 11px;
+    }
+
+    .project-nav-copy strong,
+    .project-nav-current-title {
+      font-size: 13px;
+    }
+
+    .highlight-body h4 {
+      font-size: 17px;
+      line-height: 1.4;
+    }
+
+    .highlight-body p {
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .empty-state,
+    .progress-table td.table-empty-state,
+    .milestone-status-table td.table-empty-state {
+      color: var(--text-secondary);
+      background: #f8faf9;
+      font-size: 14px;
+      text-align: center;
     }
 
     @media (max-width: 940px) {
@@ -2617,13 +2972,20 @@
         </div>
         <div class="table-scroll">
           <table class="progress-table license-table">
+            <colgroup>
+              <col class="license-col-no">
+              <col class="license-col-name">
+              <col class="license-col-expired">
+              <col class="license-col-remaining">
+              <col class="license-col-action">
+            </colgroup>
             <thead>
               <tr>
-                <th class="col-no">No</th>
-                <th class="col-license-name">License Name</th>
-                <th class="col-expired-date">Expired Date</th>
-                <th class="col-remaining">Remaining Time</th>
-                <th class="col-action">Action</th>
+                <th scope="col">No.</th>
+                <th scope="col" class="table-header-left">License Name</th>
+                <th scope="col">Expired Date</th>
+                <th scope="col">Remaining Time</th>
+                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody id="licenseTableBody"></tbody>
@@ -2643,19 +3005,31 @@
           </div>
         </div>
         <div class="table-scroll">
-          <table class="progress-table">
+          <table class="progress-table progress-summary-table">
+            <colgroup>
+              <col class="track-col-no">
+              <col class="track-col-project">
+              <col class="track-col-tech">
+              <col class="track-col-tor">
+              <col class="track-col-prpo">
+              <col class="track-col-delivery">
+              <col class="track-col-fat">
+              <col class="track-col-moc">
+              <col class="track-col-plan">
+              <col class="track-col-action">
+            </colgroup>
             <thead>
               <tr>
-                <th class="col-no">No</th>
-                <th class="col-project">Initiative project</th>
-                <th class="col-narrow vertical-header">Tech. Preparation</th>
-                <th class="col-medium">TOR</th>
-                <th class="col-medium">PR/PO</th>
-                <th class="col-narrow vertical-header">DELIVERY</th>
-                <th class="col-narrow vertical-header">FAT / SAT</th>
-                <th class="col-narrow vertical-header">CLOSE MOC</th>
-                <th class="col-wide">Overall Plan</th>
-                <th class="col-action">Action</th>
+                <th scope="col">No.</th>
+                <th scope="col" class="table-header-left">Initiative Project</th>
+                <th scope="col" class="vertical-header">Tech. Preparation</th>
+                <th scope="col">TOR</th>
+                <th scope="col">PR/PO</th>
+                <th scope="col" class="vertical-header">Delivery</th>
+                <th scope="col" class="vertical-header">FAT / SAT</th>
+                <th scope="col" class="vertical-header">Close MOC</th>
+                <th scope="col" class="table-header-left">Overall Plan</th>
+                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody id="progressTableBody"></tbody>
@@ -4155,6 +4529,14 @@
       return escapeHtml(value).replaceAll("\n", "<br>");
     }
 
+    function clampedText(value, classNames = "", fallback = "") {
+      const raw = String(value ?? "").trim();
+      const text = raw || fallback;
+      const isEmpty = !raw || /^not provided\.?$/i.test(text);
+      const classes = ["text-clamp", classNames, isEmpty ? "is-empty" : ""].filter(Boolean).join(" ");
+      return `<span class="${classes}" title="${escapeHtml(text)}">${formatCellText(text)}</span>`;
+    }
+
     function formatDateForInput(value) {
       if (!value) return "";
       const text = String(value).trim();
@@ -4216,26 +4598,26 @@
       return "cell-empty";
     }
 
-    function statusCell(value, label = "") {
+    function statusCell(value, label = "", columnClass = "") {
       const status = value || "empty";
       const text = label || (status === "done" ? "Done" : status === "progress" ? "Ongoing" : "");
-      return `<td class="${progressCellClass(status)} stage-cell"><span class="stage-label">${formatCellText(text)}</span></td>`;
+      return `<td class="${progressCellClass(status)} stage-cell ${columnClass}">${clampedText(text, "stage-label clamp-2")}</td>`;
     }
 
-    function filledCell(value) {
+    function filledCell(value, columnClass = "") {
       const text = String(value ?? "").trim();
-      return `<td class="${text ? "cell-done" : "cell-empty"}">${formatCellText(text)}</td>`;
+      return `<td class="${text ? "cell-done" : "cell-empty"} ${columnClass}">${clampedText(text, "clamp-2")}</td>`;
     }
 
     function prpoCell(row) {
       const hasValue = [row.pr, row.sapPr, row.po].some((value) => String(value ?? "").trim());
 
       return `
-        <td class="${hasValue ? "cell-done" : "cell-empty"}">
+        <td class="${hasValue ? "cell-done" : "cell-empty"} cell-prpo">
           <div class="prpo-stack">
-            <div class="prpo-line"><strong>PR</strong><span>${formatCellText(row.pr)}</span></div>
-            <div class="prpo-line"><strong>SAP PR</strong><span>${formatCellText(row.sapPr)}</span></div>
-            <div class="prpo-line"><strong>PO</strong><span>${formatCellText(row.po)}</span></div>
+            <div class="prpo-line"><strong>PR</strong>${clampedText(row.pr, "clamp-1")}</div>
+            <div class="prpo-line"><strong>SAP PR</strong>${clampedText(row.sapPr, "clamp-1")}</div>
+            <div class="prpo-line"><strong>PO</strong>${clampedText(row.po, "clamp-1")}</div>
           </div>
         </td>
       `;
@@ -4306,8 +4688,8 @@
           ${imageGallery(`highlight-${item.id}`, imagesForDisplay(item.imageUrls || item.image, item.pendingImages), item.topic, "HIGHLIGHT")}
           <div class="highlight-body">
             <span class="highlight-month">${monthLabel(item.month)}</span>
-            <h4>${formatCellText(item.topic)}</h4>
-            <p>${formatCellText(item.detail)}</p>
+            <h4>${clampedText(item.topic, "clamp-2")}</h4>
+            <p>${clampedText(item.detail, "clamp-4")}</p>
             <div class="highlight-card-actions">
               ${canEdit() ? `<button class="edit-button" type="button" data-highlight-action="edit" data-highlight-id="${escapeHtml(item.id)}">Edit</button>` : ""}
               ${canDelete() ? `<button class="delete-button" type="button" data-highlight-action="delete" data-highlight-id="${escapeHtml(item.id)}">Delete</button>` : ""}
@@ -4637,29 +5019,37 @@
           </div>
           <div class="milestone-table-scroll">
             <table class="milestone-status-table">
+              <colgroup>
+                <col class="milestone-col-name">
+                <col class="milestone-col-plan">
+                <col class="milestone-col-actual">
+                <col class="milestone-col-status">
+                <col class="milestone-col-progress">
+                <col class="milestone-col-remark">
+              </colgroup>
               <thead>
                 <tr>
-                  <th>Milestone</th>
-                  <th>Plan</th>
-                  <th>Actual</th>
-                  <th>Status</th>
-                  <th>Progress</th>
-                  <th>Remark</th>
+                  <th scope="col">Milestone</th>
+                  <th scope="col">Plan</th>
+                  <th scope="col">Actual</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Progress</th>
+                  <th scope="col">Remark</th>
                 </tr>
               </thead>
               <tbody>
                 ${rows.length ? rows.map((item) => `
                   <tr>
-                    <td>${formatCellText(item.name)}</td>
+                    <td class="milestone-name">${clampedText(item.name, "clamp-2")}</td>
                     <td class="milestone-date">${monthCompletionLabel(item.planMonth)}</td>
                     <td class="milestone-date">${monthCompletionLabel(item.actualMonth)}</td>
-                    <td class="milestone-status-cell"><span class="traffic-icon ${item.color}" title="${escapeHtml(item.label)}"></span></td>
+                    <td class="milestone-status-cell"><span class="traffic-icon ${item.color}" role="img" aria-label="${escapeHtml(item.label)}" title="${escapeHtml(item.label)}"></span></td>
                     <td class="milestone-progress">${item.progress}%</td>
-                    <td class="milestone-remark">${formatCellText(item.remark)}</td>
+                    <td class="milestone-remark">${clampedText(item.remark, "clamp-3")}</td>
                   </tr>
                 `).join("") : `
                   <tr>
-                    <td colspan="6">No milestones added.</td>
+                    <td class="table-empty-state" colspan="6">No milestones added.</td>
                   </tr>
                 `}
               </tbody>
@@ -4686,7 +5076,7 @@
       return `
         @page { size: A4 landscape; margin: 12mm; }
         * { box-sizing: border-box; }
-        body { margin: 0; color: #172126; background: #ffffff; font-family: "Aptos", "Inter", "Segoe UI", Arial, sans-serif; font-size: 11px; line-height: 1.45; }
+        body { margin: 0; color: #172126; background: #ffffff; font-family: "Inter", "IBM Plex Sans", "Segoe UI", Arial, sans-serif; font-size: 11px; line-height: 1.45; }
         .report-page { display: grid; gap: 14px; }
         .report-header { display: flex; justify-content: space-between; gap: 18px; padding: 16px 18px; color: #ffffff; background: #163c44; border-radius: 8px; }
         .report-header h1 { margin: 0; font-size: 26px; }
@@ -4844,13 +5234,13 @@
                 <table>
                   <thead>
                     <tr>
-                      <th class="center" style="width: 42px;">No</th>
-                      <th>Project</th>
-                      <th style="width: 105px;">Owner</th>
-                      <th class="center" style="width: 92px;">Status</th>
-                      <th class="center" style="width: 70px;">Plan</th>
-                      <th class="center" style="width: 70px;">Actual</th>
-                      <th>Overall Plan</th>
+                      <th scope="col" class="center" style="width: 42px;">No.</th>
+                      <th scope="col">Project</th>
+                      <th scope="col" style="width: 105px;">Owner</th>
+                      <th scope="col" class="center" style="width: 92px;">Status</th>
+                      <th scope="col" class="center" style="width: 70px;">Plan</th>
+                      <th scope="col" class="center" style="width: 70px;">Actual</th>
+                      <th scope="col">Overall Plan</th>
                     </tr>
                   </thead>
                   <tbody>${progressRowsHtml}</tbody>
@@ -4863,10 +5253,10 @@
                   <table>
                     <thead>
                       <tr>
-                        <th class="center" style="width: 42px;">No</th>
-                        <th>License Name</th>
-                        <th class="center" style="width: 100px;">Expired Date</th>
-                        <th class="center" style="width: 110px;">Remaining</th>
+                        <th scope="col" class="center" style="width: 42px;">No.</th>
+                        <th scope="col">License Name</th>
+                        <th scope="col" class="center" style="width: 100px;">Expired Date</th>
+                        <th scope="col" class="center" style="width: 110px;">Remaining Time</th>
                       </tr>
                     </thead>
                     <tbody>${licenseRowsHtml}</tbody>
@@ -4916,7 +5306,7 @@
       if (!licenseRows.length) {
         licenseTableBody.innerHTML = `
           <tr>
-            <td colspan="5">No license data</td>
+            <td class="table-empty-state" colspan="5">No license data</td>
           </tr>
         `;
         return;
@@ -4926,13 +5316,13 @@
         const days = daysUntil(license.expiredDate);
         return `
           <tr>
-            <td>${index + 1}</td>
-            <td class="col-license-name">
-              <span class="project-name">${formatCellText(license.name)}</span>
+            <td class="cell-license-number">${index + 1}</td>
+            <td class="cell-license-name">
+              ${clampedText(license.name, "project-name clamp-2")}
             </td>
-            <td>${formatCellText(displayDate(license.expiredDate))}</td>
-            <td class="license-remaining ${remainingTimeClass(days)}">${formatCellText(remainingTimeLabel(days))}</td>
-            <td>
+            <td class="cell-expired-date">${formatCellText(displayDate(license.expiredDate))}</td>
+            <td class="license-remaining cell-license-remaining ${remainingTimeClass(days)}">${formatCellText(remainingTimeLabel(days))}</td>
+            <td class="cell-license-action">
               <div class="row-actions">
                 ${canEdit() ? `<button class="edit-button" type="button" data-license-action="edit" data-license-id="${escapeHtml(license.id)}">Edit</button>` : ""}
                 ${canDelete() ? `<button class="delete-button" type="button" data-license-action="delete" data-license-id="${escapeHtml(license.id)}">Delete</button>` : ""}
@@ -4978,7 +5368,7 @@
       if (!rows.length) {
         progressTableBody.innerHTML = `
           <tr>
-            <td colspan="10">No progress rows for ${state.activeYear}</td>
+            <td class="table-empty-state" colspan="10">No progress rows for ${state.activeYear}</td>
           </tr>
         `;
         return;
@@ -4986,19 +5376,19 @@
 
       progressTableBody.innerHTML = rows.map((row, index) => `
         <tr>
-          <td>${index + 1}</td>
-          <td class="col-project">
-            <span class="project-name">${formatCellText(row.project)}</span>
-            <span class="project-owner">${formatCellText(row.owner)}</span>
+          <td class="cell-number">${index + 1}</td>
+          <td class="cell-project">
+            ${clampedText(row.project, "project-name clamp-2")}
+            ${clampedText(row.owner, "project-owner clamp-1")}
           </td>
-          ${statusCell(row.techPrep)}
-          ${filledCell(row.tor)}
+          ${statusCell(row.techPrep, "", "cell-tech")}
+          ${filledCell(row.tor, "cell-tor")}
           ${prpoCell(row)}
-          ${statusCell(row.delivery)}
-          ${statusCell(row.fatSat)}
-          ${statusCell(row.closeMoc)}
-          <td class="col-wide">${formatCellText(row.overallPlan)}</td>
-          <td>
+          ${statusCell(row.delivery, "", "cell-delivery")}
+          ${statusCell(row.fatSat, "", "cell-fat")}
+          ${statusCell(row.closeMoc, "", "cell-moc")}
+          <td class="cell-overall-plan">${clampedText(row.overallPlan, "clamp-4")}</td>
+          <td class="cell-action">
             <div class="row-actions">
               ${canEdit() ? `<button class="edit-button" type="button" data-action="edit" data-row-id="${escapeHtml(row.id)}">Edit</button>` : ""}
               ${canDelete() ? `<button class="delete-button" type="button" data-action="delete" data-row-id="${escapeHtml(row.id)}">Delete</button>` : ""}
@@ -5128,8 +5518,11 @@
         portfolioProjectNumber.textContent = "00";
         portfolioProjectTotal.textContent = "00";
         portfolioCurrentTitle.textContent = "No projects available";
+        portfolioCurrentTitle.title = "";
         portfolioPreviousTitle.textContent = "No project";
+        portfolioPreviousTitle.title = "";
         portfolioNextTitle.textContent = "No project";
+        portfolioNextTitle.title = "";
         portfolioProgressFill.style.width = "0%";
         portfolioPreviousButton.disabled = true;
         portfolioNextButton.disabled = true;
@@ -5146,8 +5539,11 @@
       portfolioProjectNumber.textContent = projectNumberLabel(portfolioSlideIndex + 1);
       portfolioProjectTotal.textContent = projectNumberLabel(projects.length);
       portfolioCurrentTitle.textContent = current.name || "Untitled project";
+      portfolioCurrentTitle.title = current.name || "Untitled project";
       portfolioPreviousTitle.textContent = disableNavigation ? "No previous project" : previous.name;
+      portfolioPreviousTitle.title = disableNavigation ? "" : previous.name;
       portfolioNextTitle.textContent = disableNavigation ? "No next project" : next.name;
+      portfolioNextTitle.title = disableNavigation ? "" : next.name;
       portfolioProgressFill.style.width = `${((portfolioSlideIndex + 1) / projects.length) * 100}%`;
       portfolioPreviousButton.disabled = disableNavigation;
       portfolioNextButton.disabled = disableNavigation;
@@ -5185,24 +5581,24 @@
         <article class="project-card${entryClass}" aria-label="Project ${portfolioSlideIndex + 1} of ${projects.length}">
           <div class="card-top">
             <div>
-              <h4>${formatCellText(project.name)}</h4>
+              <h4>${clampedText(project.name, "project-title-value clamp-2")}</h4>
             </div>
             <span class="status ${statusClass[project.status] || "on-track"}">${project.status}</span>
           </div>
           <div class="portfolio-layout">
             <section class="portfolio-objective" aria-label="Project objective">
               <h5 class="portfolio-section-title">Objective</h5>
-              <div class="portfolio-field">
+              <div class="portfolio-field objective-data-card">
                 <h5>Strategic Objective</h5>
-                <p>${formatCellText(project.strategicObjective)}</p>
+                <p>${clampedText(project.strategicObjective, "data-value clamp-4")}</p>
               </div>
-              <div class="portfolio-field">
+              <div class="portfolio-field objective-data-card">
                 <h5>Lagging KPI &amp; Target</h5>
-                <p>${formatCellText(project.laggingKpiTarget)}</p>
+                <p>${clampedText(project.laggingKpiTarget, "data-value clamp-3")}</p>
               </div>
-              <div class="portfolio-field">
+              <div class="portfolio-field objective-data-card">
                 <h5>Responsibility</h5>
-                <p>${formatCellText(project.responsibility)}</p>
+                <p>${clampedText(project.responsibility, "data-value clamp-2")}</p>
               </div>
             </section>
             <section class="portfolio-initiative" aria-label="Initiative detail">
@@ -5211,15 +5607,15 @@
                 <div class="portfolio-copy-stack">
                   <div class="portfolio-field">
                     <h5>Initiative Idea / Problem</h5>
-                    <p>${formatCellText(project.initiativeProblem)}</p>
+                    <p>${clampedText(project.initiativeProblem, "data-value clamp-6")}</p>
                   </div>
                   <div class="portfolio-field">
                     <h5>Scope of Work</h5>
-                    <p>${formatCellText(project.scopeOfWork)}</p>
+                    <p>${clampedText(project.scopeOfWork, "data-value clamp-6")}</p>
                   </div>
                   <div class="portfolio-field portfolio-present-status">
                     <h5>Present Status</h5>
-                    <p>${formatCellText(project.presentStatus)}</p>
+                    <p>${clampedText(project.presentStatus, "data-value clamp-4")}</p>
                   </div>
                 </div>
                 <div class="portfolio-image-column">
