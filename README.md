@@ -114,6 +114,8 @@ Admin = add, edit, and delete
 
 Successful login updates `Last Login`. The website writes audit rows for login, logout, add, edit, delete, image deletion, reset, and monthly report export.
 
+Login credentials are submitted to the User web app with `POST`, so the password is not placed in the request URL. After changing `google-apps-script-users-only.js`, authorize the script and deploy a new User web app version before publishing the matching `index.html`.
+
 For team/shared storage, use Google Sheets:
 
 1. Create a Google Sheet.
@@ -132,7 +134,7 @@ Paste your web app URL between the quotes.
 The progress Google Sheet will store these columns:
 
 ```text
-Year | ID | Initiative Project | Owner | Tech Preparation | TOR | PR | SAP PR | PO | Delivery | FAT/SAT | Close MOC | Overall Plan | Project Image URLs | Plan | Actual | Updated At
+Year | ID | Initiative Project | Owner | Tech Preparation | TOR | PR | SAP PR | PO | Delivery | FAT/SAT | Close MOC | Overall Plan | Project Image URLs | Plan | Actual | Updated At | Strategic Objective | Lagging KPI & Target | Responsibility | Initiative Idea / Problem | Scope of Work | Present Status
 ```
 
 ## Cybersecurity notes

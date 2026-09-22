@@ -29,6 +29,14 @@ function authorizeUserPermissions() {
 }
 
 function doGet(e) {
+  return handleUserRequest(e);
+}
+
+function doPost(e) {
+  return handleUserRequest(e);
+}
+
+function handleUserRequest(e) {
   const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
   const action = e && e.parameter && e.parameter.action ? String(e.parameter.action) : "";
   const email = e && e.parameter && e.parameter.email ? String(e.parameter.email).trim().toLowerCase() : "";

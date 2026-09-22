@@ -2445,33 +2445,49 @@
       loginStatusText.textContent = "";
     }
 
-    function loadUserFromGoogleSheet(email, password) {
-      return new Promise((resolve, reject) => {
-        if (!USER_APPS_SCRIPT_URL) {
-          reject(new Error("Users web app URL is not set"));
-          return;
+    async function loadUserFromGoogleSheet(email, password) {
+      if (!USER_APPS_SCRIPT_URL) {
+        throw new Error("Users web app URL is not set");
+      }
+
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+
+      try {
+        const response = await fetch(USER_APPS_SCRIPT_URL, {
+          method: "POST",
+          body: new URLSearchParams({ action: "login", email, password }),
+          cache: "no-store",
+          credentials: "omit",
+          redirect: "follow",
+          referrerPolicy: "no-referrer",
+          signal: controller.signal
+        });
+
+        if (!response.ok) {
+          throw new Error(`User service returned HTTP ${response.status}`);
         }
 
-        const callbackName = `systemTeamUserCallback_${Date.now()}`;
-        const script = document.createElement("script");
-        const separator = USER_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+        let payload;
+        try {
+          payload = await response.json();
+        } catch (error) {
+          throw new Error("User service needs to be redeployed with the latest User Apps Script");
+        }
 
-        window[callbackName] = (payload) => {
-          delete window[callbackName];
-          script.remove();
-          if (payload && payload.ok && payload.user) resolve(normalizeUser(payload.user));
-          else reject(new Error((payload && payload.error) || "Email not found or inactive"));
-        };
-
-        script.onerror = () => {
-          delete window[callbackName];
-          script.remove();
-          reject(new Error("Could not load user permission"));
-        };
-
-        script.src = `${USER_APPS_SCRIPT_URL}${separator}email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}&callback=${encodeURIComponent(callbackName)}`;
-        document.body.appendChild(script);
-      });
+        if (payload && payload.ok && payload.user) return normalizeUser(payload.user);
+        throw new Error((payload && payload.error) || "Email not found or inactive");
+      } catch (error) {
+        if (error && error.name === "AbortError") {
+          throw new Error("User service timed out. Please try again");
+        }
+        if (error instanceof TypeError) {
+          throw new Error("Could not connect to the User service. Check the Apps Script deployment or browser blocking");
+        }
+        throw error;
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
     }
 
     function logAudit(action, moduleName, detail = "") {
