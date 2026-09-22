@@ -818,42 +818,234 @@
     }
 
     .portfolio-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .portfolio-nav-button {
-      width: 38px;
-      height: 38px;
+      width: min(650px, 58vw);
+      min-height: 62px;
       display: grid;
-      place-items: center;
+      grid-template-columns: minmax(128px, 0.8fr) minmax(190px, 1.15fr) minmax(128px, 0.8fr);
+      overflow: hidden;
       border: 1px solid var(--line);
-      border-radius: 6px;
+      border-radius: 8px;
       color: var(--ink);
       background: #ffffff;
+      box-shadow: 0 4px 14px rgba(24, 33, 47, 0.04);
+    }
+
+    .project-nav-choice {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 11px;
+      border: 0;
+      color: #4b5d67;
+      background: #ffffff;
       cursor: pointer;
-      font-size: 22px;
-      line-height: 1;
+      font-family: inherit;
+      text-align: left;
+      transition: color 180ms ease, background-color 180ms ease, transform 180ms ease;
     }
 
-    .portfolio-nav-button:hover:not(:disabled) {
-      color: #ffffff;
-      background: var(--teal);
-      border-color: var(--teal);
+    .project-nav-choice.previous {
+      border-right: 1px solid var(--line-soft);
     }
 
-    .portfolio-nav-button:disabled {
+    .project-nav-choice.next {
+      justify-content: flex-end;
+      border-left: 1px solid var(--line-soft);
+      text-align: right;
+    }
+
+    .project-nav-choice:hover:not(:disabled) {
+      color: #244f9e;
+      background: #f0f5ff;
+      transform: translateY(-1px);
+    }
+
+    .project-nav-choice:focus-visible {
+      position: relative;
+      z-index: 2;
+      outline: 3px solid rgba(63, 114, 216, 0.24);
+      outline-offset: -3px;
+    }
+
+    .project-nav-choice:disabled {
       cursor: default;
-      opacity: 0.42;
+      opacity: 0.48;
+      transform: none;
     }
 
-    .portfolio-counter {
-      min-width: 70px;
-      color: var(--muted);
+    .project-nav-icon {
+      flex: 0 0 auto;
+      display: inline-grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      color: #3f72d8;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      transition: transform 180ms ease;
+    }
+
+    .project-nav-choice.previous:hover:not(:disabled) .project-nav-icon {
+      transform: translateX(-5px);
+    }
+
+    .project-nav-choice.next:hover:not(:disabled) .project-nav-icon {
+      transform: translateX(5px);
+    }
+
+    .project-nav-copy {
+      min-width: 0;
+      display: grid;
+      gap: 2px;
+    }
+
+    .project-nav-copy span,
+    .project-nav-meta {
+      color: #71808a;
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .project-nav-copy strong {
+      display: block;
+      overflow: hidden;
+      color: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-nav-current {
+      min-width: 0;
+      display: grid;
+      align-content: center;
+      gap: 5px;
+      padding: 8px 13px;
+      background: #f8fafc;
+    }
+
+    .project-nav-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .project-nav-number {
+      display: inline-block;
+      min-width: 18px;
+      color: #244f9e;
       font-size: 13px;
       font-weight: 800;
-      text-align: center;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .project-nav-current-title {
+      display: block;
+      overflow: hidden;
+      color: #152c3a;
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.25;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .project-nav-progress {
+      height: 3px;
+      overflow: hidden;
+      background: #dce4ed;
+      border-radius: 999px;
+    }
+
+    .project-nav-progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: #3f72d8;
+      border-radius: inherit;
+      transition: width 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .project-card {
+      transform-origin: center top;
+    }
+
+    .project-card.is-leaving-next,
+    .project-card.is-leaving-previous {
+      opacity: 0;
+      transition: opacity 120ms ease, transform 120ms ease;
+    }
+
+    .project-card.is-leaving-next {
+      transform: translateX(-20px);
+    }
+
+    .project-card.is-leaving-previous {
+      transform: translateX(20px);
+    }
+
+    .project-card.is-entering-next {
+      animation: project-enter-next 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .project-card.is-entering-previous {
+      animation: project-enter-previous 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .project-nav-number.is-leaving-next,
+    .project-nav-current-title.is-leaving-next {
+      animation: project-label-exit-next 120ms ease forwards;
+    }
+
+    .project-nav-number.is-leaving-previous,
+    .project-nav-current-title.is-leaving-previous {
+      animation: project-label-exit-previous 120ms ease forwards;
+    }
+
+    .project-nav-number.is-entering-next,
+    .project-nav-current-title.is-entering-next {
+      animation: project-label-enter-next 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .project-nav-number.is-entering-previous,
+    .project-nav-current-title.is-entering-previous {
+      animation: project-label-enter-previous 300ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes project-enter-next {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes project-enter-previous {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes project-label-exit-next {
+      to { opacity: 0; transform: translateY(-7px); }
+    }
+
+    @keyframes project-label-exit-previous {
+      to { opacity: 0; transform: translateY(7px); }
+    }
+
+    @keyframes project-label-enter-next {
+      from { opacity: 0; transform: translateY(7px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes project-label-enter-previous {
+      from { opacity: 0; transform: translateY(-7px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .project-card {
@@ -2143,6 +2335,15 @@
         flex-direction: column;
       }
 
+      .portfolio-section-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .portfolio-controls {
+        width: 100%;
+      }
+
       .milestone-head {
         align-items: stretch;
         flex-direction: column;
@@ -2211,7 +2412,35 @@
       }
 
       .portfolio-controls {
-        justify-content: flex-end;
+        width: 100%;
+        min-height: 68px;
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
+      }
+
+      .project-nav-choice {
+        justify-content: center;
+        padding: 0;
+      }
+
+      .project-nav-choice.next {
+        justify-content: center;
+      }
+
+      .project-nav-copy {
+        display: none;
+      }
+
+      .project-nav-current {
+        padding: 8px 10px;
+      }
+
+      .project-nav-current-title {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        font-size: 12px;
+        white-space: normal;
       }
 
       .topbar {
@@ -2281,7 +2510,13 @@
     @media (prefers-reduced-motion: reduce) {
       .project-story-gallery *,
       .project-story-gallery *::before,
-      .project-story-gallery *::after {
+      .project-story-gallery *::after,
+      .project-card,
+      .project-nav-choice,
+      .project-nav-icon,
+      .project-nav-number,
+      .project-nav-current-title,
+      .project-nav-progress span {
         scroll-behavior: auto !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
@@ -2290,7 +2525,9 @@
 
       .gallery-main-card:hover .gallery-main-image,
       .project-gallery-button:hover,
-      .gallery-thumbnail:hover {
+      .gallery-thumbnail:hover,
+      .project-nav-choice:hover,
+      .project-nav-choice:hover .project-nav-icon {
         transform: none;
       }
     }
@@ -2447,15 +2684,36 @@
 
       <div class="content-grid">
         <section>
-          <div class="section-head">
+          <div class="section-head portfolio-section-head">
             <div>
               <h3>Project Portfolio</h3>
               <p id="portfolioSubtitle">Current system work by objective, initiative, milestone, and status.</p>
             </div>
-            <div class="portfolio-controls" aria-label="Project slideshow controls">
-              <button class="portfolio-nav-button" type="button" id="portfolioPreviousButton" aria-label="Previous project" title="Previous project">&#8249;</button>
-              <span class="portfolio-counter" id="portfolioCounter" aria-live="polite">0 / 0</span>
-              <button class="portfolio-nav-button" type="button" id="portfolioNextButton" aria-label="Next project" title="Next project">&#8250;</button>
+            <div class="portfolio-controls" id="portfolioNavigator" role="region" aria-label="Project navigator">
+              <button class="project-nav-choice previous" type="button" id="portfolioPreviousButton" aria-label="Previous project" aria-keyshortcuts="ArrowLeft">
+                <span class="project-nav-icon" aria-hidden="true">&#8592;</span>
+                <span class="project-nav-copy">
+                  <span>Previous</span>
+                  <strong id="portfolioPreviousTitle">No project</strong>
+                </span>
+              </button>
+              <div class="project-nav-current" aria-live="polite" aria-atomic="true">
+                <div class="project-nav-meta">
+                  <span>Project</span>
+                  <strong class="project-nav-number" id="portfolioProjectNumber">00</strong>
+                  <span>/</span>
+                  <span id="portfolioProjectTotal">00</span>
+                </div>
+                <strong class="project-nav-current-title" id="portfolioCurrentTitle">No projects available</strong>
+                <span class="project-nav-progress" aria-hidden="true"><span id="portfolioProgressFill"></span></span>
+              </div>
+              <button class="project-nav-choice next" type="button" id="portfolioNextButton" aria-label="Next project" aria-keyshortcuts="ArrowRight">
+                <span class="project-nav-copy">
+                  <span>Next project</span>
+                  <strong id="portfolioNextTitle">No project</strong>
+                </span>
+                <span class="project-nav-icon" aria-hidden="true">&#8594;</span>
+              </button>
             </div>
           </div>
           <div class="project-grid" id="projectGrid"></div>
@@ -2934,9 +3192,15 @@
     const cancelLicenseButton = document.querySelector("#cancelLicenseButton");
     const saveLicenseButton = document.querySelector("#saveLicenseButton");
     const projectGrid = document.querySelector("#projectGrid");
+    const portfolioNavigator = document.querySelector("#portfolioNavigator");
     const portfolioPreviousButton = document.querySelector("#portfolioPreviousButton");
     const portfolioNextButton = document.querySelector("#portfolioNextButton");
-    const portfolioCounter = document.querySelector("#portfolioCounter");
+    const portfolioPreviousTitle = document.querySelector("#portfolioPreviousTitle");
+    const portfolioNextTitle = document.querySelector("#portfolioNextTitle");
+    const portfolioProjectNumber = document.querySelector("#portfolioProjectNumber");
+    const portfolioProjectTotal = document.querySelector("#portfolioProjectTotal");
+    const portfolioCurrentTitle = document.querySelector("#portfolioCurrentTitle");
+    const portfolioProgressFill = document.querySelector("#portfolioProgressFill");
     const progressTableBody = document.querySelector("#progressTableBody");
     const editDialog = document.querySelector("#editDialog");
     const editForm = document.querySelector("#editForm");
@@ -2979,6 +3243,7 @@
     let editMode = "update";
     let highlightMode = "create";
     let portfolioSlideIndex = 0;
+    let portfolioTransitioning = false;
     const galleryState = {};
     const galleryImages = {};
     let lightboxGalleryId = "";
@@ -4854,25 +5119,70 @@
       `).join("");
     }
 
-    function renderProjectPortfolio(projects) {
+    function projectNumberLabel(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function updatePortfolioNavigator(projects) {
       if (!projects.length) {
-        portfolioSlideIndex = 0;
-        portfolioCounter.textContent = "0 / 0";
+        portfolioProjectNumber.textContent = "00";
+        portfolioProjectTotal.textContent = "00";
+        portfolioCurrentTitle.textContent = "No projects available";
+        portfolioPreviousTitle.textContent = "No project";
+        portfolioNextTitle.textContent = "No project";
+        portfolioProgressFill.style.width = "0%";
         portfolioPreviousButton.disabled = true;
         portfolioNextButton.disabled = true;
+        portfolioPreviousButton.setAttribute("aria-label", "Previous project unavailable");
+        portfolioNextButton.setAttribute("aria-label", "Next project unavailable");
+        return;
+      }
+
+      const current = projects[portfolioSlideIndex];
+      const previous = projects[(portfolioSlideIndex - 1 + projects.length) % projects.length];
+      const next = projects[(portfolioSlideIndex + 1) % projects.length];
+      const disableNavigation = projects.length <= 1;
+
+      portfolioProjectNumber.textContent = projectNumberLabel(portfolioSlideIndex + 1);
+      portfolioProjectTotal.textContent = projectNumberLabel(projects.length);
+      portfolioCurrentTitle.textContent = current.name || "Untitled project";
+      portfolioPreviousTitle.textContent = disableNavigation ? "No previous project" : previous.name;
+      portfolioNextTitle.textContent = disableNavigation ? "No next project" : next.name;
+      portfolioProgressFill.style.width = `${((portfolioSlideIndex + 1) / projects.length) * 100}%`;
+      portfolioPreviousButton.disabled = disableNavigation;
+      portfolioNextButton.disabled = disableNavigation;
+      portfolioPreviousButton.setAttribute("aria-label", disableNavigation ? "Previous project unavailable" : `Previous project: ${previous.name}`);
+      portfolioNextButton.setAttribute("aria-label", disableNavigation ? "Next project unavailable" : `Next project: ${next.name}`);
+    }
+
+    function setPortfolioNavigatorMotion(direction, phase) {
+      const classes = [
+        "is-leaving-next",
+        "is-leaving-previous",
+        "is-entering-next",
+        "is-entering-previous"
+      ];
+      [portfolioProjectNumber, portfolioCurrentTitle].forEach((element) => {
+        element.classList.remove(...classes);
+        if (phase) element.classList.add(`is-${phase}-${direction}`);
+      });
+    }
+
+    function renderProjectPortfolio(projects, entryDirection = "") {
+      if (!projects.length) {
+        portfolioSlideIndex = 0;
+        updatePortfolioNavigator(projects);
         projectGrid.innerHTML = `<div class="empty-state">No project portfolio data for this year.</div>`;
         return;
       }
 
       portfolioSlideIndex = Math.min(Math.max(portfolioSlideIndex, 0), projects.length - 1);
       const project = projects[portfolioSlideIndex];
-      const disableNavigation = projects.length <= 1;
+      const entryClass = entryDirection ? ` is-entering-${entryDirection}` : "";
 
-      portfolioCounter.textContent = `${portfolioSlideIndex + 1} / ${projects.length}`;
-      portfolioPreviousButton.disabled = disableNavigation;
-      portfolioNextButton.disabled = disableNavigation;
+      updatePortfolioNavigator(projects);
       projectGrid.innerHTML = `
-        <article class="project-card" aria-label="Project ${portfolioSlideIndex + 1} of ${projects.length}">
+        <article class="project-card${entryClass}" aria-label="Project ${portfolioSlideIndex + 1} of ${projects.length}">
           <div class="card-top">
             <div>
               <h4>${formatCellText(project.name)}</h4>
@@ -4931,9 +5241,35 @@
 
     function changePortfolioSlide(direction) {
       const projects = projectCardsFromRows(rowsForActiveYear());
-      if (projects.length <= 1) return;
-      portfolioSlideIndex = (portfolioSlideIndex + direction + projects.length) % projects.length;
-      renderDashboard();
+      if (projects.length <= 1 || portfolioTransitioning) return;
+
+      const nextIndex = (portfolioSlideIndex + direction + projects.length) % projects.length;
+      const directionName = direction > 0 ? "next" : "previous";
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const currentCard = projectGrid.querySelector(".project-card");
+
+      if (reduceMotion || !currentCard) {
+        portfolioSlideIndex = nextIndex;
+        renderProjectPortfolio(projects);
+        return;
+      }
+
+      portfolioTransitioning = true;
+      portfolioNavigator.setAttribute("aria-busy", "true");
+      currentCard.classList.add(`is-leaving-${directionName}`);
+      setPortfolioNavigatorMotion(directionName, "leaving");
+
+      window.setTimeout(() => {
+        portfolioSlideIndex = nextIndex;
+        renderProjectPortfolio(projects, directionName);
+        setPortfolioNavigatorMotion(directionName, "entering");
+
+        window.setTimeout(() => {
+          setPortfolioNavigatorMotion("", "");
+          portfolioNavigator.removeAttribute("aria-busy");
+          portfolioTransitioning = false;
+        }, 300);
+      }, 120);
     }
 
     function renderDashboard() {
@@ -4979,6 +5315,11 @@
 
     portfolioPreviousButton.addEventListener("click", () => changePortfolioSlide(-1));
     portfolioNextButton.addEventListener("click", () => changePortfolioSlide(1));
+    portfolioNavigator.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      changePortfolioSlide(event.key === "ArrowRight" ? 1 : -1);
+    });
 
     exportReportButton.addEventListener("click", exportMonthlyReport);
     loginButton.addEventListener("click", openLoginDialog);
@@ -5254,6 +5595,31 @@
       const deltaY = touch.clientY - start.y;
       if (Math.abs(deltaX) < 45 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
       moveProjectGallery(start.gallery, deltaX < 0 ? "next" : "prev");
+    }, { passive: true });
+
+    let portfolioTouchStart = null;
+
+    projectGrid.addEventListener("touchstart", (event) => {
+      const blockedTarget = event.target.closest(".project-story-gallery, .milestone-table-scroll, button, a, input, select, textarea");
+      const touch = event.changedTouches[0];
+      if (blockedTarget || !touch) return;
+      portfolioTouchStart = {
+        x: touch.clientX,
+        y: touch.clientY
+      };
+    }, { passive: true });
+
+    projectGrid.addEventListener("touchend", (event) => {
+      if (!portfolioTouchStart) return;
+      const touch = event.changedTouches[0];
+      const start = portfolioTouchStart;
+      portfolioTouchStart = null;
+      if (!touch) return;
+
+      const deltaX = touch.clientX - start.x;
+      const deltaY = touch.clientY - start.y;
+      if (Math.abs(deltaX) < 60 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+      changePortfolioSlide(deltaX < 0 ? 1 : -1);
     }, { passive: true });
 
     highlightGrid.addEventListener("click", (event) => {
