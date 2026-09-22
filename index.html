@@ -578,7 +578,7 @@
 
     .prpo-line {
       display: grid;
-      grid-template-columns: 58px minmax(max-content, 1fr);
+      grid-template-columns: 58px 10px minmax(max-content, 1fr);
       gap: 4px;
       align-items: center;
       white-space: nowrap;
@@ -591,6 +591,10 @@
 
     .prpo-line span {
       white-space: nowrap;
+    }
+
+    .prpo-separator {
+      text-align: center;
     }
 
     .edit-button {
@@ -2498,8 +2502,8 @@
     }
 
     .prpo-line {
-      grid-template-columns: 52px minmax(0, 1fr);
-      gap: 7px;
+      grid-template-columns: 52px 10px minmax(0, 1fr);
+      gap: 4px;
       white-space: normal;
     }
 
@@ -2509,11 +2513,16 @@
       line-height: 1.3;
     }
 
-    .prpo-line span {
+    .prpo-line .prpo-value {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    .prpo-line .prpo-separator {
+      overflow: visible;
+      text-align: center;
     }
 
     .license-table {
@@ -2612,6 +2621,52 @@
       font-size: 14px;
       line-height: 1.55;
     }
+
+    .portfolio-content-scroll {
+      max-height: var(--portfolio-scroll-max, 120px);
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding-right: 6px;
+      color: #334155;
+      font-size: 14px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      word-break: normal;
+      scrollbar-color: #aab7bf transparent;
+      scrollbar-width: thin;
+      touch-action: pan-y;
+    }
+
+    .portfolio-content-scroll:focus-visible {
+      border-radius: 4px;
+      outline: 2px solid rgba(15, 118, 110, 0.45);
+      outline-offset: 2px;
+    }
+
+    .portfolio-content-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .portfolio-content-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .portfolio-content-scroll::-webkit-scrollbar-thumb {
+      background: #aab7bf;
+      border-radius: 999px;
+    }
+
+    .portfolio-content-scroll::-webkit-scrollbar-thumb:hover {
+      background: #7f8f99;
+    }
+
+    .portfolio-scroll-strategic { --portfolio-scroll-max: 120px; }
+    .portfolio-scroll-kpi { --portfolio-scroll-max: 82px; }
+    .portfolio-scroll-responsibility { --portfolio-scroll-max: 72px; }
+    .portfolio-scroll-initiative { --portfolio-scroll-max: 142px; }
+    .portfolio-scroll-scope { --portfolio-scroll-max: 122px; }
+    .portfolio-scroll-status { --portfolio-scroll-max: 98px; }
 
     .milestone-status-table {
       min-width: 760px;
@@ -2732,6 +2787,13 @@
         grid-template-columns: 1fr;
       }
 
+      .portfolio-scroll-strategic { --portfolio-scroll-max: 150px; }
+      .portfolio-scroll-kpi { --portfolio-scroll-max: 104px; }
+      .portfolio-scroll-responsibility { --portfolio-scroll-max: 90px; }
+      .portfolio-scroll-initiative { --portfolio-scroll-max: 178px; }
+      .portfolio-scroll-scope { --portfolio-scroll-max: 152px; }
+      .portfolio-scroll-status { --portfolio-scroll-max: 124px; }
+
       .portfolio-objective {
         border-right: 0;
         border-bottom: 1px solid var(--line);
@@ -2777,6 +2839,13 @@
       .highlight-grid {
         grid-template-columns: 1fr;
       }
+
+      .portfolio-scroll-strategic { --portfolio-scroll-max: 220px; }
+      .portfolio-scroll-kpi { --portfolio-scroll-max: 160px; }
+      .portfolio-scroll-responsibility { --portfolio-scroll-max: 140px; }
+      .portfolio-scroll-initiative { --portfolio-scroll-max: 280px; }
+      .portfolio-scroll-scope { --portfolio-scroll-max: 250px; }
+      .portfolio-scroll-status { --portfolio-scroll-max: 200px; }
 
       .highlight-controls {
         align-items: stretch;
@@ -4562,6 +4631,14 @@
       return `<span class="${classes}" title="${escapeHtml(text)}">${formatCellText(text)}</span>`;
     }
 
+    function portfolioScrollableText(value, classNames, label, fallback = "Not provided.") {
+      const raw = String(value ?? "").trim();
+      const text = raw || fallback;
+      const isEmpty = !raw || /^not provided\.?$/i.test(text);
+      const classes = ["portfolio-content-scroll", "data-value", classNames, isEmpty ? "is-empty" : ""].filter(Boolean).join(" ");
+      return `<div class="${classes}" tabindex="0" role="region" aria-label="${escapeHtml(label)} details">${formatCellText(text)}</div>`;
+    }
+
     function formatDateForInput(value) {
       if (!value) return "";
       const text = String(value).trim();
@@ -4640,9 +4717,9 @@
       return `
         <td class="${hasValue ? "cell-done" : "cell-empty"} cell-prpo">
           <div class="prpo-stack">
-            <div class="prpo-line"><strong>PR</strong>${clampedText(row.pr, "clamp-1")}</div>
-            <div class="prpo-line"><strong>SAP PR</strong>${clampedText(row.sapPr, "clamp-1")}</div>
-            <div class="prpo-line"><strong>PO</strong>${clampedText(row.po, "clamp-1")}</div>
+            <div class="prpo-line"><strong class="prpo-label">PR</strong><span class="prpo-separator" aria-hidden="true">:</span>${clampedText(row.pr, "prpo-value clamp-1")}</div>
+            <div class="prpo-line"><strong class="prpo-label">SAP PR</strong><span class="prpo-separator" aria-hidden="true">:</span>${clampedText(row.sapPr, "prpo-value clamp-1")}</div>
+            <div class="prpo-line"><strong class="prpo-label">PO</strong><span class="prpo-separator" aria-hidden="true">:</span>${clampedText(row.po, "prpo-value clamp-1")}</div>
           </div>
         </td>
       `;
@@ -5682,15 +5759,15 @@
               <h5 class="portfolio-section-title">Objective</h5>
               <div class="portfolio-field objective-data-card">
                 <h5>Strategic Objective</h5>
-                <p>${clampedText(project.strategicObjective, "data-value clamp-4")}</p>
+                ${portfolioScrollableText(project.strategicObjective, "portfolio-scroll-strategic", "Strategic Objective")}
               </div>
               <div class="portfolio-field objective-data-card">
                 <h5>Lagging KPI &amp; Target</h5>
-                <p>${clampedText(project.laggingKpiTarget, "data-value clamp-3")}</p>
+                ${portfolioScrollableText(project.laggingKpiTarget, "portfolio-scroll-kpi", "Lagging KPI and Target")}
               </div>
               <div class="portfolio-field objective-data-card">
                 <h5>Responsibility</h5>
-                <p>${clampedText(project.responsibility, "data-value clamp-2")}</p>
+                ${portfolioScrollableText(project.responsibility, "portfolio-scroll-responsibility", "Responsibility")}
               </div>
             </section>
             <section class="portfolio-initiative" aria-label="Initiative detail">
@@ -5699,15 +5776,15 @@
                 <div class="portfolio-copy-stack">
                   <div class="portfolio-field">
                     <h5>Initiative Idea / Problem</h5>
-                    <p>${clampedText(project.initiativeProblem, "data-value clamp-6")}</p>
+                    ${portfolioScrollableText(project.initiativeProblem, "portfolio-scroll-initiative", "Initiative Idea or Problem")}
                   </div>
                   <div class="portfolio-field">
                     <h5>Scope of Work</h5>
-                    <p>${clampedText(project.scopeOfWork, "data-value clamp-6")}</p>
+                    ${portfolioScrollableText(project.scopeOfWork, "portfolio-scroll-scope", "Scope of Work")}
                   </div>
                   <div class="portfolio-field portfolio-present-status">
                     <h5>Present Status</h5>
-                    <p>${clampedText(project.presentStatus, "data-value clamp-4")}</p>
+                    ${portfolioScrollableText(project.presentStatus, "portfolio-scroll-status", "Present Status")}
                   </div>
                 </div>
                 <div class="portfolio-image-column">
