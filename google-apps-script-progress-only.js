@@ -22,7 +22,13 @@ const HEADERS = [
   "Project Image URLs",
   "Plan",
   "Actual",
-  "Updated At"
+  "Updated At",
+  "Strategic Objective",
+  "Lagging KPI & Target",
+  "Responsibility",
+  "Initiative Idea / Problem",
+  "Scope of Work",
+  "Present Status"
 ];
 
 function authorizeProgressPermissions() {
@@ -195,7 +201,13 @@ function sheetValuesToRow(values) {
     projectImageUrl: values[13],
     projectImageUrls: normalizeImageUrls(values[13]),
     updatePlan: parseMilestoneText(values[14]),
-    updateActual: parseMilestoneText(values[15])
+    updateActual: parseMilestoneText(values[15]),
+    strategicObjective: values[17],
+    laggingKpiTarget: values[18],
+    responsibility: values[19],
+    initiativeProblem: values[20],
+    scopeOfWork: values[21],
+    presentStatus: values[22]
   };
 }
 
@@ -217,7 +229,13 @@ function rowToSheetValues(row) {
     imageUrlsText(row.projectImageUrls || row.projectImageUrl),
     milestoneText(row.updatePlan),
     milestoneText(row.updateActual),
-    new Date()
+    new Date(),
+    safeSheetValue(row.strategicObjective),
+    safeSheetValue(row.laggingKpiTarget),
+    safeSheetValue(row.responsibility),
+    safeSheetValue(row.initiativeProblem),
+    safeSheetValue(row.scopeOfWork),
+    safeSheetValue(row.presentStatus)
   ];
 }
 
@@ -407,6 +425,12 @@ function getSheet() {
 
   if (sheet.getLastRow() === 0) {
     sheet.appendRow(HEADERS);
+  } else {
+    const currentHeaders = sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0];
+    const needsHeaderUpdate = HEADERS.some((header, index) => String(currentHeaders[index] || "") !== header);
+    if (needsHeaderUpdate) {
+      sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    }
   }
 
   return sheet;

@@ -24,6 +24,12 @@
       box-sizing: border-box;
     }
 
+    html,
+    body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
     body {
       margin: 0;
       font-family: "Segoe UI", Arial, Helvetica, sans-serif;
@@ -796,9 +802,46 @@
     }
 
     .project-grid {
+      display: block;
+    }
+
+    .portfolio-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .portfolio-nav-button {
+      width: 38px;
+      height: 38px;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--ink);
+      background: #ffffff;
+      cursor: pointer;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .portfolio-nav-button:hover:not(:disabled) {
+      color: #ffffff;
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    .portfolio-nav-button:disabled {
+      cursor: default;
+      opacity: 0.42;
+    }
+
+    .portfolio-counter {
+      min-width: 70px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
     }
 
     .project-card {
@@ -810,6 +853,129 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: 0 10px 24px rgba(24, 33, 47, 0.06);
+    }
+
+    .portfolio-layout {
+      display: grid;
+      grid-template-columns: minmax(250px, 0.75fr) minmax(0, 1.75fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .portfolio-objective,
+    .portfolio-initiative {
+      min-width: 0;
+      padding: 16px;
+    }
+
+    .portfolio-objective {
+      display: grid;
+      align-content: start;
+      gap: 16px;
+      background: #edf6fa;
+      border-right: 1px solid var(--line);
+    }
+
+    .portfolio-initiative {
+      display: grid;
+      gap: 14px;
+      background: #ffffff;
+    }
+
+    .portfolio-section-title {
+      margin: 0;
+      padding: 8px 10px;
+      color: #ffffff;
+      background: #0f7fa3;
+      border-radius: 4px;
+      font-size: 14px;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .portfolio-initiative > .portfolio-section-title {
+      background: #356eb8;
+    }
+
+    .portfolio-field {
+      min-width: 0;
+    }
+
+    .portfolio-field h5 {
+      margin: 0 0 6px;
+      color: #17345d;
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .portfolio-field p {
+      margin: 0;
+      color: #334155;
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .portfolio-detail-upper {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 0.85fr);
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .portfolio-copy-stack {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+
+    .portfolio-copy-stack .portfolio-field,
+    .portfolio-present-status {
+      padding: 12px;
+      border: 1px solid #bfd0e4;
+      border-radius: 4px;
+      background: #f8fbff;
+    }
+
+    .portfolio-present-status {
+      border-left: 4px solid var(--teal);
+    }
+
+    .portfolio-image-column {
+      min-width: 0;
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .portfolio-image-column .project-image {
+      aspect-ratio: 4 / 3;
+    }
+
+    .portfolio-progress-summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .portfolio-progress-summary span {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 10px;
+      color: var(--muted);
+      background: #f3f6fa;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .portfolio-progress-summary strong {
+      color: var(--ink);
+      font-size: 16px;
     }
 
     .card-top {
@@ -1131,6 +1297,12 @@
       font-size: 12px;
     }
 
+    .milestone-table-scroll {
+      width: 100%;
+      min-width: 0;
+      overflow-x: auto;
+    }
+
     .milestone-status-table th,
     .milestone-status-table td {
       border-bottom: 1px solid #1f2937;
@@ -1360,6 +1532,16 @@
         flex-direction: column;
       }
 
+      .portfolio-layout,
+      .portfolio-detail-upper {
+        grid-template-columns: 1fr;
+      }
+
+      .portfolio-objective {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
     }
 
     @media (max-width: 640px) {
@@ -1387,6 +1569,15 @@
         align-items: stretch;
         flex-direction: column;
         width: 100%;
+      }
+
+      .section-head {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .portfolio-controls {
+        justify-content: flex-end;
       }
 
       .topbar {
@@ -1581,7 +1772,12 @@
           <div class="section-head">
             <div>
               <h3>Project Portfolio</h3>
-              <p id="portfolioSubtitle">Current system work by progress, owner, and status.</p>
+              <p id="portfolioSubtitle">Current system work by objective, initiative, milestone, and status.</p>
+            </div>
+            <div class="portfolio-controls" aria-label="Project slideshow controls">
+              <button class="portfolio-nav-button" type="button" id="portfolioPreviousButton" aria-label="Previous project" title="Previous project">&#8249;</button>
+              <span class="portfolio-counter" id="portfolioCounter" aria-live="polite">0 / 0</span>
+              <button class="portfolio-nav-button" type="button" id="portfolioNextButton" aria-label="Next project" title="Next project">&#8250;</button>
             </div>
           </div>
           <div class="project-grid" id="projectGrid"></div>
@@ -1717,6 +1913,30 @@
         <div class="form-field full">
           <label for="editOverallPlan">Overall Plan</label>
           <textarea id="editOverallPlan" name="overallPlan"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="editStrategicObjective">Strategic Objective</label>
+          <textarea id="editStrategicObjective" name="strategicObjective"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="editLaggingKpiTarget">Lagging KPI &amp; Target</label>
+          <textarea id="editLaggingKpiTarget" name="laggingKpiTarget"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="editResponsibility">Responsibility</label>
+          <input id="editResponsibility" name="responsibility">
+        </div>
+        <div class="form-field full">
+          <label for="editInitiativeProblem">Initiative Idea / Problem</label>
+          <textarea id="editInitiativeProblem" name="initiativeProblem"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="editScopeOfWork">Scope of Work</label>
+          <textarea id="editScopeOfWork" name="scopeOfWork"></textarea>
+        </div>
+        <div class="form-field full">
+          <label for="editPresentStatus">Present Status</label>
+          <textarea id="editPresentStatus" name="presentStatus"></textarea>
         </div>
         <div class="form-field full">
           <label for="editUpdatePlan">Plan</label>
@@ -2035,6 +2255,9 @@
     const cancelLicenseButton = document.querySelector("#cancelLicenseButton");
     const saveLicenseButton = document.querySelector("#saveLicenseButton");
     const projectGrid = document.querySelector("#projectGrid");
+    const portfolioPreviousButton = document.querySelector("#portfolioPreviousButton");
+    const portfolioNextButton = document.querySelector("#portfolioNextButton");
+    const portfolioCounter = document.querySelector("#portfolioCounter");
     const progressTableBody = document.querySelector("#progressTableBody");
     const editDialog = document.querySelector("#editDialog");
     const editForm = document.querySelector("#editForm");
@@ -2076,6 +2299,7 @@
     let pendingDeleteRowId = "";
     let editMode = "update";
     let highlightMode = "create";
+    let portfolioSlideIndex = 0;
     const galleryState = {};
     const galleryImages = {};
     let lightboxGalleryId = "";
@@ -2652,6 +2876,12 @@
         projectImage: row.projectImage || "",
         pendingProjectImages: normalizeImageUrls(row.pendingProjectImages || row.projectImage),
         pendingProjectImage: Boolean(row.pendingProjectImage),
+        strategicObjective: String(row.strategicObjective || "").trim(),
+        laggingKpiTarget: String(row.laggingKpiTarget || "").trim(),
+        responsibility: String(row.responsibility || row.owner || "").trim(),
+        initiativeProblem: String(row.initiativeProblem || "").trim(),
+        scopeOfWork: String(row.scopeOfWork || "").trim(),
+        presentStatus: String(row.presentStatus || row.overallPlan || "").trim(),
         updatePlan: normalizeMilestones(row.updatePlan ?? row.actualPlan),
         updateActual: normalizeMilestones(row.updateActual ?? row.progressPlan)
       };
@@ -2812,6 +3042,12 @@
         fatSat: row.fatSat,
         closeMoc: row.closeMoc,
         overallPlan: row.overallPlan,
+        strategicObjective: row.strategicObjective,
+        laggingKpiTarget: row.laggingKpiTarget,
+        responsibility: row.responsibility,
+        initiativeProblem: row.initiativeProblem,
+        scopeOfWork: row.scopeOfWork,
+        presentStatus: row.presentStatus,
         updatePlan: normalizeMilestones(row.updatePlan),
         updateActual: normalizeMilestones(row.updateActual),
         projectImageUrls: persistedImageUrls(row.projectImageUrls || row.projectImageUrl),
@@ -3197,6 +3433,12 @@
         quarter: selectedYear().year,
         impact: row.overallPlan || "Waiting for update.",
         overallProject: row.overallPlan || "Waiting for update.",
+        strategicObjective: row.strategicObjective || "Not provided.",
+        laggingKpiTarget: row.laggingKpiTarget || "Not provided.",
+        responsibility: row.responsibility || row.owner || "Not provided.",
+        initiativeProblem: row.initiativeProblem || "Not provided.",
+        scopeOfWork: row.scopeOfWork || "Not provided.",
+        presentStatus: row.presentStatus || row.overallPlan || "Not provided.",
         projectImages: imagesForDisplay(row.projectImageUrls || row.projectImageUrl || row.projectImage, row.pendingProjectImages),
         updatePlan: normalizeMilestones(row.updatePlan),
         updateActual: normalizeMilestones(row.updateActual)
@@ -3350,34 +3592,36 @@
               <span><strong>${summary.delayed}</strong>Delayed</span>
             </div>
           </div>
-          <table class="milestone-status-table">
-            <thead>
-              <tr>
-                <th>Milestone</th>
-                <th>Plan</th>
-                <th>Actual</th>
-                <th>Status</th>
-                <th>Progress</th>
-                <th>Remark</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows.length ? rows.map((item) => `
+          <div class="milestone-table-scroll">
+            <table class="milestone-status-table">
+              <thead>
                 <tr>
-                  <td>${formatCellText(item.name)}</td>
-                  <td class="milestone-date">${monthCompletionLabel(item.planMonth)}</td>
-                  <td class="milestone-date">${monthCompletionLabel(item.actualMonth)}</td>
-                  <td class="milestone-status-cell"><span class="traffic-icon ${item.color}" title="${escapeHtml(item.label)}"></span></td>
-                  <td class="milestone-progress">${item.progress}%</td>
-                  <td class="milestone-remark">${formatCellText(item.remark)}</td>
+                  <th>Milestone</th>
+                  <th>Plan</th>
+                  <th>Actual</th>
+                  <th>Status</th>
+                  <th>Progress</th>
+                  <th>Remark</th>
                 </tr>
-              `).join("") : `
-                <tr>
-                  <td colspan="6">No milestones added.</td>
-                </tr>
-              `}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${rows.length ? rows.map((item) => `
+                  <tr>
+                    <td>${formatCellText(item.name)}</td>
+                    <td class="milestone-date">${monthCompletionLabel(item.planMonth)}</td>
+                    <td class="milestone-date">${monthCompletionLabel(item.actualMonth)}</td>
+                    <td class="milestone-status-cell"><span class="traffic-icon ${item.color}" title="${escapeHtml(item.label)}"></span></td>
+                    <td class="milestone-progress">${item.progress}%</td>
+                    <td class="milestone-remark">${formatCellText(item.remark)}</td>
+                  </tr>
+                `).join("") : `
+                  <tr>
+                    <td colspan="6">No milestones added.</td>
+                  </tr>
+                `}
+              </tbody>
+            </table>
+          </div>
         </div>
       `;
     }
@@ -3509,9 +3753,13 @@
             ${image}
             <div>
               <h3>${formatCellText(project.name)} ${statusBadge(project.status)}</h3>
-              <p><strong>Owner:</strong> ${formatCellText(project.owner)}</p>
+              <p><strong>Strategic Objective:</strong> ${formatCellText(project.strategicObjective)}</p>
+              <p><strong>Lagging KPI &amp; Target:</strong> ${formatCellText(project.laggingKpiTarget)}</p>
+              <p><strong>Responsibility:</strong> ${formatCellText(project.responsibility)}</p>
+              <p><strong>Initiative Idea / Problem:</strong> ${formatCellText(project.initiativeProblem)}</p>
+              <p><strong>Scope of Work:</strong> ${formatCellText(project.scopeOfWork)}</p>
+              <p><strong>Present Status:</strong> ${formatCellText(project.presentStatus)}</p>
               <p><strong>Plan:</strong> ${project.planProgress}% | <strong>Actual:</strong> ${project.progress}%</p>
-              <p>${formatCellText(project.overallProject)}</p>
             </div>
           </article>
         `;
@@ -3732,6 +3980,12 @@
       document.querySelector("#editFatSat").value = row.fatSat || "empty";
       document.querySelector("#editCloseMoc").value = row.closeMoc || "empty";
       document.querySelector("#editOverallPlan").value = row.overallPlan || "";
+      document.querySelector("#editStrategicObjective").value = row.strategicObjective || "";
+      document.querySelector("#editLaggingKpiTarget").value = row.laggingKpiTarget || "";
+      document.querySelector("#editResponsibility").value = row.responsibility || row.owner || "";
+      document.querySelector("#editInitiativeProblem").value = row.initiativeProblem || "";
+      document.querySelector("#editScopeOfWork").value = row.scopeOfWork || "";
+      document.querySelector("#editPresentStatus").value = row.presentStatus || row.overallPlan || "";
       clearProjectImageInput();
       renderProjectExistingImages(row);
       editUpdatePlan.value = milestoneText(row.updatePlan);
@@ -3754,6 +4008,12 @@
       document.querySelector("#editFatSat").value = "empty";
       document.querySelector("#editCloseMoc").value = "empty";
       document.querySelector("#editOverallPlan").value = "";
+      document.querySelector("#editStrategicObjective").value = "";
+      document.querySelector("#editLaggingKpiTarget").value = "";
+      document.querySelector("#editResponsibility").value = "System Team";
+      document.querySelector("#editInitiativeProblem").value = "";
+      document.querySelector("#editScopeOfWork").value = "";
+      document.querySelector("#editPresentStatus").value = "";
       clearProjectImageInput();
       renderProjectExistingImages(null);
       editUpdatePlan.value = "";
@@ -3814,6 +4074,88 @@
       `).join("");
     }
 
+    function renderProjectPortfolio(projects) {
+      if (!projects.length) {
+        portfolioSlideIndex = 0;
+        portfolioCounter.textContent = "0 / 0";
+        portfolioPreviousButton.disabled = true;
+        portfolioNextButton.disabled = true;
+        projectGrid.innerHTML = `<div class="empty-state">No project portfolio data for this year.</div>`;
+        return;
+      }
+
+      portfolioSlideIndex = Math.min(Math.max(portfolioSlideIndex, 0), projects.length - 1);
+      const project = projects[portfolioSlideIndex];
+      const disableNavigation = projects.length <= 1;
+
+      portfolioCounter.textContent = `${portfolioSlideIndex + 1} / ${projects.length}`;
+      portfolioPreviousButton.disabled = disableNavigation;
+      portfolioNextButton.disabled = disableNavigation;
+      projectGrid.innerHTML = `
+        <article class="project-card" aria-label="Project ${portfolioSlideIndex + 1} of ${projects.length}">
+          <div class="card-top">
+            <div>
+              <h4>${formatCellText(project.name)}</h4>
+            </div>
+            <span class="status ${statusClass[project.status] || "on-track"}">${project.status}</span>
+          </div>
+          <div class="portfolio-layout">
+            <section class="portfolio-objective" aria-label="Project objective">
+              <h5 class="portfolio-section-title">Objective</h5>
+              <div class="portfolio-field">
+                <h5>Strategic Objective</h5>
+                <p>${formatCellText(project.strategicObjective)}</p>
+              </div>
+              <div class="portfolio-field">
+                <h5>Lagging KPI &amp; Target</h5>
+                <p>${formatCellText(project.laggingKpiTarget)}</p>
+              </div>
+              <div class="portfolio-field">
+                <h5>Responsibility</h5>
+                <p>${formatCellText(project.responsibility)}</p>
+              </div>
+            </section>
+            <section class="portfolio-initiative" aria-label="Initiative detail">
+              <h5 class="portfolio-section-title">Initiative Detail</h5>
+              <div class="portfolio-detail-upper">
+                <div class="portfolio-copy-stack">
+                  <div class="portfolio-field">
+                    <h5>Initiative Idea / Problem</h5>
+                    <p>${formatCellText(project.initiativeProblem)}</p>
+                  </div>
+                  <div class="portfolio-field">
+                    <h5>Scope of Work</h5>
+                    <p>${formatCellText(project.scopeOfWork)}</p>
+                  </div>
+                  <div class="portfolio-field portfolio-present-status">
+                    <h5>Present Status</h5>
+                    <p>${formatCellText(project.presentStatus)}</p>
+                  </div>
+                </div>
+                <div class="portfolio-image-column">
+                  <div class="project-image">
+                    ${imageGallery(`project-${project.id}`, project.projectImages, project.name, "PROJECT PICTURE")}
+                  </div>
+                  <div class="portfolio-progress-summary" aria-label="Project progress summary">
+                    <span>Plan <strong>${project.planProgress}%</strong></span>
+                    <span>Actual <strong>${project.progress}%</strong></span>
+                  </div>
+                </div>
+              </div>
+              ${projectMilestoneTable(project)}
+            </section>
+          </div>
+        </article>
+      `;
+    }
+
+    function changePortfolioSlide(direction) {
+      const projects = projectCardsFromRows(rowsForActiveYear());
+      if (projects.length <= 1) return;
+      portfolioSlideIndex = (portfolioSlideIndex + direction + projects.length) % projects.length;
+      renderDashboard();
+    }
+
     function renderDashboard() {
       const data = selectedYear();
       const projects = projectCardsFromRows(rowsForActiveYear());
@@ -3838,44 +4180,8 @@
       document.querySelector("#metricCompleted").textContent = completed;
       document.querySelector("#metricActive").textContent = active;
       document.querySelector("#metricWatch").textContent = watch;
-      document.querySelector("#portfolioSubtitle").textContent = `${data.year} system work by progress, owner, and status.`;
-
-      projectGrid.innerHTML = projects.map((project) => `
-        <article class="project-card">
-          <div class="card-top">
-            <div>
-              <h4>${formatCellText(project.name)}</h4>
-            </div>
-            <span class="status ${statusClass[project.status] || "on-track"}">${project.status}</span>
-          </div>
-          <div class="project-image">
-            ${imageGallery(`project-${project.id}`, project.projectImages, project.name, "PROJECT PICTURE")}
-          </div>
-          <div class="progress-wrap">
-            <div class="progress-meta">
-              <span>Plan</span>
-              <strong>${project.planProgress}%</strong>
-            </div>
-            <div class="progress plan" aria-label="${escapeHtml(project.name)} plan">
-              <span style="width: ${project.planProgress}%"></span>
-            </div>
-          </div>
-          <div class="progress-wrap">
-            <div class="progress-meta">
-              <span>Progress</span>
-              <strong>${project.progress}%</strong>
-            </div>
-            <div class="progress" aria-label="${escapeHtml(project.name)} progress">
-              <span style="width: ${project.progress}%"></span>
-            </div>
-          </div>
-          ${projectMilestoneTable(project)}
-          <ul class="meta-list">
-            <li><strong>${formatCellText(project.owner)}</strong>Owner</li>
-            <li><strong>${formatCellText(project.overallProject)}</strong>Overall Project</li>
-          </ul>
-        </article>
-      `).join("");
+      document.querySelector("#portfolioSubtitle").textContent = `${data.year} system work by objective, initiative, milestone, and status.`;
+      renderProjectPortfolio(projects);
 
       renderYearOptions();
       renderLicenseTable();
@@ -3885,10 +4191,14 @@
 
     yearSelect.addEventListener("change", (event) => {
       state.activeYear = Number(event.target.value);
+      portfolioSlideIndex = 0;
       renderDashboard();
       loadRowsFromGoogleSheet(state.activeYear);
       loadHighlightsFromGoogleSheet(state.activeYear);
     });
+
+    portfolioPreviousButton.addEventListener("click", () => changePortfolioSlide(-1));
+    portfolioNextButton.addEventListener("click", () => changePortfolioSlide(1));
 
     exportReportButton.addEventListener("click", exportMonthlyReport);
     loginButton.addEventListener("click", openLoginDialog);
@@ -4197,6 +4507,12 @@
             fatSat: "empty",
             closeMoc: "empty",
             overallPlan: "",
+            strategicObjective: "",
+            laggingKpiTarget: "",
+            responsibility: "System Team",
+            initiativeProblem: "",
+            scopeOfWork: "",
+            presentStatus: "",
             projectImageUrl: "",
             projectImageUrls: [],
             projectImage: "",
@@ -4221,6 +4537,12 @@
         row.fatSat = document.querySelector("#editFatSat").value;
         row.closeMoc = document.querySelector("#editCloseMoc").value;
         row.overallPlan = document.querySelector("#editOverallPlan").value.trim();
+        row.strategicObjective = document.querySelector("#editStrategicObjective").value.trim();
+        row.laggingKpiTarget = document.querySelector("#editLaggingKpiTarget").value.trim();
+        row.responsibility = document.querySelector("#editResponsibility").value.trim();
+        row.initiativeProblem = document.querySelector("#editInitiativeProblem").value.trim();
+        row.scopeOfWork = document.querySelector("#editScopeOfWork").value.trim();
+        row.presentStatus = document.querySelector("#editPresentStatus").value.trim();
         row.updatePlan = parseMilestoneText(editUpdatePlan.value);
         row.updateActual = parseMilestoneText(editUpdateActual.value);
 
