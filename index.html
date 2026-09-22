@@ -1172,6 +1172,260 @@
       font-weight: 800;
     }
 
+    .portfolio-image-column .project-image {
+      aspect-ratio: auto;
+      overflow: visible;
+      display: block;
+      color: inherit;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .project-story-gallery {
+      aspect-ratio: auto;
+      overflow: visible;
+      display: block;
+      color: var(--ink);
+      background: transparent;
+      font-weight: 400;
+    }
+
+    .project-story-gallery:focus-visible {
+      outline: 3px solid rgba(63, 114, 216, 0.24);
+      outline-offset: 4px;
+      border-radius: 8px;
+    }
+
+    .project-story-gallery.gallery-empty {
+      aspect-ratio: 4 / 3;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: #eef2f7;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .gallery-stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      box-sizing: border-box;
+    }
+
+    .gallery-main-card,
+    .gallery-preview-card {
+      overflow: hidden;
+      border: 1px solid #c9d4e2;
+      border-radius: 8px;
+      background: #e8edf4;
+    }
+
+    .gallery-main-card {
+      position: relative;
+      z-index: 2;
+      display: block;
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      cursor: zoom-in;
+      box-shadow: 0 5px 14px rgba(35, 53, 68, 0.08);
+    }
+
+    .gallery-main-card:focus-visible {
+      outline: 3px solid rgba(63, 114, 216, 0.28);
+      outline-offset: 2px;
+    }
+
+    .gallery-preview-card {
+      position: absolute;
+      inset: 8px -10px 8px 18px;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.72;
+      transform: translateX(0) scale(0.965);
+      transform-origin: right center;
+    }
+
+    .project-story-gallery .gallery-main-image,
+    .project-story-gallery .gallery-preview-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .project-story-gallery .gallery-main-image {
+      display: block;
+      cursor: zoom-in;
+      transition: opacity 140ms ease, transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .gallery-main-card:hover .gallery-main-image {
+      transform: scale(1.015);
+    }
+
+    .gallery-main-image.is-exiting-left {
+      opacity: 0;
+      transform: translateX(-18px) scale(0.99);
+    }
+
+    .gallery-main-image.is-exiting-right {
+      opacity: 0;
+      transform: translateX(18px) scale(0.99);
+    }
+
+    .gallery-main-image.is-entering-right {
+      animation: gallery-enter-right 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .gallery-main-image.is-entering-left {
+      animation: gallery-enter-left 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes gallery-enter-right {
+      from { opacity: 0; transform: translateX(18px) scale(0.99); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    @keyframes gallery-enter-left {
+      from { opacity: 0; transform: translateX(-18px) scale(0.99); }
+      to { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    .gallery-control-row {
+      display: grid;
+      grid-template-columns: auto minmax(64px, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      margin-top: 7px;
+    }
+
+    .project-gallery-counter {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 4px;
+      min-width: 50px;
+      color: #64748b;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0;
+    }
+
+    .project-gallery-counter strong {
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .gallery-progress-track {
+      height: 3px;
+      overflow: hidden;
+      background: #dce4ed;
+      border-radius: 999px;
+    }
+
+    .gallery-progress-fill {
+      display: block;
+      height: 100%;
+      background: #3f72d8;
+      border-radius: inherit;
+      transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .gallery-nav {
+      display: flex;
+      gap: 6px;
+    }
+
+    .project-gallery-button {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border: 1px solid #c8d4e2;
+      border-radius: 7px;
+      color: #335eae;
+      background: #ffffff;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      line-height: 1;
+      transition: color 180ms ease, background 180ms ease, border-color 180ms ease, transform 180ms ease;
+    }
+
+    .project-gallery-button:hover {
+      color: #ffffff;
+      background: #3f72d8;
+      border-color: #3f72d8;
+    }
+
+    .project-gallery-button.prev:hover {
+      transform: translateX(-2px) scale(1.02);
+    }
+
+    .project-gallery-button.next:hover {
+      transform: translateX(2px) scale(1.02);
+    }
+
+    .project-gallery-button:active {
+      transform: scale(0.96);
+    }
+
+    .project-gallery-button:focus-visible,
+    .gallery-thumbnail:focus-visible {
+      outline: 3px solid rgba(63, 114, 216, 0.24);
+      outline-offset: 2px;
+    }
+
+    .gallery-thumbnails {
+      display: flex;
+      gap: 7px;
+      margin-top: 6px;
+      padding: 1px 1px 3px;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scrollbar-width: thin;
+      scrollbar-color: #bdc9d7 transparent;
+    }
+
+    .gallery-thumbnail {
+      flex: 0 0 48px;
+      width: 48px;
+      height: 32px;
+      overflow: hidden;
+      padding: 2px;
+      border: 1px solid #ccd6e1;
+      border-radius: 6px;
+      background: #ffffff;
+      cursor: pointer;
+      opacity: 0.68;
+      transition: opacity 180ms ease, border-color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+
+    .gallery-thumbnail:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+
+    .gallery-thumbnail.is-active {
+      opacity: 1;
+      border-color: #3f72d8;
+      background: #eaf1ff;
+      box-shadow: 0 0 0 1px #3f72d8;
+    }
+
+    .project-story-gallery .gallery-thumbnail img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 3px;
+      cursor: pointer;
+      object-fit: cover;
+    }
+
     .lightbox-backdrop {
       position: fixed;
       inset: 0;
@@ -1904,6 +2158,15 @@
         border-bottom: 1px solid var(--line);
       }
 
+      .gallery-stage {
+        padding-right: 0;
+      }
+
+      .gallery-preview-card {
+        left: 14px;
+        right: -6px;
+      }
+
     }
 
     @media (max-width: 640px) {
@@ -1992,6 +2255,43 @@
 
       .milestone-status-table {
         min-width: 680px;
+      }
+
+      .gallery-stage {
+        aspect-ratio: 16 / 10;
+        padding-right: 0;
+      }
+
+      .gallery-preview-card {
+        display: none;
+      }
+
+      .gallery-control-row {
+        grid-template-columns: auto minmax(44px, 1fr) auto;
+        gap: 8px;
+      }
+
+      .gallery-thumbnail {
+        flex-basis: 46px;
+        width: 46px;
+        height: 32px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .project-story-gallery *,
+      .project-story-gallery *::before,
+      .project-story-gallery *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+
+      .gallery-main-card:hover .gallery-main-image,
+      .project-gallery-button:hover,
+      .gallery-thumbnail:hover {
+        transform: none;
       }
     }
   </style>
@@ -3200,6 +3500,87 @@
 
     function imagesForDisplay(urls, pending = []) {
       return [...normalizeImageUrls(urls), ...normalizeImageUrls(pending)];
+    }
+
+    function projectStoryGallery(galleryId, images, altText, emptyText) {
+      const normalized = normalizeImageUrls(images);
+      const index = Math.min(galleryState[galleryId] || 0, Math.max(normalized.length - 1, 0));
+      galleryState[galleryId] = index;
+      galleryImages[galleryId] = normalized;
+
+      if (!normalized.length) {
+        return `<div class="image-gallery project-story-gallery gallery-empty">${emptyText}</div>`;
+      }
+
+      const total = normalized.length;
+      const nextIndex = (index + 1) % total;
+      const currentLabel = String(index + 1).padStart(2, "0");
+      const totalLabel = String(total).padStart(2, "0");
+      const galleryLabel = `${altText} project activity gallery`;
+
+      return `
+        <div
+          class="image-gallery project-story-gallery"
+          data-gallery-id="${escapeHtml(galleryId)}"
+          data-gallery-alt="${escapeHtml(altText)}"
+          data-gallery-index="${index}"
+          tabindex="0"
+          role="region"
+          aria-label="${escapeHtml(galleryLabel)}"
+        >
+          <div class="gallery-stage">
+            ${total > 1 ? `
+              <div class="gallery-preview-card" aria-hidden="true">
+                <img src="${escapeHtml(normalized[nextIndex])}" alt="">
+              </div>
+            ` : ""}
+            <button
+              class="gallery-main-card"
+              type="button"
+              data-gallery-open="true"
+              aria-label="Open ${escapeHtml(altText)} picture ${index + 1} of ${total}"
+            >
+              <img
+                class="gallery-main-image"
+                src="${escapeHtml(normalized[index])}"
+                alt="${escapeHtml(altText)} - picture ${index + 1} of ${total}"
+              >
+            </button>
+          </div>
+          <div class="gallery-control-row">
+            <span class="project-gallery-counter" aria-live="polite">
+              <strong data-gallery-current>${currentLabel}</strong>
+              <span>/ ${totalLabel}</span>
+            </span>
+            <span class="gallery-progress-track" aria-hidden="true">
+              <span class="gallery-progress-fill" style="width: ${((index + 1) / total) * 100}%"></span>
+            </span>
+            ${total > 1 ? `
+              <span class="gallery-nav">
+                <button class="project-gallery-button prev" type="button" data-gallery-action="prev" data-gallery-id="${escapeHtml(galleryId)}" aria-label="Previous project picture">&#8592;</button>
+                <button class="project-gallery-button next" type="button" data-gallery-action="next" data-gallery-id="${escapeHtml(galleryId)}" aria-label="Next project picture">&#8594;</button>
+              </span>
+            ` : ""}
+          </div>
+          ${total > 1 ? `
+            <div class="gallery-thumbnails" aria-label="Choose a project picture">
+              ${normalized.map((url, thumbnailIndex) => `
+                <button
+                  class="gallery-thumbnail${thumbnailIndex === index ? " is-active" : ""}"
+                  type="button"
+                  data-gallery-action="select"
+                  data-gallery-id="${escapeHtml(galleryId)}"
+                  data-gallery-index="${thumbnailIndex}"
+                  aria-label="Show project picture ${thumbnailIndex + 1} of ${total}"
+                  aria-current="${thumbnailIndex === index ? "true" : "false"}"
+                >
+                  <img src="${escapeHtml(url)}" alt="" loading="lazy">
+                </button>
+              `).join("")}
+            </div>
+          ` : ""}
+        </div>
+      `;
     }
 
     function imageGallery(galleryId, images, altText, emptyText, extraClass = "") {
@@ -4533,7 +4914,7 @@
                 </div>
                 <div class="portfolio-image-column">
                   <div class="project-image">
-                    ${imageGallery(`project-${project.id}`, project.projectImages, project.name, "PROJECT PICTURE")}
+                    ${projectStoryGallery(`project-${project.id}`, project.projectImages, project.name, "PROJECT PICTURE")}
                   </div>
                   <div class="portfolio-progress-summary" aria-label="Project progress summary">
                     <span>Plan <strong>${project.planProgress}%</strong></span>
@@ -4720,6 +5101,85 @@
       lightboxIndex = 0;
     }
 
+    function updateProjectGallery(gallery, requestedIndex, direction = "next") {
+      const galleryId = gallery?.dataset.galleryId;
+      const images = galleryImages[galleryId] || [];
+      if (!galleryId || !images.length || gallery.dataset.animating === "true") return;
+
+      const current = galleryState[galleryId] || 0;
+      const nextIndex = (requestedIndex + images.length) % images.length;
+      if (nextIndex === current) return;
+
+      const mainImage = gallery.querySelector(".gallery-main-image");
+      const mainButton = gallery.querySelector(".gallery-main-card");
+      const previewImage = gallery.querySelector(".gallery-preview-card img");
+      const currentCounter = gallery.querySelector("[data-gallery-current]");
+      const progressFill = gallery.querySelector(".gallery-progress-fill");
+      const altText = gallery.dataset.galleryAlt || "Project";
+
+      const applyImage = () => {
+        galleryState[galleryId] = nextIndex;
+        gallery.dataset.galleryIndex = String(nextIndex);
+
+        if (mainImage) {
+          mainImage.src = images[nextIndex];
+          mainImage.alt = `${altText} - picture ${nextIndex + 1} of ${images.length}`;
+        }
+        if (mainButton) {
+          mainButton.setAttribute("aria-label", `Open ${altText} picture ${nextIndex + 1} of ${images.length}`);
+        }
+        if (previewImage) {
+          previewImage.src = images[(nextIndex + 1) % images.length];
+        }
+        if (currentCounter) {
+          currentCounter.textContent = String(nextIndex + 1).padStart(2, "0");
+        }
+        if (progressFill) {
+          progressFill.style.width = `${((nextIndex + 1) / images.length) * 100}%`;
+        }
+
+        gallery.querySelectorAll(".gallery-thumbnail").forEach((thumbnail) => {
+          const isActive = Number(thumbnail.dataset.galleryIndex) === nextIndex;
+          thumbnail.classList.toggle("is-active", isActive);
+          thumbnail.setAttribute("aria-current", String(isActive));
+          if (isActive) {
+            thumbnail.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest", inline: "center" });
+          }
+        });
+      };
+
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduceMotion || !mainImage) {
+        applyImage();
+        return;
+      }
+
+      const exitClass = direction === "prev" ? "is-exiting-right" : "is-exiting-left";
+      const enterClass = direction === "prev" ? "is-entering-left" : "is-entering-right";
+      gallery.dataset.animating = "true";
+      mainImage.classList.add(exitClass);
+
+      window.setTimeout(() => {
+        applyImage();
+        mainImage.classList.remove(exitClass);
+        mainImage.classList.add(enterClass);
+        window.setTimeout(() => {
+          mainImage.classList.remove(enterClass);
+          delete gallery.dataset.animating;
+        }, 320);
+      }, 120);
+    }
+
+    function moveProjectGallery(gallery, direction) {
+      if (!gallery) return;
+      const galleryId = gallery.dataset.galleryId;
+      const images = galleryImages[galleryId] || [];
+      if (images.length <= 1) return;
+      const current = galleryState[galleryId] || 0;
+      const nextIndex = direction === "next" ? current + 1 : current - 1;
+      updateProjectGallery(gallery, nextIndex, direction);
+    }
+
     function handleGalleryClick(event) {
       const image = event.target.closest("[data-gallery-open]");
       if (image) {
@@ -4738,6 +5198,19 @@
       event.stopPropagation();
       const galleryId = button.dataset.galleryId;
       const gallery = button.closest(".image-gallery");
+
+      if (gallery?.classList.contains("project-story-gallery")) {
+        const action = button.dataset.galleryAction;
+        if (action === "select") {
+          const selectedIndex = Number(button.dataset.galleryIndex);
+          const current = galleryState[galleryId] || 0;
+          updateProjectGallery(gallery, selectedIndex, selectedIndex < current ? "prev" : "next");
+        } else {
+          moveProjectGallery(gallery, action);
+        }
+        return true;
+      }
+
       const total = Number(gallery?.querySelector(".gallery-counter")?.textContent?.split("/")[1] || 1);
       const current = galleryState[galleryId] || 0;
       galleryState[galleryId] = button.dataset.galleryAction === "next"
@@ -4748,6 +5221,40 @@
     }
 
     projectGrid.addEventListener("click", handleGalleryClick);
+
+    projectGrid.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      const gallery = event.target.closest(".project-story-gallery[data-gallery-id]");
+      if (!gallery) return;
+      event.preventDefault();
+      moveProjectGallery(gallery, event.key === "ArrowRight" ? "next" : "prev");
+    });
+
+    let projectGalleryTouchStart = null;
+
+    projectGrid.addEventListener("touchstart", (event) => {
+      const gallery = event.target.closest(".project-story-gallery[data-gallery-id]");
+      const touch = event.changedTouches[0];
+      if (!gallery || !touch) return;
+      projectGalleryTouchStart = {
+        gallery,
+        x: touch.clientX,
+        y: touch.clientY
+      };
+    }, { passive: true });
+
+    projectGrid.addEventListener("touchend", (event) => {
+      if (!projectGalleryTouchStart) return;
+      const touch = event.changedTouches[0];
+      const start = projectGalleryTouchStart;
+      projectGalleryTouchStart = null;
+      if (!touch || !start.gallery.isConnected) return;
+
+      const deltaX = touch.clientX - start.x;
+      const deltaY = touch.clientY - start.y;
+      if (Math.abs(deltaX) < 45 || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+      moveProjectGallery(start.gallery, deltaX < 0 ? "next" : "prev");
+    }, { passive: true });
 
     highlightGrid.addEventListener("click", (event) => {
       if (handleGalleryClick(event)) return;
