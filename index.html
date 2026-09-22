@@ -2421,6 +2421,20 @@
     .progress-summary-table col.track-col-plan { width: 20%; }
     .progress-summary-table col.track-col-action { width: 6%; }
 
+    .progress-summary-table:not(.has-action-column) {
+      min-width: 1200px;
+    }
+
+    .progress-summary-table:not(.has-action-column) col.track-col-no { width: 4%; }
+    .progress-summary-table:not(.has-action-column) col.track-col-project { width: 20%; }
+    .progress-summary-table:not(.has-action-column) col.track-col-tech { width: 8%; }
+    .progress-summary-table:not(.has-action-column) col.track-col-tor { width: 10%; }
+    .progress-summary-table:not(.has-action-column) col.track-col-prpo { width: 14.5%; }
+    .progress-summary-table:not(.has-action-column) col.track-col-delivery { width: 7%; }
+    .progress-summary-table:not(.has-action-column) col.track-col-fat { width: 7%; }
+    .progress-summary-table:not(.has-action-column) col.track-col-moc { width: 7%; }
+    .progress-summary-table:not(.has-action-column) col.track-col-plan { width: 22.5%; }
+
     .progress-summary-table .cell-number,
     .progress-summary-table .cell-tech,
     .progress-summary-table .cell-tor,
@@ -2511,6 +2525,15 @@
     .license-table col.license-col-expired { width: 16%; }
     .license-table col.license-col-remaining { width: 16%; }
     .license-table col.license-col-action { width: 14%; }
+
+    .license-table:not(.has-action-column) {
+      min-width: 760px;
+    }
+
+    .license-table:not(.has-action-column) col.license-col-no { width: 7%; }
+    .license-table:not(.has-action-column) col.license-col-name { width: 57%; }
+    .license-table:not(.has-action-column) col.license-col-expired { width: 18%; }
+    .license-table:not(.has-action-column) col.license-col-remaining { width: 18%; }
 
     .license-table .cell-license-number,
     .license-table .cell-expired-date,
@@ -2971,21 +2994,19 @@
           </div>
         </div>
         <div class="table-scroll">
-          <table class="progress-table license-table">
-            <colgroup>
+          <table class="progress-table license-table" id="licenseTable">
+            <colgroup id="licenseTableColumns">
               <col class="license-col-no">
               <col class="license-col-name">
               <col class="license-col-expired">
               <col class="license-col-remaining">
-              <col class="license-col-action">
             </colgroup>
-            <thead>
+            <thead id="licenseTableHead">
               <tr>
                 <th scope="col">No.</th>
                 <th scope="col" class="table-header-left">License Name</th>
                 <th scope="col">Expired Date</th>
                 <th scope="col">Remaining Time</th>
-                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody id="licenseTableBody"></tbody>
@@ -3005,8 +3026,8 @@
           </div>
         </div>
         <div class="table-scroll">
-          <table class="progress-table progress-summary-table">
-            <colgroup>
+          <table class="progress-table progress-summary-table" id="progressSummaryTable">
+            <colgroup id="progressTableColumns">
               <col class="track-col-no">
               <col class="track-col-project">
               <col class="track-col-tech">
@@ -3016,9 +3037,8 @@
               <col class="track-col-fat">
               <col class="track-col-moc">
               <col class="track-col-plan">
-              <col class="track-col-action">
             </colgroup>
-            <thead>
+            <thead id="progressTableHead">
               <tr>
                 <th scope="col">No.</th>
                 <th scope="col" class="table-header-left">Initiative Project</th>
@@ -3029,7 +3049,6 @@
                 <th scope="col" class="vertical-header">FAT / SAT</th>
                 <th scope="col" class="vertical-header">Close MOC</th>
                 <th scope="col" class="table-header-left">Overall Plan</th>
-                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody id="progressTableBody"></tbody>
@@ -3554,6 +3573,9 @@
     const loginStatusText = document.querySelector("#loginStatusText");
     const cancelLoginButton = document.querySelector("#cancelLoginButton");
     const confirmLoginButton = document.querySelector("#confirmLoginButton");
+    const licenseTable = document.querySelector("#licenseTable");
+    const licenseTableColumns = document.querySelector("#licenseTableColumns");
+    const licenseTableHead = document.querySelector("#licenseTableHead");
     const licenseTableBody = document.querySelector("#licenseTableBody");
     const licenseStorageStatus = document.querySelector("#licenseStorageStatus");
     const addLicenseButton = document.querySelector("#addLicenseButton");
@@ -3575,6 +3597,9 @@
     const portfolioProjectTotal = document.querySelector("#portfolioProjectTotal");
     const portfolioCurrentTitle = document.querySelector("#portfolioCurrentTitle");
     const portfolioProgressFill = document.querySelector("#portfolioProgressFill");
+    const progressSummaryTable = document.querySelector("#progressSummaryTable");
+    const progressTableColumns = document.querySelector("#progressTableColumns");
+    const progressTableHead = document.querySelector("#progressTableHead");
     const progressTableBody = document.querySelector("#progressTableBody");
     const editDialog = document.querySelector("#editDialog");
     const editForm = document.querySelector("#editForm");
@@ -5302,11 +5327,72 @@
       return progressRows[state.activeYear];
     }
 
+    function renderLicenseTableStructure(showActions) {
+      const permissionState = String(showActions);
+      if (licenseTable.dataset.actionColumn === permissionState) return;
+
+      licenseTable.dataset.actionColumn = permissionState;
+      licenseTable.classList.toggle("has-action-column", showActions);
+      licenseTableColumns.innerHTML = `
+        <col class="license-col-no">
+        <col class="license-col-name">
+        <col class="license-col-expired">
+        <col class="license-col-remaining">
+        ${showActions ? `<col class="license-col-action">` : ""}
+      `;
+      licenseTableHead.innerHTML = `
+        <tr>
+          <th scope="col">No.</th>
+          <th scope="col" class="table-header-left">License Name</th>
+          <th scope="col">Expired Date</th>
+          <th scope="col">Remaining Time</th>
+          ${showActions ? `<th scope="col">Action</th>` : ""}
+        </tr>
+      `;
+    }
+
+    function renderProgressTableStructure(showActions) {
+      const permissionState = String(showActions);
+      if (progressSummaryTable.dataset.actionColumn === permissionState) return;
+
+      progressSummaryTable.dataset.actionColumn = permissionState;
+      progressSummaryTable.classList.toggle("has-action-column", showActions);
+      progressTableColumns.innerHTML = `
+        <col class="track-col-no">
+        <col class="track-col-project">
+        <col class="track-col-tech">
+        <col class="track-col-tor">
+        <col class="track-col-prpo">
+        <col class="track-col-delivery">
+        <col class="track-col-fat">
+        <col class="track-col-moc">
+        <col class="track-col-plan">
+        ${showActions ? `<col class="track-col-action">` : ""}
+      `;
+      progressTableHead.innerHTML = `
+        <tr>
+          <th scope="col">No.</th>
+          <th scope="col" class="table-header-left">Initiative Project</th>
+          <th scope="col" class="vertical-header">Tech. Preparation</th>
+          <th scope="col">TOR</th>
+          <th scope="col">PR/PO</th>
+          <th scope="col" class="vertical-header">Delivery</th>
+          <th scope="col" class="vertical-header">FAT / SAT</th>
+          <th scope="col" class="vertical-header">Close MOC</th>
+          <th scope="col" class="table-header-left">Overall Plan</th>
+          ${showActions ? `<th scope="col">Action</th>` : ""}
+        </tr>
+      `;
+    }
+
     function renderLicenseTable() {
+      const showActions = Boolean(canEdit());
+      renderLicenseTableStructure(showActions);
+
       if (!licenseRows.length) {
         licenseTableBody.innerHTML = `
           <tr>
-            <td class="table-empty-state" colspan="5">No license data</td>
+            <td class="table-empty-state" colspan="${showActions ? 5 : 4}">No license data</td>
           </tr>
         `;
         return;
@@ -5322,12 +5408,14 @@
             </td>
             <td class="cell-expired-date">${formatCellText(displayDate(license.expiredDate))}</td>
             <td class="license-remaining cell-license-remaining ${remainingTimeClass(days)}">${formatCellText(remainingTimeLabel(days))}</td>
-            <td class="cell-license-action">
-              <div class="row-actions">
-                ${canEdit() ? `<button class="edit-button" type="button" data-license-action="edit" data-license-id="${escapeHtml(license.id)}">Edit</button>` : ""}
-                ${canDelete() ? `<button class="delete-button" type="button" data-license-action="delete" data-license-id="${escapeHtml(license.id)}">Delete</button>` : ""}
-              </div>
-            </td>
+            ${showActions ? `
+              <td class="cell-license-action">
+                <div class="row-actions">
+                  <button class="edit-button" type="button" data-license-action="edit" data-license-id="${escapeHtml(license.id)}">Edit</button>
+                  ${canDelete() ? `<button class="delete-button" type="button" data-license-action="delete" data-license-id="${escapeHtml(license.id)}">Delete</button>` : ""}
+                </div>
+              </td>
+            ` : ""}
           </tr>
         `;
       }).join("");
@@ -5364,11 +5452,13 @@
 
     function renderProgressTable() {
       const rows = rowsForActiveYear();
+      const showActions = Boolean(canEdit());
+      renderProgressTableStructure(showActions);
 
       if (!rows.length) {
         progressTableBody.innerHTML = `
           <tr>
-            <td class="table-empty-state" colspan="10">No progress rows for ${state.activeYear}</td>
+            <td class="table-empty-state" colspan="${showActions ? 10 : 9}">No progress rows for ${state.activeYear}</td>
           </tr>
         `;
         return;
@@ -5388,12 +5478,14 @@
           ${statusCell(row.fatSat, "", "cell-fat")}
           ${statusCell(row.closeMoc, "", "cell-moc")}
           <td class="cell-overall-plan">${clampedText(row.overallPlan, "clamp-4")}</td>
-          <td class="cell-action">
-            <div class="row-actions">
-              ${canEdit() ? `<button class="edit-button" type="button" data-action="edit" data-row-id="${escapeHtml(row.id)}">Edit</button>` : ""}
-              ${canDelete() ? `<button class="delete-button" type="button" data-action="delete" data-row-id="${escapeHtml(row.id)}">Delete</button>` : ""}
-            </div>
-          </td>
+          ${showActions ? `
+            <td class="cell-action">
+              <div class="row-actions">
+                <button class="edit-button" type="button" data-action="edit" data-row-id="${escapeHtml(row.id)}">Edit</button>
+                ${canDelete() ? `<button class="delete-button" type="button" data-action="delete" data-row-id="${escapeHtml(row.id)}">Delete</button>` : ""}
+              </div>
+            </td>
+          ` : ""}
         </tr>
       `).join("");
     }
