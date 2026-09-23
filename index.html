@@ -641,6 +641,46 @@
       display: flex;
     }
 
+    body.auth-locked {
+      overflow: hidden;
+    }
+
+    body.auth-locked main {
+      filter: blur(10px);
+      opacity: 0.72;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    body:not(.auth-locked) main {
+      filter: blur(0);
+      opacity: 1;
+    }
+
+    main {
+      transition: filter 250ms ease, opacity 250ms ease;
+    }
+
+    #loginDialog {
+      z-index: 100;
+      background: rgba(245, 248, 250, 0.42);
+    }
+
+    #loginDialog .confirm-dialog {
+      position: relative;
+      z-index: 1;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      box-shadow: 0 22px 54px rgba(15, 23, 42, 0.18);
+    }
+
+    #loginStatusText.is-error {
+      color: #b42318;
+    }
+
+    #loginStatusText.is-loading {
+      color: var(--teal);
+    }
+
     .edit-dialog {
       width: min(760px, 100%);
       max-height: min(860px, calc(100vh - 36px));
@@ -2955,6 +2995,10 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+      main {
+        transition: none !important;
+      }
+
       .project-story-gallery *,
       .project-story-gallery *::before,
       .project-story-gallery *::after,
@@ -2980,7 +3024,7 @@
     }
   </style>
 </head>
-<body>
+<body class="auth-locked auth-loading">
   <div class="shell">
     <header class="topbar">
       <div class="brand">
@@ -3004,7 +3048,7 @@
       </div>
     </header>
 
-    <main>
+    <main id="protectedContent" inert aria-hidden="true">
       <section class="hero" aria-labelledby="heroTitle">
         <canvas id="systemMap" aria-hidden="true"></canvas>
         <div class="hero-copy">
@@ -3215,7 +3259,7 @@
       </div>
       <p id="loginStatusText" class="form-status"></p>
       <div class="dialog-actions">
-        <button class="action-button secondary" type="button" id="cancelLoginButton">Cancel</button>
+        <button class="action-button secondary" type="button" id="cancelLoginButton" hidden>Cancel</button>
         <button class="action-button" type="submit" id="confirmLoginButton">Login</button>
       </div>
     </form>
@@ -3517,17 +3561,17 @@
       2026: [
         {
           id: "2026-001",
-          project: "ExaPilot GSP 2 3 and ESP",
+          project: "Example Project",
           owner: "System Team",
           techPrep: "done",
-          tor: "TR-69C000803",
-          pr: "1121000435",
-          sapPr: "PR-69C001072",
-          po: "3121000540",
+          tor: "N/A",
+          pr: "N/A",
+          sapPr: "N/A",
+          po: "N/A",
           delivery: "progress",
           fatSat: "empty",
           closeMoc: "empty",
-          overallPlan: "Waiting for delivery and installation after vendor schedule confirmation.",
+          overallPlan: "Example data shown only after authentication while live data loads.",
           projectImageUrl: "",
           updatePlan: [
             { task: "ดำเนินการดึงข้อมูลจาก EXAQUANTUM", months: [1, 2] },
@@ -3631,6 +3675,7 @@
     };
 
     const yearSelect = document.querySelector("#yearSelect");
+    const protectedContent = document.querySelector("#protectedContent");
     const exportReportButton = document.querySelector("#exportReportButton");
     const authUserText = document.querySelector("#authUserText");
     const loginButton = document.querySelector("#loginButton");
@@ -3698,15 +3743,18 @@
     const lightboxCounter = document.querySelector("#lightboxCounter");
     const lightboxClose = document.querySelector("#lightboxClose");
 
-    let progressRows = loadProgressRows();
-    let licenseRows = loadLicenseRows();
-    let highlights = loadHighlights();
+    let progressRows = {};
+    let licenseRows = [];
+    let highlights = [];
     let currentUser = loadCurrentUser();
     let currentUserPassword = sessionStorage.getItem(USER_PASSWORD_STORAGE_KEY) || "";
-    if (currentUser && !currentUserPassword) {
+    if (!currentUser || !currentUserPassword) {
       localStorage.removeItem(USER_STORAGE_KEY);
+      sessionStorage.removeItem(USER_PASSWORD_STORAGE_KEY);
       currentUser = null;
+      currentUserPassword = "";
     }
+    let authStatus = "loading";
     let pendingDeleteRowId = "";
     let editMode = "update";
     let highlightMode = "create";
@@ -3717,6 +3765,7 @@
     let lightboxGalleryId = "";
     let lightboxIndex = 0;
     let inactivityTimer = 0;
+    let protectedDataTimer = 0;
     const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
     const ACTIVITY_SAVE_INTERVAL_MS = 5000;
 
@@ -3753,6 +3802,23 @@
       };
     }
 
+    function isAuthenticated() {
+      return authStatus === "authenticated" && Boolean(currentUser && currentUser.active && currentUserPassword);
+    }
+
+    function updateProtectedView() {
+      const locked = !isAuthenticated();
+      document.body.classList.toggle("auth-locked", locked);
+      document.body.classList.toggle("auth-loading", authStatus === "loading");
+      protectedContent.inert = locked;
+      protectedContent.setAttribute("aria-hidden", String(locked));
+      yearSelect.disabled = locked;
+      exportReportButton.disabled = locked;
+      loginButton.disabled = locked;
+      cancelLoginButton.hidden = locked;
+      loginDialog.classList.toggle("is-open", locked);
+    }
+
     function saveCurrentUser(user, password = "") {
       currentUser = normalizeUser(user);
       if (currentUser && currentUser.active) {
@@ -3764,29 +3830,51 @@
           sessionStorage.setItem(USER_PASSWORD_STORAGE_KEY, password);
         }
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+        authStatus = "authenticated";
       } else {
         localStorage.removeItem(USER_STORAGE_KEY);
         sessionStorage.removeItem(USER_PASSWORD_STORAGE_KEY);
         currentUser = null;
         currentUserPassword = "";
+        authStatus = "unauthenticated";
       }
+      updateProtectedView();
       applyPermissionState();
       resetInactivityTimer();
+    }
+
+    function stopProtectedDataSync() {
+      window.clearInterval(protectedDataTimer);
+      protectedDataTimer = 0;
+    }
+
+    function clearProtectedData(removeCachedData = false) {
+      progressRows = {};
+      licenseRows = [];
+      highlights = [];
+      portfolioSlideIndex = 0;
+
+      if (removeCachedData) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(LICENSE_STORAGE_KEY);
+        localStorage.removeItem(HIGHLIGHT_STORAGE_KEY);
+      }
     }
 
     function logoutUser(showMessage = "") {
       if (currentUser && currentUser.active) {
         logAudit("Logout", "User", showMessage || "Manual logout");
       }
+      stopProtectedDataSync();
+      clearProtectedData(true);
       saveCurrentUser(null);
       closeLicenseDialog();
       closeEditDialog();
       closeHighlightDialog();
       closeDeleteDialog();
       closeLightbox();
-      renderDashboard();
-      openLoginDialog();
-      loginStatusText.textContent = showMessage;
+      renderLockedDashboard();
+      openLoginDialog(showMessage || "Authentication is required to access internal project data.");
     }
 
     function isSessionExpired(user) {
@@ -3795,7 +3883,7 @@
     }
 
     function recordUserActivity(force = false) {
-      if (!currentUser || !currentUser.active) return;
+      if (!isAuthenticated()) return;
       const now = Date.now();
       if (!force && now - Number(currentUser.lastActivityAt || 0) < ACTIVITY_SAVE_INTERVAL_MS) return;
       currentUser.lastActivityAt = now;
@@ -3804,32 +3892,32 @@
 
     function resetInactivityTimer() {
       window.clearTimeout(inactivityTimer);
-      if (!currentUser || !currentUser.active) return;
+      if (!isAuthenticated()) return;
       if (isSessionExpired(currentUser)) {
-        logoutUser("Logged out after 30 minutes without activity.");
+        logoutUser("Your session expired after 30 minutes without activity. Please sign in again.");
         return;
       }
 
       recordUserActivity();
       inactivityTimer = window.setTimeout(() => {
-        logoutUser("Logged out after 30 minutes without activity.");
+        logoutUser("Your session expired after 30 minutes without activity. Please sign in again.");
       }, INACTIVITY_LIMIT_MS);
     }
 
     function canEdit() {
-      return currentUser && currentUser.active && ["Admin", "Editor"].includes(currentUser.role);
+      return isAuthenticated() && ["Admin", "Editor"].includes(currentUser.role);
     }
 
     function canDelete() {
-      return currentUser && currentUser.active && currentUser.role === "Admin";
+      return isAuthenticated() && currentUser.role === "Admin";
     }
 
     function currentActorEmail() {
-      return currentUser && currentUser.active ? currentUser.email : "";
+      return isAuthenticated() ? currentUser.email : "";
     }
 
     function currentActorPassword() {
-      return currentUser && currentUser.active ? currentUserPassword : "";
+      return isAuthenticated() ? currentUserPassword : "";
     }
 
     function requireEditPermission() {
@@ -3844,20 +3932,35 @@
       return false;
     }
 
-    function openLoginDialog() {
-      loginStatusText.textContent = "";
+    function setLoginBusy(isBusy, message = "") {
+      loginEmailInput.disabled = isBusy;
+      loginPasswordInput.disabled = isBusy;
+      confirmLoginButton.disabled = isBusy;
+      confirmLoginButton.textContent = isBusy ? "Checking" : "Login";
+      loginStatusText.classList.toggle("is-loading", isBusy);
+      if (message) loginStatusText.textContent = message;
+    }
+
+    function openLoginDialog(message = "", tone = "") {
+      loginStatusText.classList.toggle("is-error", tone === "error");
+      if (message) loginStatusText.textContent = message;
       loginEmailInput.value = currentUser?.email || "";
       loginDialog.classList.add("is-open");
-      loginEmailInput.focus();
+      if (!loginEmailInput.disabled) loginEmailInput.focus();
     }
 
     function closeLoginDialog() {
+      if (!isAuthenticated()) {
+        loginDialog.classList.add("is-open");
+        return;
+      }
       loginDialog.classList.remove("is-open");
       loginForm.reset();
       loginStatusText.textContent = "";
+      loginStatusText.classList.remove("is-error", "is-loading");
     }
 
-    async function loadUserFromGoogleSheet(email, password) {
+    async function loadUserFromGoogleSheet(email, password, action = "login") {
       if (!USER_APPS_SCRIPT_URL) {
         throw new Error("Users web app URL is not set");
       }
@@ -3868,7 +3971,7 @@
       try {
         const response = await fetch(USER_APPS_SCRIPT_URL, {
           method: "POST",
-          body: new URLSearchParams({ action: "login", email, password }),
+          body: new URLSearchParams({ action, email, password }),
           cache: "no-store",
           credentials: "omit",
           redirect: "follow",
@@ -3902,6 +4005,14 @@
       }
     }
 
+    function handleProtectedApiAuthenticationError(payload) {
+      if (!payload || payload.ok !== false || !isAuthenticated()) return false;
+      const message = String(payload.error || "");
+      if (!/auth|login|password|approved|inactive|permission required/i.test(message)) return false;
+      logoutUser("Your session is no longer valid. Please sign in again.");
+      return true;
+    }
+
     function logAudit(action, moduleName, detail = "") {
       if (!USER_APPS_SCRIPT_URL || !currentUser || !currentUser.active) return;
 
@@ -3924,13 +4035,19 @@
     }
 
     function applyPermissionState() {
+      const authenticated = isAuthenticated();
       authUserText.textContent = "";
-      const label = document.createTextNode(currentUser && currentUser.active ? currentUser.name || currentUser.email : "Not signed in");
+      const labelText = authStatus === "loading"
+        ? "Checking session"
+        : authenticated
+          ? currentUser.name || currentUser.email
+          : "Not signed in";
+      const label = document.createTextNode(labelText);
       const role = document.createElement("span");
-      role.textContent = currentUser && currentUser.active ? currentUser.role : "Viewer mode";
+      role.textContent = authenticated ? currentUser.role : "Protected view";
       authUserText.append(label, role);
-      loginButton.hidden = Boolean(currentUser && currentUser.active);
-      logoutButton.hidden = !currentUser;
+      loginButton.hidden = authenticated;
+      logoutButton.hidden = !authenticated;
       addLicenseButton.classList.toggle("permission-hidden", !canEdit());
       addRowButton.classList.toggle("permission-hidden", !canEdit());
       addHighlightButton.classList.toggle("permission-hidden", !canEdit());
@@ -4019,20 +4136,32 @@
     }
 
     function loadLicenseRowsFromGoogleSheet() {
-      if (!LICENSE_APPS_SCRIPT_URL) return;
+      if (!LICENSE_APPS_SCRIPT_URL || !isAuthenticated()) return;
 
       const callbackName = `systemTeamLicenseCallback_${Date.now()}`;
       const script = document.createElement("script");
       const separator = LICENSE_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+      const sessionEmail = currentActorEmail();
+      const sessionPassword = currentActorPassword();
 
       licenseStorageStatus.textContent = "Loading licenses from Google Sheets";
 
       window[callbackName] = (payload) => {
+        if (!isAuthenticated() || currentActorEmail() !== sessionEmail) {
+          delete window[callbackName];
+          script.remove();
+          return;
+        }
+
         if (payload && payload.ok) {
           licenseRows = (payload.rows || []).map(normalizeLicenseRow);
           localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(licenseRows));
           licenseStorageStatus.textContent = "Loaded licenses from Google Sheets";
           renderLicenseTable();
+        } else if (handleProtectedApiAuthenticationError(payload)) {
+          delete window[callbackName];
+          script.remove();
+          return;
         } else {
           licenseStorageStatus.textContent = payload && payload.error
             ? `License load error: ${payload.error}`
@@ -4049,7 +4178,7 @@
         script.remove();
       };
 
-      script.src = `${LICENSE_APPS_SCRIPT_URL}${separator}callback=${encodeURIComponent(callbackName)}`;
+      script.src = `${LICENSE_APPS_SCRIPT_URL}${separator}actorEmail=${encodeURIComponent(sessionEmail)}&actorPassword=${encodeURIComponent(sessionPassword)}&callback=${encodeURIComponent(callbackName)}`;
       document.body.appendChild(script);
     }
 
@@ -4134,13 +4263,21 @@
     }
 
     function loadHighlightsFromGoogleSheet(year = state.activeYear) {
-      if (!HIGHLIGHT_APPS_SCRIPT_URL) return;
+      if (!HIGHLIGHT_APPS_SCRIPT_URL || !isAuthenticated()) return;
 
       const callbackName = `systemTeamHighlightCallback_${Date.now()}`;
       const script = document.createElement("script");
       const separator = HIGHLIGHT_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+      const sessionEmail = currentActorEmail();
+      const sessionPassword = currentActorPassword();
 
       window[callbackName] = (payload) => {
+        if (!isAuthenticated() || currentActorEmail() !== sessionEmail) {
+          delete window[callbackName];
+          script.remove();
+          return;
+        }
+
         if (payload && payload.ok) {
           highlights = (payload.rows || []).map((item) => ({
             id: item.id,
@@ -4155,6 +4292,10 @@
           }));
           saveHighlights();
           renderHighlights();
+        } else if (handleProtectedApiAuthenticationError(payload)) {
+          delete window[callbackName];
+          script.remove();
+          return;
         }
 
         delete window[callbackName];
@@ -4166,7 +4307,7 @@
         script.remove();
       };
 
-      script.src = `${HIGHLIGHT_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&callback=${encodeURIComponent(callbackName)}`;
+      script.src = `${HIGHLIGHT_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&actorEmail=${encodeURIComponent(sessionEmail)}&actorPassword=${encodeURIComponent(sessionPassword)}&callback=${encodeURIComponent(callbackName)}`;
       document.body.appendChild(script);
     }
 
@@ -4357,12 +4498,12 @@
 
     function loadProgressRows() {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return normalizeProgressRows(structuredClone(defaultProgressRows));
+      if (!saved) return {};
 
       try {
-        return normalizeProgressRows({ ...structuredClone(defaultProgressRows), ...JSON.parse(saved) });
+        return normalizeProgressRows(JSON.parse(saved));
       } catch (error) {
-        return normalizeProgressRows(structuredClone(defaultProgressRows));
+        return {};
       }
     }
 
@@ -4578,20 +4719,32 @@
     }
 
     function loadRowsFromGoogleSheet(year = state.activeYear) {
-      if (!PROGRESS_APPS_SCRIPT_URL) return;
+      if (!PROGRESS_APPS_SCRIPT_URL || !isAuthenticated()) return;
 
       const callbackName = `systemTeamProgressCallback_${Date.now()}`;
       const script = document.createElement("script");
       const separator = PROGRESS_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
+      const sessionEmail = currentActorEmail();
+      const sessionPassword = currentActorPassword();
 
       tableStorageStatus.textContent = "Loading table from Google Sheets";
 
       window[callbackName] = (payload) => {
+        if (!isAuthenticated() || currentActorEmail() !== sessionEmail) {
+          delete window[callbackName];
+          script.remove();
+          return;
+        }
+
         if (payload && payload.ok) {
           progressRows[year] = (payload.rows || []).map(normalizeRow);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
           tableStorageStatus.textContent = "Loaded table from Google Sheets";
           renderDashboard();
+        } else if (handleProtectedApiAuthenticationError(payload)) {
+          delete window[callbackName];
+          script.remove();
+          return;
         } else {
           tableStorageStatus.textContent = "Could not load table from Google Sheets";
         }
@@ -4606,7 +4759,7 @@
         script.remove();
       };
 
-      script.src = `${PROGRESS_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&callback=${encodeURIComponent(callbackName)}`;
+      script.src = `${PROGRESS_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&actorEmail=${encodeURIComponent(sessionEmail)}&actorPassword=${encodeURIComponent(sessionPassword)}&callback=${encodeURIComponent(callbackName)}`;
       document.body.appendChild(script);
     }
 
@@ -5837,6 +5990,87 @@
       }, 120);
     }
 
+    function renderLockedDashboard() {
+      renderYearOptions();
+      document.querySelector("#heroEyebrow").textContent = "Protected dashboard";
+      document.querySelector("#heroTitle").textContent = "System Team Progress";
+      document.querySelector("#heroSummary").textContent = "Sign in to view internal project, license, milestone, and portfolio information.";
+      document.querySelector("#currentYearLabel").textContent = "--";
+      document.querySelector("#overallScore").textContent = "--";
+      document.querySelector("#scoreCaption").textContent = "Authentication required";
+      ["heroProjectCount", "heroCompletedCount", "heroActiveCount", "heroDelayCount", "metricProjects", "metricCompleted", "metricActive", "metricWatch"]
+        .forEach((id) => { document.querySelector(`#${id}`).textContent = "--"; });
+      document.querySelector("#heroFocusText").textContent = "Protected information";
+      document.querySelector("#heroRiskText").textContent = "Protected information";
+      document.querySelector("#portfolioSubtitle").textContent = "Sign in to view the project portfolio.";
+      updatePortfolioNavigator([]);
+      projectGrid.innerHTML = `<div class="empty-state">Authentication required to view project details.</div>`;
+      renderLicenseTableStructure(false);
+      licenseTableBody.innerHTML = `<tr><td class="table-empty-state" colspan="4">Sign in to view license information.</td></tr>`;
+      renderProgressTableStructure(false);
+      progressTableBody.innerHTML = `<tr><td class="table-empty-state" colspan="9">Sign in to view project progress.</td></tr>`;
+      highlightGrid.innerHTML = `<div class="empty-state">Sign in to view monthly highlights.</div>`;
+      licenseStorageStatus.textContent = "Authentication required";
+      tableStorageStatus.textContent = "Authentication required";
+    }
+
+    function startProtectedDataSync() {
+      stopProtectedDataSync();
+      if (!isAuthenticated()) return;
+
+      loadLicenseRowsFromGoogleSheet();
+      loadRowsFromGoogleSheet(state.activeYear);
+      loadHighlightsFromGoogleSheet(state.activeYear);
+      protectedDataTimer = window.setInterval(() => {
+        if (!isAuthenticated()) return;
+        loadLicenseRowsFromGoogleSheet();
+        loadRowsFromGoogleSheet(state.activeYear);
+        loadHighlightsFromGoogleSheet(state.activeYear);
+      }, 60000);
+    }
+
+    function revealProtectedDashboard() {
+      if (!isAuthenticated()) return;
+      progressRows = loadProgressRows();
+      licenseRows = loadLicenseRows();
+      highlights = loadHighlights();
+      renderDashboard();
+      startProtectedDataSync();
+    }
+
+    async function initializeAuthentication() {
+      authStatus = "loading";
+      updateProtectedView();
+      renderLockedDashboard();
+      applyPermissionState();
+      openLoginDialog("Checking your saved session...", "loading");
+      setLoginBusy(true, "Checking your saved session...");
+
+      if (!currentUser || !currentUserPassword) {
+        clearProtectedData(true);
+        saveCurrentUser(null);
+        renderLockedDashboard();
+        setLoginBusy(false);
+        openLoginDialog("Authentication is required to access internal project data.");
+        return;
+      }
+
+      try {
+        const verifiedUser = await loadUserFromGoogleSheet(currentUser.email, currentUserPassword, "verify");
+        if (!verifiedUser || !verifiedUser.active) throw new Error("Session is no longer active");
+        saveCurrentUser(verifiedUser, currentUserPassword);
+        setLoginBusy(false);
+        closeLoginDialog();
+        revealProtectedDashboard();
+      } catch (error) {
+        clearProtectedData(true);
+        saveCurrentUser(null);
+        renderLockedDashboard();
+        setLoginBusy(false);
+        openLoginDialog("Your saved session could not be verified. Please sign in again.", "error");
+      }
+    }
+
     function renderDashboard() {
       const data = selectedYear();
       const projects = projectCardsFromRows(rowsForActiveYear());
@@ -5871,6 +6105,7 @@
     }
 
     yearSelect.addEventListener("change", (event) => {
+      if (!isAuthenticated()) return;
       state.activeYear = Number(event.target.value);
       portfolioSlideIndex = 0;
       renderDashboard();
@@ -5886,7 +6121,13 @@
       changePortfolioSlide(event.key === "ArrowRight" ? 1 : -1);
     });
 
-    exportReportButton.addEventListener("click", exportMonthlyReport);
+    exportReportButton.addEventListener("click", () => {
+      if (!isAuthenticated()) {
+        openLoginDialog("Please sign in before exporting an internal report.");
+        return;
+      }
+      exportMonthlyReport();
+    });
     loginButton.addEventListener("click", openLoginDialog);
     logoutButton.addEventListener("click", () => {
       logoutUser("");
@@ -5895,22 +6136,24 @@
 
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      confirmLoginButton.disabled = true;
-      confirmLoginButton.textContent = "Checking";
-      loginStatusText.textContent = "Checking permission";
+      loginStatusText.classList.remove("is-error");
+      setLoginBusy(true, "Checking permission...");
 
       try {
         const user = await loadUserFromGoogleSheet(loginEmailInput.value.trim(), loginPasswordInput.value);
         if (!user || !user.active) throw new Error("Email is not active");
         saveCurrentUser(user, loginPasswordInput.value);
-        loginStatusText.textContent = `Logged in as ${user.role}`;
+        setLoginBusy(false);
         closeLoginDialog();
-        renderDashboard();
+        revealProtectedDashboard();
       } catch (error) {
-        loginStatusText.textContent = error.message || "Login failed";
-      } finally {
-        confirmLoginButton.disabled = false;
-        confirmLoginButton.textContent = "Login";
+        stopProtectedDataSync();
+        clearProtectedData(true);
+        saveCurrentUser(null);
+        renderLockedDashboard();
+        setLoginBusy(false);
+        loginPasswordInput.value = "";
+        openLoginDialog("Login unsuccessful. The email or password is incorrect. Please try again.", "error");
       }
     });
 
@@ -6294,10 +6537,11 @@
 
     resetTableButton.addEventListener("click", () => {
       if (!requireDeletePermission()) return;
-      progressRows[state.activeYear] = structuredClone(defaultProgressRows[state.activeYear] || []);
-      logAudit("Reset", "Progress Summary", `${state.activeYear} table reset`);
-      saveProgressRows();
+      localStorage.removeItem(STORAGE_KEY);
+      progressRows[state.activeYear] = [];
+      logAudit("Reload", "Progress Summary", `${state.activeYear} table reloaded from Google Sheets`);
       renderDashboard();
+      loadRowsFromGoogleSheet(state.activeYear);
     });
 
     cancelEditButton.addEventListener("click", closeEditDialog);
@@ -6466,16 +6710,7 @@
 
     resizeCanvas();
     renderHighlightMonthOptions();
-    renderDashboard();
-    applyPermissionState();
-    resetInactivityTimer();
-    if (!currentUser) openLoginDialog();
-    loadLicenseRowsFromGoogleSheet();
-    loadRowsFromGoogleSheet(state.activeYear);
-    loadHighlightsFromGoogleSheet(state.activeYear);
-    setInterval(loadLicenseRowsFromGoogleSheet, 60000);
-    setInterval(() => loadRowsFromGoogleSheet(state.activeYear), 60000);
-    setInterval(() => loadHighlightsFromGoogleSheet(state.activeYear), 60000);
+    initializeAuthentication();
     animationFrame = requestAnimationFrame(drawSystemMap);
   </script>
 </body>

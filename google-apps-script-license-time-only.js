@@ -39,6 +39,10 @@ function doGet(e) {
       return callbackResponse(callback, saveLicensePayload(payload));
     }
 
+    assertPermission({
+      actorEmail: e && e.parameter && e.parameter.actorEmail ? String(e.parameter.actorEmail) : "",
+      actorPassword: e && e.parameter && e.parameter.actorPassword ? String(e.parameter.actorPassword) : ""
+    }, "read");
     const rows = readLicenseRows();
     return callbackResponse(callback, {
       ok: true,
@@ -47,9 +51,10 @@ function doGet(e) {
     });
   } catch (error) {
     const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
+    const message = String(error && error.message ? error.message : error);
     return callbackResponse(callback, {
       ok: false,
-      error: String(error && error.message ? error.message : error)
+      error: /login|password|approved|inactive/i.test(message) ? "Authentication required" : message
     });
   }
 }

@@ -46,19 +46,26 @@ function authorizeProgressPermissions() {
 function doGet(e) {
   const year = e && e.parameter && e.parameter.year ? String(e.parameter.year) : "";
   const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
-  const rows = readRows(year);
-  const payload = JSON.stringify({
-    ok: true,
-    message: "System Team Progress API is running",
-    year,
-    rows
-  });
-
-  if (callback) {
-    return callbackResponse(callback, JSON.parse(payload));
+  try {
+    assertPermission({
+      actorEmail: e && e.parameter && e.parameter.actorEmail ? String(e.parameter.actorEmail) : "",
+      actorPassword: e && e.parameter && e.parameter.actorPassword ? String(e.parameter.actorPassword) : ""
+    }, "read");
+    const payload = {
+      ok: true,
+      message: "System Team Progress API is running",
+      year,
+      rows: readRows(year)
+    };
+    return callback ? callbackResponse(callback, payload) : jsonResponse(payload);
+  } catch (error) {
+    const message = String(error && error.message ? error.message : error);
+    const payload = {
+      ok: false,
+      error: /login|password|approved|inactive/i.test(message) ? "Authentication required" : "Could not load progress data"
+    };
+    return callback ? callbackResponse(callback, payload) : jsonResponse(payload);
   }
-
-  return jsonResponse(JSON.parse(payload));
 }
 
 function doPost(e) {
