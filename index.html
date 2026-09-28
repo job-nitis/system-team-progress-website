@@ -836,6 +836,9 @@
 
     .project-grid {
       display: block;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .portfolio-controls {
@@ -1072,6 +1075,9 @@
     .project-card {
       display: grid;
       gap: 14px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       min-height: 260px;
       padding: 18px;
       background: var(--panel);
@@ -1083,6 +1089,9 @@
     .portfolio-layout {
       display: grid;
       grid-template-columns: minmax(250px, 0.75fr) minmax(0, 1.75fr);
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       overflow: hidden;
       border: 1px solid var(--line);
       border-radius: 6px;
@@ -1105,6 +1114,7 @@
     .portfolio-initiative {
       display: grid;
       gap: 14px;
+      max-width: 100%;
       background: #ffffff;
     }
 
@@ -1151,12 +1161,17 @@
       grid-template-columns: minmax(0, 1fr) minmax(300px, 0.85fr);
       gap: 14px;
       align-items: stretch;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .portfolio-copy-stack {
       display: grid;
       align-content: start;
       gap: 12px;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .portfolio-copy-stack .portfolio-field,
@@ -1173,6 +1188,8 @@
 
     .portfolio-image-column {
       min-width: 0;
+      width: 100%;
+      max-width: 100%;
       display: grid;
       align-content: start;
       gap: 10px;
@@ -1313,6 +1330,8 @@
 
     .project-image {
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
       aspect-ratio: 16 / 9;
       overflow: hidden;
       position: relative;
@@ -1327,7 +1346,9 @@
     }
 
     .project-image img {
+      display: block;
       width: 100%;
+      max-width: 100%;
       height: 100%;
       object-fit: cover;
     }
@@ -1335,6 +1356,8 @@
     .image-gallery {
       position: relative;
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
       aspect-ratio: 16 / 9;
       overflow: hidden;
       display: grid;
@@ -1391,8 +1414,10 @@
 
     .portfolio-image-column .project-image {
       aspect-ratio: auto;
-      overflow: visible;
+      overflow: hidden;
       display: block;
+      max-width: 100%;
+      min-width: 0;
       color: inherit;
       background: transparent;
       border: 0;
@@ -1400,9 +1425,13 @@
     }
 
     .project-story-gallery {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       aspect-ratio: auto;
-      overflow: visible;
+      overflow: hidden;
       display: block;
+      box-sizing: border-box;
       color: var(--ink);
       background: transparent;
       font-weight: 400;
@@ -1429,6 +1458,8 @@
     .gallery-stage {
       position: relative;
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
       aspect-ratio: 16 / 9;
       box-sizing: border-box;
     }
@@ -1459,7 +1490,7 @@
 
     .gallery-preview-card {
       position: absolute;
-      inset: 8px -10px 8px 18px;
+      inset: 8px 0 8px 18px;
       z-index: 1;
       pointer-events: none;
       opacity: 0.72;
@@ -1469,7 +1500,9 @@
 
     .project-story-gallery .gallery-main-image,
     .project-story-gallery .gallery-preview-card img {
+      display: block;
       width: 100%;
+      max-width: 100%;
       height: 100%;
       object-fit: cover;
     }
@@ -1517,6 +1550,9 @@
       grid-template-columns: auto minmax(64px, 1fr) auto;
       align-items: center;
       gap: 10px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       margin-top: 7px;
     }
 
@@ -1597,15 +1633,40 @@
       outline-offset: 2px;
     }
 
+    .gallery-thumbnail-viewport {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+
     .gallery-thumbnails {
       display: flex;
       gap: 7px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       margin-top: 6px;
       padding: 1px 1px 3px;
       overflow-x: auto;
+      overflow-y: hidden;
       overscroll-behavior-inline: contain;
       scrollbar-width: thin;
       scrollbar-color: #bdc9d7 transparent;
+    }
+
+    .gallery-thumbnails::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    .gallery-thumbnails::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .gallery-thumbnails::-webkit-scrollbar-thumb {
+      background: #bdc9d7;
+      border-radius: 999px;
     }
 
     .gallery-thumbnail {
@@ -2609,11 +2670,11 @@
     }
 
     .portfolio-layout {
-      grid-template-columns: minmax(270px, 0.42fr) minmax(0, 1fr);
+      grid-template-columns: minmax(260px, 0.28fr) minmax(0, 0.72fr);
     }
 
     .portfolio-detail-upper {
-      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
       gap: 16px;
     }
 
@@ -4437,20 +4498,22 @@
             ` : ""}
           </div>
           ${total > 1 ? `
-            <div class="gallery-thumbnails" aria-label="Choose a project picture">
-              ${normalized.map((url, thumbnailIndex) => `
-                <button
-                  class="gallery-thumbnail${thumbnailIndex === index ? " is-active" : ""}"
-                  type="button"
-                  data-gallery-action="select"
-                  data-gallery-id="${escapeHtml(galleryId)}"
-                  data-gallery-index="${thumbnailIndex}"
-                  aria-label="Show project picture ${thumbnailIndex + 1} of ${total}"
-                  aria-current="${thumbnailIndex === index ? "true" : "false"}"
-                >
-                  <img src="${escapeHtml(url)}" alt="" loading="lazy">
-                </button>
-              `).join("")}
+            <div class="gallery-thumbnail-viewport">
+              <div class="gallery-thumbnails" aria-label="Choose a project picture">
+                ${normalized.map((url, thumbnailIndex) => `
+                  <button
+                    class="gallery-thumbnail${thumbnailIndex === index ? " is-active" : ""}"
+                    type="button"
+                    data-gallery-action="select"
+                    data-gallery-id="${escapeHtml(galleryId)}"
+                    data-gallery-index="${thumbnailIndex}"
+                    aria-label="Show project picture ${thumbnailIndex + 1} of ${total}"
+                    aria-current="${thumbnailIndex === index ? "true" : "false"}"
+                  >
+                    <img src="${escapeHtml(url)}" alt="" loading="lazy">
+                  </button>
+                `).join("")}
+              </div>
             </div>
           ` : ""}
         </div>
@@ -5955,6 +6018,11 @@
           </div>
         </article>
       `;
+
+      window.requestAnimationFrame(() => {
+        const activeThumbnail = projectGrid.querySelector(".project-story-gallery .gallery-thumbnail.is-active");
+        keepActiveGalleryThumbnailVisible(activeThumbnail, "auto");
+      });
     }
 
     function changePortfolioSlide(direction) {
@@ -6250,6 +6318,26 @@
       lightboxIndex = 0;
     }
 
+    function keepActiveGalleryThumbnailVisible(thumbnail, behavior = "smooth") {
+      const track = thumbnail?.closest(".gallery-thumbnails");
+      if (!track) return;
+
+      const trackRect = track.getBoundingClientRect();
+      const thumbnailRect = thumbnail.getBoundingClientRect();
+      const edgePadding = 4;
+      let nextLeft = track.scrollLeft;
+
+      if (thumbnailRect.left < trackRect.left + edgePadding) {
+        nextLeft += thumbnailRect.left - trackRect.left - edgePadding;
+      } else if (thumbnailRect.right > trackRect.right - edgePadding) {
+        nextLeft += thumbnailRect.right - trackRect.right + edgePadding;
+      } else {
+        return;
+      }
+
+      track.scrollTo({ left: Math.max(0, nextLeft), behavior });
+    }
+
     function updateProjectGallery(gallery, requestedIndex, direction = "next") {
       const galleryId = gallery?.dataset.galleryId;
       const images = galleryImages[galleryId] || [];
@@ -6292,7 +6380,7 @@
           thumbnail.classList.toggle("is-active", isActive);
           thumbnail.setAttribute("aria-current", String(isActive));
           if (isActive) {
-            thumbnail.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "nearest", inline: "center" });
+            keepActiveGalleryThumbnailVisible(thumbnail, reduceMotion ? "auto" : "smooth");
           }
         });
       };
