@@ -56,6 +56,7 @@ Use these status values for the built-in colors:
 The progress table saves edits in the browser immediately using `localStorage`.
 Deleting a project removes it from the active year after a confirmation popup.
 The website also loads table rows from Google Sheets on page load, when the year changes, and once every minute while open.
+License Time, Progress Summary, Project Portfolio, and Highlight each have an independent Refresh/Retry control. A failed refresh keeps the last successfully loaded data visible and does not end the login session.
 
 Highlight data uses a spreadsheet named `Highlight data` with a sheet tab named `Highlight information` and these columns:
 
@@ -114,7 +115,19 @@ Admin = add, edit, and delete
 
 Successful login updates `Last Login`. The website writes audit rows for login, logout, add, edit, delete, image deletion, reset, and monthly report export.
 
-Login credentials are submitted to the User web app with `POST`, so the password is not placed in the request URL. After changing `google-apps-script-users-only.js`, authorize the script and deploy a new User web app version before publishing the matching `index.html`.
+Login credentials are submitted to the User web app with `POST`, so the password is not placed in the request URL. A successful login creates an opaque server session token with a 15-minute sliding inactivity expiry. Only that token is kept in browser `sessionStorage`, so F5/browser refresh can restore the session without storing or resending the password. The User Apps Script validates the token on every session check, audit request, and protected data request.
+
+The Apps Script web-app architecture cannot issue a custom first-party `HttpOnly` cookie for a separately hosted GitHub Pages site. The opaque token is therefore held only for the browser-tab session; it is not the source of truth. Server-side Script Properties store the session, hash the token key, enforce expiry, and re-check the user's current Active/Role values.
+
+After applying the session update, redeploy in this order:
+
+1. Replace and deploy `google-apps-script-users-only.js` first.
+2. Replace and deploy `google-apps-script-progress-only.js`.
+3. Replace and deploy `google-apps-script-license-time-only.js`.
+4. Replace and deploy `google-apps-script-highlight-data-only.js`.
+5. Publish the matching `index.html` only after all four web apps are updated.
+
+Redeploying only the website will not work because the older Apps Script versions expect an email/password pair instead of the session token.
 
 For team/shared storage, use Google Sheets:
 
@@ -139,7 +152,7 @@ Year | ID | Initiative Project | Owner | Tech Preparation | TOR | PR | SAP PR | 
 
 ## Cybersecurity notes
 
-The website now sends the logged-in email to the Apps Script write endpoints, and each write endpoint checks the `System Website User` spreadsheet before saving data.
+The website sends the opaque session token to each protected Apps Script endpoint. Each endpoint validates that token through the User service and uses the server-returned role before reading, saving, or deleting data. Client-supplied email and role values are not trusted for authorization.
 
 Permission rules:
 
@@ -149,7 +162,7 @@ Editor = can add and edit
 Admin = can add, edit, delete rows, and delete pictures
 ```
 
-The Apps Script files also validate JSONP callback names, limit image uploads to JPEG, PNG, or WebP under 5 MB, and protect spreadsheet cells from formula injection by prefixing text that starts with `=`, `+`, `-`, or `@`.
+The Apps Script files also validate JSONP callback names, apply a 15-second client request timeout, limit image uploads to JPEG, PNG, or WebP under 5 MB, and protect spreadsheet cells from formula injection by prefixing text that starts with `=`, `+`, `-`, or `@`.
 
 Important limitation: email-only login is not strong authentication. A stronger security design should use Microsoft or Google sign-in and verify the identity token on the backend before accepting writes.
 

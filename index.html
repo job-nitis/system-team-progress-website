@@ -382,6 +382,71 @@
       gap: 8px;
     }
 
+    .data-refresh-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-height: 36px;
+      padding: 8px 11px;
+      border: 1px solid #cbd5df;
+      border-radius: 7px;
+      color: #29415b;
+      background: #ffffff;
+      cursor: pointer;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .data-refresh-button:hover:not(:disabled) {
+      color: #0b625c;
+      background: #f2f8f7;
+      border-color: #8eb9b4;
+      transform: translateY(-1px);
+    }
+
+    .data-refresh-button:disabled {
+      cursor: wait;
+      opacity: 0.68;
+    }
+
+    .data-refresh-icon {
+      display: inline-block;
+      font-size: 16px;
+      line-height: 1;
+      transition: transform 180ms ease;
+    }
+
+    .data-refresh-button:hover:not(:disabled) .data-refresh-icon {
+      transform: rotate(35deg);
+    }
+
+    .data-refresh-button.is-loading .data-refresh-icon {
+      animation: data-refresh-spin 900ms linear infinite;
+    }
+
+    @keyframes data-refresh-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .data-source-status.is-warning {
+      color: #9a6700;
+    }
+
+    .data-source-status.is-error {
+      color: #b42318;
+    }
+
+    .portfolio-header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      min-width: 0;
+    }
+
     .action-button {
       border: 0;
       border-radius: 8px;
@@ -2874,6 +2939,12 @@
         flex-direction: column;
       }
 
+      .portfolio-header-actions {
+        align-items: stretch;
+        flex-direction: column;
+        width: 100%;
+      }
+
       .portfolio-controls {
         width: 100%;
       }
@@ -3068,7 +3139,8 @@
       .project-nav-icon,
       .project-nav-number,
       .project-nav-current-title,
-      .project-nav-progress span {
+      .project-nav-progress span,
+      .data-refresh-icon {
         scroll-behavior: auto !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
@@ -3161,9 +3233,13 @@
         <div class="summary-toolbar">
           <div>
             <h3 id="licenseTableTitle">License Time</h3>
-            <p id="licenseStorageStatus">Saved in this browser</p>
+            <p class="data-source-status" id="licenseStorageStatus">Saved in this browser</p>
           </div>
           <div class="table-actions">
+            <button class="data-refresh-button" type="button" id="refreshLicenseButton" aria-label="Refresh License Time from Google Sheets">
+              <span class="data-refresh-icon" aria-hidden="true">&#8635;</span>
+              <span data-refresh-label>Refresh</span>
+            </button>
             <button class="action-button" type="button" id="addLicenseButton">Add License</button>
           </div>
         </div>
@@ -3192,9 +3268,13 @@
         <div class="summary-toolbar">
           <div>
             <h3 id="summaryTableTitle">Progress Summary</h3>
-            <p id="tableStorageStatus">Saved in this browser</p>
+            <p class="data-source-status" id="tableStorageStatus">Saved in this browser</p>
           </div>
           <div class="table-actions">
+            <button class="data-refresh-button" type="button" id="refreshProgressButton" aria-label="Refresh Progress Summary from Google Sheets">
+              <span class="data-refresh-icon" aria-hidden="true">&#8635;</span>
+              <span data-refresh-label>Refresh</span>
+            </button>
             <button class="action-button secondary" type="button" id="resetTableButton">Reset</button>
             <button class="action-button" type="button" id="addRowButton">Add Project</button>
           </div>
@@ -3255,32 +3335,39 @@
             <div>
               <h3>Project Portfolio</h3>
               <p id="portfolioSubtitle">Current system work by objective, initiative, milestone, and status.</p>
+              <p class="data-source-status" id="portfolioStorageStatus">Waiting for Google Sheets</p>
             </div>
-            <div class="portfolio-controls" id="portfolioNavigator" role="region" aria-label="Project navigator">
-              <button class="project-nav-choice previous" type="button" id="portfolioPreviousButton" aria-label="Previous project" aria-keyshortcuts="ArrowLeft">
-                <span class="project-nav-icon" aria-hidden="true">&#8592;</span>
-                <span class="project-nav-copy">
-                  <span>Previous</span>
-                  <strong id="portfolioPreviousTitle">No project</strong>
-                </span>
+            <div class="portfolio-header-actions">
+              <button class="data-refresh-button" type="button" id="refreshPortfolioButton" aria-label="Refresh Project Portfolio from Google Sheets">
+                <span class="data-refresh-icon" aria-hidden="true">&#8635;</span>
+                <span data-refresh-label>Refresh</span>
               </button>
-              <div class="project-nav-current" aria-live="polite" aria-atomic="true">
-                <div class="project-nav-meta">
-                  <span>Project</span>
-                  <strong class="project-nav-number" id="portfolioProjectNumber">00</strong>
-                  <span>/</span>
-                  <span id="portfolioProjectTotal">00</span>
+              <div class="portfolio-controls" id="portfolioNavigator" role="region" aria-label="Project navigator">
+                <button class="project-nav-choice previous" type="button" id="portfolioPreviousButton" aria-label="Previous project" aria-keyshortcuts="ArrowLeft">
+                  <span class="project-nav-icon" aria-hidden="true">&#8592;</span>
+                  <span class="project-nav-copy">
+                    <span>Previous</span>
+                    <strong id="portfolioPreviousTitle">No project</strong>
+                  </span>
+                </button>
+                <div class="project-nav-current" aria-live="polite" aria-atomic="true">
+                  <div class="project-nav-meta">
+                    <span>Project</span>
+                    <strong class="project-nav-number" id="portfolioProjectNumber">00</strong>
+                    <span>/</span>
+                    <span id="portfolioProjectTotal">00</span>
+                  </div>
+                  <strong class="project-nav-current-title" id="portfolioCurrentTitle">No projects available</strong>
+                  <span class="project-nav-progress" aria-hidden="true"><span id="portfolioProgressFill"></span></span>
                 </div>
-                <strong class="project-nav-current-title" id="portfolioCurrentTitle">No projects available</strong>
-                <span class="project-nav-progress" aria-hidden="true"><span id="portfolioProgressFill"></span></span>
+                <button class="project-nav-choice next" type="button" id="portfolioNextButton" aria-label="Next project" aria-keyshortcuts="ArrowRight">
+                  <span class="project-nav-copy">
+                    <span>Next project</span>
+                    <strong id="portfolioNextTitle">No project</strong>
+                  </span>
+                  <span class="project-nav-icon" aria-hidden="true">&#8594;</span>
+                </button>
               </div>
-              <button class="project-nav-choice next" type="button" id="portfolioNextButton" aria-label="Next project" aria-keyshortcuts="ArrowRight">
-                <span class="project-nav-copy">
-                  <span>Next project</span>
-                  <strong id="portfolioNextTitle">No project</strong>
-                </span>
-                <span class="project-nav-icon" aria-hidden="true">&#8594;</span>
-              </button>
             </div>
           </div>
           <div class="project-grid" id="projectGrid"></div>
@@ -3291,10 +3378,15 @@
             <div>
               <h3 id="highlightTitle">Highlight</h3>
               <p>Monthly highlight activity cards for the system team.</p>
+              <p class="data-source-status" id="highlightStorageStatus">Waiting for Google Sheets</p>
             </div>
             <div class="highlight-controls">
               <label for="highlightMonthSelect">Month</label>
               <select id="highlightMonthSelect" aria-label="Highlight month"></select>
+              <button class="data-refresh-button" type="button" id="refreshHighlightButton" aria-label="Refresh Highlights from Google Sheets">
+                <span class="data-refresh-icon" aria-hidden="true">&#8635;</span>
+                <span data-refresh-label>Refresh</span>
+              </button>
               <button class="action-button" type="button" id="addHighlightButton">Create Highlight</button>
             </div>
           </div>
@@ -3700,7 +3792,12 @@
     const HIGHLIGHT_STORAGE_KEY = "system-team-highlights-v1";
     const LICENSE_STORAGE_KEY = "system-team-license-time-v1";
     const USER_STORAGE_KEY = "system-team-current-user-v1";
-    const USER_PASSWORD_STORAGE_KEY = "system-team-current-user-password-v1";
+    const USER_SESSION_STORAGE_KEY = "system-team-session-token-v1";
+    const LEGACY_USER_PASSWORD_STORAGE_KEY = "system-team-current-user-password-v1";
+    const GOOGLE_SHEETS_TIMEOUT_MS = 15000;
+    const INACTIVITY_LIMIT_MS = 15 * 60 * 1000;
+    const ACTIVITY_SAVE_INTERVAL_MS = 5000;
+    const SESSION_TOUCH_INTERVAL_MS = 60 * 1000;
     const PROGRESS_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyP9IOgobN2e3fGiMP6hTmAyYkSuBfheTgx0eiIuIlk5wqKzNUsv4x9EpwrlT6owxgVrw/exec";
     const HIGHLIGHT_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3R3iJCwLumpaz7d6VyS4E54aCbde9y1uP-PGyMrmg3KGBimVq5Y7AZw_aJyCzyulI/exec";
     const LICENSE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw25juQC6L_-L-crFs0Eed3HrQZ-pKnhyea6JFLI6NECygUZX5GYa8f6oiX0r_LQft75Q/exec";
@@ -3753,6 +3850,7 @@
     const licenseTableHead = document.querySelector("#licenseTableHead");
     const licenseTableBody = document.querySelector("#licenseTableBody");
     const licenseStorageStatus = document.querySelector("#licenseStorageStatus");
+    const refreshLicenseButton = document.querySelector("#refreshLicenseButton");
     const addLicenseButton = document.querySelector("#addLicenseButton");
     const licenseDialog = document.querySelector("#licenseDialog");
     const licenseForm = document.querySelector("#licenseForm");
@@ -3772,10 +3870,13 @@
     const portfolioProjectTotal = document.querySelector("#portfolioProjectTotal");
     const portfolioCurrentTitle = document.querySelector("#portfolioCurrentTitle");
     const portfolioProgressFill = document.querySelector("#portfolioProgressFill");
+    const portfolioStorageStatus = document.querySelector("#portfolioStorageStatus");
+    const refreshPortfolioButton = document.querySelector("#refreshPortfolioButton");
     const progressSummaryTable = document.querySelector("#progressSummaryTable");
     const progressTableColumns = document.querySelector("#progressTableColumns");
     const progressTableHead = document.querySelector("#progressTableHead");
     const progressTableBody = document.querySelector("#progressTableBody");
+    const refreshProgressButton = document.querySelector("#refreshProgressButton");
     const editDialog = document.querySelector("#editDialog");
     const editForm = document.querySelector("#editForm");
     const deleteDialog = document.querySelector("#deleteDialog");
@@ -3784,6 +3885,8 @@
     const highlightForm = document.querySelector("#highlightForm");
     const highlightGrid = document.querySelector("#highlightGrid");
     const highlightMonthSelect = document.querySelector("#highlightMonthSelect");
+    const highlightStorageStatus = document.querySelector("#highlightStorageStatus");
+    const refreshHighlightButton = document.querySelector("#refreshHighlightButton");
     const highlightMonthInput = document.querySelector("#highlightMonthInput");
     const addHighlightButton = document.querySelector("#addHighlightButton");
     const cancelHighlightButton = document.querySelector("#cancelHighlightButton");
@@ -3808,14 +3911,15 @@
     let licenseRows = [];
     let highlights = [];
     let currentUser = loadCurrentUser();
-    let currentUserPassword = sessionStorage.getItem(USER_PASSWORD_STORAGE_KEY) || "";
-    if (!currentUser || !currentUserPassword) {
+    let currentSessionToken = sessionStorage.getItem(USER_SESSION_STORAGE_KEY) || "";
+    sessionStorage.removeItem(LEGACY_USER_PASSWORD_STORAGE_KEY);
+    if (!currentUser || !currentSessionToken) {
       localStorage.removeItem(USER_STORAGE_KEY);
-      sessionStorage.removeItem(USER_PASSWORD_STORAGE_KEY);
+      sessionStorage.removeItem(USER_SESSION_STORAGE_KEY);
       currentUser = null;
-      currentUserPassword = "";
+      currentSessionToken = "";
     }
-    let authStatus = "loading";
+    let authStatus = "checking";
     let pendingDeleteRowId = "";
     let editMode = "update";
     let highlightMode = "create";
@@ -3827,8 +3931,13 @@
     let lightboxIndex = 0;
     let inactivityTimer = 0;
     let protectedDataTimer = 0;
-    const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
-    const ACTIVITY_SAVE_INTERVAL_MS = 5000;
+    let lastSessionTouchAt = 0;
+    const dataRefreshState = {
+      license: { loading: false, lastUpdated: 0, retry: false, tone: "", message: "" },
+      progress: { loading: false, lastUpdated: 0, retry: false, tone: "", message: "" },
+      portfolio: { loading: false, lastUpdated: 0, retry: false, tone: "", message: "" },
+      highlight: { loading: false, lastUpdated: 0, retry: false, tone: "", message: "" }
+    };
 
     function loadCurrentUser() {
       const saved = localStorage.getItem(USER_STORAGE_KEY);
@@ -3864,13 +3973,13 @@
     }
 
     function isAuthenticated() {
-      return authStatus === "authenticated" && Boolean(currentUser && currentUser.active && currentUserPassword);
+      return authStatus === "authenticated" && Boolean(currentUser && currentUser.active && currentSessionToken);
     }
 
     function updateProtectedView() {
       const locked = !isAuthenticated();
       document.body.classList.toggle("auth-locked", locked);
-      document.body.classList.toggle("auth-loading", authStatus === "loading");
+      document.body.classList.toggle("auth-loading", authStatus === "checking");
       protectedContent.inert = locked;
       protectedContent.setAttribute("aria-hidden", String(locked));
       yearSelect.disabled = locked;
@@ -3880,24 +3989,26 @@
       loginDialog.classList.toggle("is-open", locked);
     }
 
-    function saveCurrentUser(user, password = "") {
+    function saveCurrentUser(user, sessionToken = currentSessionToken) {
       currentUser = normalizeUser(user);
       if (currentUser && currentUser.active) {
         const now = Date.now();
         currentUser.loginAt = currentUser.loginAt || now;
         currentUser.lastActivityAt = now;
-        if (password) {
-          currentUserPassword = password;
-          sessionStorage.setItem(USER_PASSWORD_STORAGE_KEY, password);
-        }
+        currentSessionToken = String(sessionToken || "");
+        if (!currentSessionToken) throw new Error("Authenticated session token is missing");
         localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+        sessionStorage.setItem(USER_SESSION_STORAGE_KEY, currentSessionToken);
         authStatus = "authenticated";
+        Object.values(dataRefreshState).forEach((entry) => { entry.loading = false; });
       } else {
         localStorage.removeItem(USER_STORAGE_KEY);
-        sessionStorage.removeItem(USER_PASSWORD_STORAGE_KEY);
+        sessionStorage.removeItem(USER_SESSION_STORAGE_KEY);
+        sessionStorage.removeItem(LEGACY_USER_PASSWORD_STORAGE_KEY);
         currentUser = null;
-        currentUserPassword = "";
+        currentSessionToken = "";
         authStatus = "unauthenticated";
+        Object.values(dataRefreshState).forEach((entry) => { entry.loading = false; });
       }
       updateProtectedView();
       applyPermissionState();
@@ -3923,9 +4034,8 @@
     }
 
     function logoutUser(showMessage = "") {
-      if (currentUser && currentUser.active) {
-        logAudit("Logout", "User", showMessage || "Manual logout");
-      }
+      const endingToken = currentSessionToken;
+      if (endingToken) endServerSession(endingToken, showMessage || "Manual logout");
       stopProtectedDataSync();
       clearProtectedData(true);
       saveCurrentUser(null);
@@ -3949,19 +4059,23 @@
       if (!force && now - Number(currentUser.lastActivityAt || 0) < ACTIVITY_SAVE_INTERVAL_MS) return;
       currentUser.lastActivityAt = now;
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+      if (force || now - lastSessionTouchAt >= SESSION_TOUCH_INTERVAL_MS) {
+        lastSessionTouchAt = now;
+        touchServerSession();
+      }
     }
 
     function resetInactivityTimer() {
       window.clearTimeout(inactivityTimer);
       if (!isAuthenticated()) return;
       if (isSessionExpired(currentUser)) {
-        logoutUser("Your session expired after 30 minutes without activity. Please sign in again.");
+        logoutUser("Your session expired after 15 minutes without activity. Please sign in again.");
         return;
       }
 
       recordUserActivity();
       inactivityTimer = window.setTimeout(() => {
-        logoutUser("Your session expired after 30 minutes without activity. Please sign in again.");
+        logoutUser("Your session expired after 15 minutes without activity. Please sign in again.");
       }, INACTIVITY_LIMIT_MS);
     }
 
@@ -3973,12 +4087,8 @@
       return isAuthenticated() && currentUser.role === "Admin";
     }
 
-    function currentActorEmail() {
-      return isAuthenticated() ? currentUser.email : "";
-    }
-
-    function currentActorPassword() {
-      return isAuthenticated() ? currentUserPassword : "";
+    function currentActorToken() {
+      return isAuthenticated() ? currentSessionToken : "";
     }
 
     function requireEditPermission() {
@@ -4021,18 +4131,18 @@
       loginStatusText.classList.remove("is-error", "is-loading");
     }
 
-    async function loadUserFromGoogleSheet(email, password, action = "login") {
+    async function requestUserService(parameters) {
       if (!USER_APPS_SCRIPT_URL) {
         throw new Error("Users web app URL is not set");
       }
 
       const controller = new AbortController();
-      const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+      const timeoutId = window.setTimeout(() => controller.abort(), GOOGLE_SHEETS_TIMEOUT_MS);
 
       try {
         const response = await fetch(USER_APPS_SCRIPT_URL, {
           method: "POST",
-          body: new URLSearchParams({ action, email, password }),
+          body: new URLSearchParams(parameters),
           cache: "no-store",
           credentials: "omit",
           redirect: "follow",
@@ -4051,8 +4161,7 @@
           throw new Error("User service needs to be redeployed with the latest User Apps Script");
         }
 
-        if (payload && payload.ok && payload.user) return normalizeUser(payload.user);
-        throw new Error((payload && payload.error) || "Email not found or inactive");
+        return payload || { ok: false, error: "Empty response from User service" };
       } catch (error) {
         if (error && error.name === "AbortError") {
           throw new Error("User service timed out. Please try again");
@@ -4066,10 +4175,72 @@
       }
     }
 
+    async function authenticateUser(email, password) {
+      const payload = await requestUserService({ action: "login", email, password });
+      if (payload && payload.ok && payload.user && payload.sessionToken) {
+        return {
+          user: normalizeUser(payload.user),
+          sessionToken: String(payload.sessionToken)
+        };
+      }
+
+      const error = new Error((payload && payload.error) || "Email not found or inactive");
+      error.code = payload && payload.code ? String(payload.code) : "LOGIN_REJECTED";
+      error.isAuthenticationResult = true;
+      throw error;
+    }
+
+    async function verifyServerSession(sessionToken) {
+      const payload = await requestUserService({ action: "session", token: sessionToken });
+      if (payload && payload.ok && payload.user) return normalizeUser(payload.user);
+
+      const error = new Error((payload && payload.error) || "Session is no longer active");
+      error.code = payload && payload.code ? String(payload.code) : "SESSION_INVALID";
+      error.isAuthenticationResult = true;
+      throw error;
+    }
+
+    async function touchServerSession() {
+      if (!isAuthenticated() || !currentSessionToken) return;
+      const tokenAtRequest = currentSessionToken;
+
+      try {
+        const payload = await requestUserService({ action: "session", token: tokenAtRequest });
+        if (tokenAtRequest !== currentSessionToken) return;
+        if (payload && payload.ok && payload.user) {
+          currentUser = normalizeUser({ ...payload.user, loginAt: currentUser.loginAt, lastActivityAt: currentUser.lastActivityAt });
+          localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
+          applyPermissionState();
+          return;
+        }
+        if (payload && ["SESSION_EXPIRED", "SESSION_INVALID", "AUTH_REQUIRED"].includes(String(payload.code || ""))) {
+          logoutUser("Your session is no longer valid. Please sign in again.");
+        }
+      } catch (error) {
+        // A temporary User service/network failure must not erase a valid local session.
+      }
+    }
+
+    function endServerSession(sessionToken, detail) {
+      if (!USER_APPS_SCRIPT_URL || !sessionToken) return;
+      fetch(USER_APPS_SCRIPT_URL, {
+        method: "POST",
+        body: new URLSearchParams({ action: "logout", token: sessionToken, detail }),
+        cache: "no-store",
+        credentials: "omit",
+        keepalive: true,
+        redirect: "follow",
+        referrerPolicy: "no-referrer"
+      }).catch(() => {});
+    }
+
     function handleProtectedApiAuthenticationError(payload) {
       if (!payload || payload.ok !== false || !isAuthenticated()) return false;
+      const code = String(payload.code || "");
       const message = String(payload.error || "");
-      if (!/auth|login|password|approved|inactive|permission required/i.test(message)) return false;
+      const rejected = ["SESSION_EXPIRED", "SESSION_INVALID", "AUTH_REQUIRED"].includes(code)
+        || (!code && /^Authentication required$/i.test(message));
+      if (!rejected) return false;
       logoutUser("Your session is no longer valid. Please sign in again.");
       return true;
     }
@@ -4091,14 +4262,14 @@
         script.remove();
       };
 
-      script.src = `${USER_APPS_SCRIPT_URL}${separator}action=audit&email=${encodeURIComponent(currentUser.email)}&role=${encodeURIComponent(currentUser.role)}&event=${encodeURIComponent(action)}&module=${encodeURIComponent(moduleName)}&detail=${encodeURIComponent(detail)}&callback=${encodeURIComponent(callbackName)}`;
+      script.src = `${USER_APPS_SCRIPT_URL}${separator}action=audit&token=${encodeURIComponent(currentSessionToken)}&event=${encodeURIComponent(action)}&module=${encodeURIComponent(moduleName)}&detail=${encodeURIComponent(detail)}&callback=${encodeURIComponent(callbackName)}`;
       document.body.appendChild(script);
     }
 
     function applyPermissionState() {
       const authenticated = isAuthenticated();
       authUserText.textContent = "";
-      const labelText = authStatus === "loading"
+      const labelText = authStatus === "checking"
         ? "Checking session"
         : authenticated
           ? currentUser.name || currentUser.email
@@ -4113,9 +4284,109 @@
       addRowButton.classList.toggle("permission-hidden", !canEdit());
       addHighlightButton.classList.toggle("permission-hidden", !canEdit());
       resetTableButton.classList.toggle("permission-hidden", !canDelete());
+      ["license", "progress", "portfolio", "highlight"].forEach((key) => updateDataSourceUi(key));
       renderLicenseTable();
       renderProgressTable();
       renderHighlights();
+    }
+
+    function formatRefreshTime(timestamp) {
+      if (!timestamp) return "";
+      return new Intl.DateTimeFormat("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false
+      }).format(new Date(timestamp));
+    }
+
+    function dataSourceElements(key) {
+      return {
+        license: { button: refreshLicenseButton, status: licenseStorageStatus },
+        progress: { button: refreshProgressButton, status: tableStorageStatus },
+        portfolio: { button: refreshPortfolioButton, status: portfolioStorageStatus },
+        highlight: { button: refreshHighlightButton, status: highlightStorageStatus }
+      }[key];
+    }
+
+    function updateDataSourceUi(key, options = {}) {
+      const stateEntry = dataRefreshState[key];
+      const elements = dataSourceElements(key);
+      if (!stateEntry || !elements) return;
+
+      if (options.lastUpdated) {
+        stateEntry.lastUpdated = options.lastUpdated;
+        stateEntry.retry = false;
+        stateEntry.tone = "";
+        stateEntry.message = "";
+      }
+      if (typeof options.loading === "boolean") {
+        stateEntry.loading = options.loading;
+        if (options.loading) {
+          stateEntry.retry = false;
+          stateEntry.tone = "";
+        }
+      }
+      if (typeof options.retry === "boolean") stateEntry.retry = options.retry;
+      if (typeof options.tone === "string") stateEntry.tone = options.tone;
+      if (Object.prototype.hasOwnProperty.call(options, "message")) stateEntry.message = options.message;
+
+      const { button, status } = elements;
+      button.disabled = stateEntry.loading || !isAuthenticated();
+      button.classList.toggle("is-loading", stateEntry.loading);
+      const label = button.querySelector("[data-refresh-label]");
+      if (label) label.textContent = stateEntry.loading ? "Refreshing" : stateEntry.retry ? "Retry" : "Refresh";
+
+      status.classList.toggle("is-warning", stateEntry.tone === "warning");
+      status.classList.toggle("is-error", stateEntry.tone === "error");
+      if (stateEntry.message) {
+        status.textContent = stateEntry.message;
+      } else if (stateEntry.lastUpdated) {
+        status.textContent = `Last updated: ${formatRefreshTime(stateEntry.lastUpdated)}`;
+      }
+    }
+
+    function friendlyDataError(error, sourceLabel) {
+      if (error && error.kind === "timeout") return `${sourceLabel} timed out. Try again.`;
+      if (error && error.kind === "network") return `Could not connect to ${sourceLabel}. Try again.`;
+      return error && error.message ? String(error.message) : `Could not refresh ${sourceLabel}.`;
+    }
+
+    function jsonpRequest(url, parameters, timeoutMs = GOOGLE_SHEETS_TIMEOUT_MS) {
+      return new Promise((resolve, reject) => {
+        const callbackName = `systemTeamJsonp_${Date.now()}_${Math.round(Math.random() * 1000000)}`;
+        const script = document.createElement("script");
+        const separator = url.includes("?") ? "&" : "?";
+        let settled = false;
+
+        const cleanup = () => {
+          window.clearTimeout(timeoutId);
+          delete window[callbackName];
+          script.remove();
+        };
+
+        const finish = (handler, value) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          handler(value);
+        };
+
+        const timeoutId = window.setTimeout(() => {
+          const error = new Error("Google Sheets request timed out");
+          error.kind = "timeout";
+          finish(reject, error);
+        }, timeoutMs);
+
+        window[callbackName] = (payload) => finish(resolve, payload);
+        script.onerror = () => {
+          const error = new Error("Google Sheets connection failed");
+          error.kind = "network";
+          finish(reject, error);
+        };
+        script.async = true;
+        script.src = `${url}${separator}${new URLSearchParams({ ...parameters, callback: callbackName }).toString()}`;
+        document.body.appendChild(script);
+      });
     }
 
     function loadLicenseRows() {
@@ -4147,7 +4418,7 @@
       saveLicenseRowsToGoogleSheet()
       .then(() => {
         licenseStorageStatus.textContent = "Saved to Google Sheets";
-        setTimeout(loadLicenseRowsFromGoogleSheet, 1000);
+        setTimeout(() => loadLicenseRowsFromGoogleSheet(), 1000);
       })
       .catch((error) => {
         licenseStorageStatus.textContent = error.message || "Saved locally, license sync failed";
@@ -4155,92 +4426,61 @@
     }
 
     function saveLicenseRowsToGoogleSheet() {
-      return new Promise((resolve, reject) => {
-        const actorEmail = currentActorEmail();
-        if (!actorEmail) {
-          reject(new Error("Please login before saving License Time"));
-          return;
-        }
-        const actorPassword = currentActorPassword();
-        if (!actorPassword) {
-          reject(new Error("Please login again before saving License Time"));
-          return;
-        }
+      const actorToken = currentActorToken();
+      if (!actorToken) return Promise.reject(new Error("Please login before saving License Time"));
 
-        const callbackName = `systemTeamLicenseSaveCallback_${Date.now()}`;
-        const script = document.createElement("script");
-        const separator = LICENSE_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
-        const rowsPayload = JSON.stringify(licenseRows.map(normalizeLicenseRow));
-        const url = `${LICENSE_APPS_SCRIPT_URL}${separator}action=save&actorEmail=${encodeURIComponent(actorEmail)}&actorPassword=${encodeURIComponent(actorPassword)}&rows=${encodeURIComponent(rowsPayload)}&callback=${encodeURIComponent(callbackName)}`;
+      const rowsPayload = JSON.stringify(licenseRows.map(normalizeLicenseRow));
+      const queryLength = new URLSearchParams({ action: "save", actorToken, rows: rowsPayload }).toString().length;
+      if (queryLength > 18000) return Promise.reject(new Error("Too much license data to sync at one time"));
 
-        if (url.length > 18000) {
-          reject(new Error("Too much license data to sync at one time"));
-          return;
-        }
-
-        window[callbackName] = (payload) => {
-          delete window[callbackName];
-          script.remove();
-          if (payload && payload.ok) resolve(payload);
-          else reject(new Error((payload && payload.error) || "License sync failed"));
-        };
-
-        script.onerror = () => {
-          delete window[callbackName];
-          script.remove();
-          reject(new Error("Could not send licenses to Google Sheets"));
-        };
-
-        script.src = url;
-        document.body.appendChild(script);
+      return jsonpRequest(LICENSE_APPS_SCRIPT_URL, {
+        action: "save",
+        actorToken,
+        rows: rowsPayload
+      }).then((payload) => {
+        if (payload && payload.ok) return payload;
+        if (handleProtectedApiAuthenticationError(payload)) throw new Error("Authentication required");
+        throw new Error((payload && payload.error) || "License sync failed");
       });
     }
 
-    function loadLicenseRowsFromGoogleSheet() {
-      if (!LICENSE_APPS_SCRIPT_URL || !isAuthenticated()) return;
+    async function loadLicenseRowsFromGoogleSheet(options = {}) {
+      if (!LICENSE_APPS_SCRIPT_URL || !isAuthenticated() || dataRefreshState.license.loading) return false;
 
-      const callbackName = `systemTeamLicenseCallback_${Date.now()}`;
-      const script = document.createElement("script");
-      const separator = LICENSE_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
-      const sessionEmail = currentActorEmail();
-      const sessionPassword = currentActorPassword();
+      const tokenAtRequest = currentSessionToken;
+      const hasPreviousData = licenseRows.length > 0 || dataRefreshState.license.lastUpdated > 0;
+      updateDataSourceUi("license", {
+        loading: true,
+        message: options.manual ? "Refreshing licenses from Google Sheets..." : "Loading licenses from Google Sheets..."
+      });
 
-      licenseStorageStatus.textContent = "Loading licenses from Google Sheets";
-
-      window[callbackName] = (payload) => {
-        if (!isAuthenticated() || currentActorEmail() !== sessionEmail) {
-          delete window[callbackName];
-          script.remove();
-          return;
+      try {
+        const payload = await jsonpRequest(LICENSE_APPS_SCRIPT_URL, { actorToken: tokenAtRequest });
+        if (!isAuthenticated() || tokenAtRequest !== currentSessionToken) return false;
+        if (!payload || !payload.ok) {
+          if (handleProtectedApiAuthenticationError(payload)) return false;
+          const error = new Error((payload && payload.error) || "Invalid License Time response");
+          error.kind = payload && payload.code === "PERMISSION_DENIED" ? "permission" : "response";
+          throw error;
         }
 
-        if (payload && payload.ok) {
-          licenseRows = (payload.rows || []).map(normalizeLicenseRow);
-          localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(licenseRows));
-          licenseStorageStatus.textContent = "Loaded licenses from Google Sheets";
-          renderLicenseTable();
-        } else if (handleProtectedApiAuthenticationError(payload)) {
-          delete window[callbackName];
-          script.remove();
-          return;
-        } else {
-          licenseStorageStatus.textContent = payload && payload.error
-            ? `License load error: ${payload.error}`
-            : "Could not load licenses from Google Sheets";
-        }
-
-        delete window[callbackName];
-        script.remove();
-      };
-
-      script.onerror = () => {
-        licenseStorageStatus.textContent = "Could not load licenses from Google Sheets";
-        delete window[callbackName];
-        script.remove();
-      };
-
-      script.src = `${LICENSE_APPS_SCRIPT_URL}${separator}actorEmail=${encodeURIComponent(sessionEmail)}&actorPassword=${encodeURIComponent(sessionPassword)}&callback=${encodeURIComponent(callbackName)}`;
-      document.body.appendChild(script);
+        licenseRows = (payload.rows || []).map(normalizeLicenseRow);
+        localStorage.setItem(LICENSE_STORAGE_KEY, JSON.stringify(licenseRows));
+        const updatedAt = Date.now();
+        renderLicenseTable();
+        updateDataSourceUi("license", { loading: false, lastUpdated: updatedAt });
+        return true;
+      } catch (error) {
+        updateDataSourceUi("license", {
+          loading: false,
+          retry: true,
+          tone: hasPreviousData ? "warning" : "error",
+          message: hasPreviousData
+            ? "Refresh failed. Showing last successfully loaded license data."
+            : friendlyDataError(error, "License Time")
+        });
+        return false;
+      }
     }
 
     function loadHighlights() {
@@ -4276,8 +4516,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-          actorEmail: currentActorEmail(),
-          actorPassword: currentActorPassword(),
+          actorToken: currentActorToken(),
           type: "highlight",
           year: state.activeYear,
           id: highlight.id,
@@ -4298,8 +4537,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-          actorEmail: currentActorEmail(),
-          actorPassword: currentActorPassword(),
+          actorToken: currentActorToken(),
           action: "delete",
           id: highlightId
         })
@@ -4314,8 +4552,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-          actorEmail: currentActorEmail(),
-          actorPassword: currentActorPassword(),
+          actorToken: currentActorToken(),
           action: "deleteImage",
           id: highlightId,
           imageUrl
@@ -4323,53 +4560,55 @@
       });
     }
 
-    function loadHighlightsFromGoogleSheet(year = state.activeYear) {
-      if (!HIGHLIGHT_APPS_SCRIPT_URL || !isAuthenticated()) return;
+    async function loadHighlightsFromGoogleSheet(year = state.activeYear, options = {}) {
+      if (!HIGHLIGHT_APPS_SCRIPT_URL || !isAuthenticated() || dataRefreshState.highlight.loading) return false;
 
-      const callbackName = `systemTeamHighlightCallback_${Date.now()}`;
-      const script = document.createElement("script");
-      const separator = HIGHLIGHT_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
-      const sessionEmail = currentActorEmail();
-      const sessionPassword = currentActorPassword();
+      const tokenAtRequest = currentSessionToken;
+      const requestedYear = Number(year);
+      const hasPreviousData = highlights.length > 0 || dataRefreshState.highlight.lastUpdated > 0;
+      updateDataSourceUi("highlight", {
+        loading: true,
+        message: options.manual ? "Refreshing highlights from Google Sheets..." : "Loading highlights from Google Sheets..."
+      });
 
-      window[callbackName] = (payload) => {
-        if (!isAuthenticated() || currentActorEmail() !== sessionEmail) {
-          delete window[callbackName];
-          script.remove();
-          return;
+      try {
+        const payload = await jsonpRequest(HIGHLIGHT_APPS_SCRIPT_URL, {
+          year: requestedYear,
+          actorToken: tokenAtRequest
+        });
+        if (!isAuthenticated() || tokenAtRequest !== currentSessionToken || requestedYear !== Number(state.activeYear)) return false;
+        if (!payload || !payload.ok) {
+          if (handleProtectedApiAuthenticationError(payload)) return false;
+          throw new Error((payload && payload.error) || "Invalid Highlight response");
         }
 
-        if (payload && payload.ok) {
-          highlights = (payload.rows || []).map((item) => ({
-            id: item.id,
-            year: item.year,
-            month: normalizeMonthValue(item.month),
-            topic: item.topic,
-            detail: item.detail,
-            image: item.imageUrl || item.image || "",
-            imageUrls: normalizeImageUrls(item.imageUrls || item.imageUrl || item.image),
-            pendingImages: [],
-            uploadImages: []
-          }));
-          saveHighlights();
-          renderHighlights();
-        } else if (handleProtectedApiAuthenticationError(payload)) {
-          delete window[callbackName];
-          script.remove();
-          return;
-        }
-
-        delete window[callbackName];
-        script.remove();
-      };
-
-      script.onerror = () => {
-        delete window[callbackName];
-        script.remove();
-      };
-
-      script.src = `${HIGHLIGHT_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&actorEmail=${encodeURIComponent(sessionEmail)}&actorPassword=${encodeURIComponent(sessionPassword)}&callback=${encodeURIComponent(callbackName)}`;
-      document.body.appendChild(script);
+        highlights = (payload.rows || []).map((item) => ({
+          id: item.id,
+          year: item.year,
+          month: normalizeMonthValue(item.month),
+          topic: item.topic,
+          detail: item.detail,
+          image: item.imageUrl || item.image || "",
+          imageUrls: normalizeImageUrls(item.imageUrls || item.imageUrl || item.image),
+          pendingImages: [],
+          uploadImages: []
+        }));
+        saveHighlights();
+        renderHighlights();
+        const updatedAt = Date.now();
+        updateDataSourceUi("highlight", { loading: false, lastUpdated: updatedAt });
+        return true;
+      } catch (error) {
+        updateDataSourceUi("highlight", {
+          loading: false,
+          retry: true,
+          tone: hasPreviousData ? "warning" : "error",
+          message: hasPreviousData
+            ? "Refresh failed. Showing last successfully loaded highlights."
+            : friendlyDataError(error, "Highlights")
+        });
+        return false;
+      }
     }
 
     function normalizeMonthValue(value) {
@@ -4709,8 +4948,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-          actorEmail: currentActorEmail(),
-          actorPassword: currentActorPassword(),
+          actorToken: currentActorToken(),
           year: state.activeYear,
           rows: rowsForGoogleSheet()
         })
@@ -4732,8 +4970,7 @@
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
-          actorEmail: currentActorEmail(),
-          actorPassword: currentActorPassword(),
+          actorToken: currentActorToken(),
           action: "deleteImage",
           id: rowId,
           imageUrl
@@ -4781,49 +5018,74 @@
       );
     }
 
-    function loadRowsFromGoogleSheet(year = state.activeYear) {
-      if (!PROGRESS_APPS_SCRIPT_URL || !isAuthenticated()) return;
+    function renderPortfolioData(preservedProjectId = "") {
+      const data = selectedYear();
+      const projects = projectCardsFromRows(rowsForActiveYear());
+      const preservedIndex = preservedProjectId
+        ? projects.findIndex((project) => String(project.id) === String(preservedProjectId))
+        : -1;
+      if (preservedIndex >= 0) portfolioSlideIndex = preservedIndex;
+      else portfolioSlideIndex = Math.min(portfolioSlideIndex, Math.max(projects.length - 1, 0));
+      document.querySelector("#portfolioSubtitle").textContent = `${data.year} system work by objective, initiative, milestone, and status.`;
+      renderProjectPortfolio(projects);
+    }
 
-      const callbackName = `systemTeamProgressCallback_${Date.now()}`;
-      const script = document.createElement("script");
-      const separator = PROGRESS_APPS_SCRIPT_URL.includes("?") ? "&" : "?";
-      const sessionEmail = currentActorEmail();
-      const sessionPassword = currentActorPassword();
+    async function loadRowsFromGoogleSheet(year = state.activeYear, options = {}) {
+      if (!PROGRESS_APPS_SCRIPT_URL || !isAuthenticated()) return false;
 
-      tableStorageStatus.textContent = "Loading table from Google Sheets";
+      const sections = Array.isArray(options.sections) && options.sections.length
+        ? options.sections.filter((section) => ["progress", "portfolio"].includes(section))
+        : ["progress", "portfolio"];
+      if (!sections.length || sections.some((section) => dataRefreshState[section].loading)) return false;
 
-      window[callbackName] = (payload) => {
-        if (!isAuthenticated() || currentActorEmail() !== sessionEmail) {
-          delete window[callbackName];
-          script.remove();
-          return;
+      const tokenAtRequest = currentSessionToken;
+      const requestedYear = Number(year);
+      const currentProjects = projectCardsFromRows(rowsForActiveYear());
+      const preservedProjectId = currentProjects[portfolioSlideIndex]?.id || "";
+      const hasPreviousData = rowsForActiveYear().length > 0;
+
+      sections.forEach((section) => {
+        updateDataSourceUi(section, {
+          loading: true,
+          message: options.manual
+            ? `Refreshing ${section === "progress" ? "Progress Summary" : "Project Portfolio"} from Google Sheets...`
+            : `Loading ${section === "progress" ? "Progress Summary" : "Project Portfolio"} from Google Sheets...`
+        });
+      });
+
+      try {
+        const payload = await jsonpRequest(PROGRESS_APPS_SCRIPT_URL, {
+          year: requestedYear,
+          actorToken: tokenAtRequest
+        });
+        if (!isAuthenticated() || tokenAtRequest !== currentSessionToken || requestedYear !== Number(state.activeYear)) return false;
+        if (!payload || !payload.ok) {
+          if (handleProtectedApiAuthenticationError(payload)) return false;
+          throw new Error((payload && payload.error) || "Invalid Progress response");
         }
 
-        if (payload && payload.ok) {
-          progressRows[year] = (payload.rows || []).map(normalizeRow);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRows));
-          tableStorageStatus.textContent = "Loaded table from Google Sheets";
-          renderDashboard();
-        } else if (handleProtectedApiAuthenticationError(payload)) {
-          delete window[callbackName];
-          script.remove();
-          return;
-        } else {
-          tableStorageStatus.textContent = "Could not load table from Google Sheets";
-        }
+        progressRows[requestedYear] = (payload.rows || []).map(normalizeRow);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(progressRowsForLocalStorage()));
+        if (sections.includes("progress")) renderProgressTable();
+        if (sections.includes("portfolio")) renderPortfolioData(preservedProjectId);
+        if (!options.manual && sections.includes("progress") && sections.includes("portfolio")) renderProjectMetrics();
 
-        delete window[callbackName];
-        script.remove();
-      };
-
-      script.onerror = () => {
-        tableStorageStatus.textContent = "Could not load table from Google Sheets";
-        delete window[callbackName];
-        script.remove();
-      };
-
-      script.src = `${PROGRESS_APPS_SCRIPT_URL}${separator}year=${encodeURIComponent(year)}&actorEmail=${encodeURIComponent(sessionEmail)}&actorPassword=${encodeURIComponent(sessionPassword)}&callback=${encodeURIComponent(callbackName)}`;
-      document.body.appendChild(script);
+        const updatedAt = Date.now();
+        sections.forEach((section) => updateDataSourceUi(section, { loading: false, lastUpdated: updatedAt }));
+        return true;
+      } catch (error) {
+        sections.forEach((section) => {
+          updateDataSourceUi(section, {
+            loading: false,
+            retry: true,
+            tone: hasPreviousData ? "warning" : "error",
+            message: hasPreviousData
+              ? `Refresh failed. Showing last successfully loaded ${section === "progress" ? "progress table" : "portfolio"} data.`
+              : friendlyDataError(error, section === "progress" ? "Progress Summary" : "Project Portfolio")
+          });
+        });
+        return false;
+      }
     }
 
     function escapeHtml(value) {
@@ -6080,6 +6342,8 @@
       highlightGrid.innerHTML = `<div class="empty-state">Sign in to view monthly highlights.</div>`;
       licenseStorageStatus.textContent = "Authentication required";
       tableStorageStatus.textContent = "Authentication required";
+      portfolioStorageStatus.textContent = "Authentication required";
+      highlightStorageStatus.textContent = "Authentication required";
     }
 
     function startProtectedDataSync() {
@@ -6087,12 +6351,12 @@
       if (!isAuthenticated()) return;
 
       loadLicenseRowsFromGoogleSheet();
-      loadRowsFromGoogleSheet(state.activeYear);
+      loadRowsFromGoogleSheet(state.activeYear, { sections: ["progress", "portfolio"] });
       loadHighlightsFromGoogleSheet(state.activeYear);
       protectedDataTimer = window.setInterval(() => {
         if (!isAuthenticated()) return;
         loadLicenseRowsFromGoogleSheet();
-        loadRowsFromGoogleSheet(state.activeYear);
+        loadRowsFromGoogleSheet(state.activeYear, { sections: ["progress", "portfolio"] });
         loadHighlightsFromGoogleSheet(state.activeYear);
       }, 60000);
     }
@@ -6103,18 +6367,22 @@
       licenseRows = loadLicenseRows();
       highlights = loadHighlights();
       renderDashboard();
+      updateDataSourceUi("license", { message: licenseRows.length ? "Showing saved data while checking Google Sheets..." : "Connecting to Google Sheets..." });
+      updateDataSourceUi("progress", { message: rowsForActiveYear().length ? "Showing saved data while checking Google Sheets..." : "Connecting to Google Sheets..." });
+      updateDataSourceUi("portfolio", { message: rowsForActiveYear().length ? "Showing saved data while checking Google Sheets..." : "Connecting to Google Sheets..." });
+      updateDataSourceUi("highlight", { message: highlights.length ? "Showing saved data while checking Google Sheets..." : "Connecting to Google Sheets..." });
       startProtectedDataSync();
     }
 
     async function initializeAuthentication() {
-      authStatus = "loading";
+      authStatus = "checking";
       updateProtectedView();
       renderLockedDashboard();
       applyPermissionState();
       openLoginDialog("Checking your saved session...", "loading");
       setLoginBusy(true, "Checking your saved session...");
 
-      if (!currentUser || !currentUserPassword) {
+      if (!currentUser || !currentSessionToken) {
         clearProtectedData(true);
         saveCurrentUser(null);
         renderLockedDashboard();
@@ -6124,22 +6392,34 @@
       }
 
       try {
-        const verifiedUser = await loadUserFromGoogleSheet(currentUser.email, currentUserPassword, "verify");
+        const tokenToVerify = currentSessionToken;
+        const verifiedUser = await verifyServerSession(tokenToVerify);
         if (!verifiedUser || !verifiedUser.active) throw new Error("Session is no longer active");
-        saveCurrentUser(verifiedUser, currentUserPassword);
+        saveCurrentUser(verifiedUser, tokenToVerify);
         setLoginBusy(false);
         closeLoginDialog();
         revealProtectedDashboard();
       } catch (error) {
-        clearProtectedData(true);
-        saveCurrentUser(null);
+        if (error && error.isAuthenticationResult) {
+          clearProtectedData(true);
+          saveCurrentUser(null);
+        } else {
+          authStatus = "unauthenticated";
+          updateProtectedView();
+          applyPermissionState();
+        }
         renderLockedDashboard();
         setLoginBusy(false);
-        openLoginDialog("Your saved session could not be verified. Please sign in again.", "error");
+        openLoginDialog(
+          error && error.isAuthenticationResult
+            ? "Your saved session expired or is no longer valid. Please sign in again."
+            : "Could not reach the User service. Your saved session was kept; refresh to retry verification.",
+          "error"
+        );
       }
     }
 
-    function renderDashboard() {
+    function renderProjectMetrics() {
       const data = selectedYear();
       const projects = projectCardsFromRows(rowsForActiveYear());
       const completed = projects.filter((project) => project.progress >= 100).length;
@@ -6163,6 +6443,13 @@
       document.querySelector("#metricCompleted").textContent = completed;
       document.querySelector("#metricActive").textContent = active;
       document.querySelector("#metricWatch").textContent = watch;
+
+      return projects;
+    }
+
+    function renderDashboard() {
+      const data = selectedYear();
+      const projects = renderProjectMetrics();
       document.querySelector("#portfolioSubtitle").textContent = `${data.year} system work by objective, initiative, milestone, and status.`;
       renderProjectPortfolio(projects);
 
@@ -6174,11 +6461,28 @@
 
     yearSelect.addEventListener("change", (event) => {
       if (!isAuthenticated()) return;
+      ["progress", "portfolio", "highlight"].forEach((key) => { dataRefreshState[key].loading = false; });
       state.activeYear = Number(event.target.value);
       portfolioSlideIndex = 0;
       renderDashboard();
-      loadRowsFromGoogleSheet(state.activeYear);
+      loadRowsFromGoogleSheet(state.activeYear, { sections: ["progress", "portfolio"] });
       loadHighlightsFromGoogleSheet(state.activeYear);
+    });
+
+    refreshLicenseButton.addEventListener("click", () => {
+      loadLicenseRowsFromGoogleSheet({ manual: true });
+    });
+
+    refreshProgressButton.addEventListener("click", () => {
+      loadRowsFromGoogleSheet(state.activeYear, { sections: ["progress"], manual: true });
+    });
+
+    refreshPortfolioButton.addEventListener("click", () => {
+      loadRowsFromGoogleSheet(state.activeYear, { sections: ["portfolio"], manual: true });
+    });
+
+    refreshHighlightButton.addEventListener("click", () => {
+      loadHighlightsFromGoogleSheet(state.activeYear, { manual: true });
     });
 
     portfolioPreviousButton.addEventListener("click", () => changePortfolioSlide(-1));
@@ -6208,20 +6512,32 @@
       setLoginBusy(true, "Checking permission...");
 
       try {
-        const user = await loadUserFromGoogleSheet(loginEmailInput.value.trim(), loginPasswordInput.value);
-        if (!user || !user.active) throw new Error("Email is not active");
-        saveCurrentUser(user, loginPasswordInput.value);
+        const session = await authenticateUser(loginEmailInput.value.trim(), loginPasswordInput.value);
+        if (!session.user || !session.user.active) throw new Error("Email is not active");
+        saveCurrentUser(session.user, session.sessionToken);
+        loginPasswordInput.value = "";
         setLoginBusy(false);
         closeLoginDialog();
         revealProtectedDashboard();
       } catch (error) {
         stopProtectedDataSync();
-        clearProtectedData(true);
-        saveCurrentUser(null);
+        if ((error && error.isAuthenticationResult) || !currentSessionToken) {
+          clearProtectedData(true);
+          saveCurrentUser(null);
+        } else {
+          authStatus = "unauthenticated";
+          updateProtectedView();
+          applyPermissionState();
+        }
         renderLockedDashboard();
         setLoginBusy(false);
         loginPasswordInput.value = "";
-        openLoginDialog("Login unsuccessful. The email or password is incorrect. Please try again.", "error");
+        openLoginDialog(
+          error && error.isAuthenticationResult
+            ? "Login unsuccessful. The email or password is incorrect. Please try again."
+            : "Could not reach the User service. Your saved session was not deleted. Please try again.",
+          "error"
+        );
       }
     });
 

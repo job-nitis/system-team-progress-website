@@ -32,16 +32,14 @@ function doGet(e) {
     if (action === "save") {
       const rowsText = e && e.parameter && e.parameter.rows ? String(e.parameter.rows) : "[]";
       const payload = {
-        actorEmail: e && e.parameter && e.parameter.actorEmail ? String(e.parameter.actorEmail) : "",
-        actorPassword: e && e.parameter && e.parameter.actorPassword ? String(e.parameter.actorPassword) : "",
+        actorToken: e && e.parameter && e.parameter.actorToken ? String(e.parameter.actorToken) : "",
         rows: JSON.parse(rowsText)
       };
       return callbackResponse(callback, saveLicensePayload(payload));
     }
 
     assertPermission({
-      actorEmail: e && e.parameter && e.parameter.actorEmail ? String(e.parameter.actorEmail) : "",
-      actorPassword: e && e.parameter && e.parameter.actorPassword ? String(e.parameter.actorPassword) : ""
+      actorToken: e && e.parameter && e.parameter.actorToken ? String(e.parameter.actorToken) : ""
     }, "read");
     const rows = readLicenseRows();
     return callbackResponse(callback, {
@@ -52,9 +50,11 @@ function doGet(e) {
   } catch (error) {
     const callback = e && e.parameter && e.parameter.callback ? String(e.parameter.callback) : "";
     const message = String(error && error.message ? error.message : error);
+    const authenticationError = /authentication required|session expired|session invalid/i.test(message);
     return callbackResponse(callback, {
       ok: false,
-      error: /login|password|approved|inactive/i.test(message) ? "Authentication required" : message
+      code: authenticationError ? "SESSION_EXPIRED" : "DATA_ERROR",
+      error: authenticationError ? "Authentication required" : message
     });
   }
 }
@@ -221,7 +221,7 @@ function jsonResponse(payload) {
 }
 
 function assertPermission(payload, action) {
-  const user = lookupUser(payload && payload.actorEmail, payload && payload.actorPassword);
+  const user = lookupUser(payload && payload.actorToken);
   const role = user && user.role;
 
   if (action === "delete" && role !== "Admin") {
@@ -233,19 +233,17 @@ function assertPermission(payload, action) {
   }
 }
 
-function lookupUser(email, password) {
-  const cleanEmail = String(email || "").trim().toLowerCase();
-  const cleanPassword = String(password || "");
-  if (!cleanEmail) throw new Error("Login email is required");
-  if (!cleanPassword) throw new Error("Login password is required");
+function lookupUser(token) {
+  const cleanToken = String(token || "").trim();
+  if (!cleanToken) throw new Error("Authentication required");
   if (!USER_PERMISSION_WEB_APP_URL) throw new Error("User permission URL is not set");
 
-  const response = UrlFetchApp.fetch(`${USER_PERMISSION_WEB_APP_URL}?action=verify&email=${encodeURIComponent(cleanEmail)}&password=${encodeURIComponent(cleanPassword)}`, {
+  const response = UrlFetchApp.fetch(`${USER_PERMISSION_WEB_APP_URL}?action=session&token=${encodeURIComponent(cleanToken)}`, {
     muteHttpExceptions: true
   });
   const payload = JSON.parse(response.getContentText() || "{}");
   if (!payload.ok || !payload.user || !payload.user.active) {
-    throw new Error("User is not approved or inactive");
+    throw new Error("Authentication required");
   }
 
   return payload.user;

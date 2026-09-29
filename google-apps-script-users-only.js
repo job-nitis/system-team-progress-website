@@ -18,6 +18,8 @@ const AUDIT_HEADERS = [
   "Module",
   "Detail"
 ];
+const SESSION_TTL_SECONDS = 15 * 60;
+const SESSION_PROPERTY_PREFIX = "SYSTEM_TEAM_SESSION_";
 
 function authorizeUserPermissions() {
   const sheet = getUsersSheet();
@@ -41,12 +43,41 @@ function handleUserRequest(e) {
   const action = e && e.parameter && e.parameter.action ? String(e.parameter.action) : "";
   const email = e && e.parameter && e.parameter.email ? String(e.parameter.email).trim().toLowerCase() : "";
   const password = e && e.parameter && e.parameter.password ? String(e.parameter.password) : "";
+  const token = e && e.parameter && e.parameter.token ? String(e.parameter.token) : "";
 
   try {
+    if (action === "session") {
+      const session = validateSession(token, true);
+      if (!session) return callbackResponse(callback, authenticationRequired());
+      return callbackResponse(callback, {
+        ok: true,
+        user: publicUser(session.user),
+        expiresAt: session.expiresAt,
+        idleTimeoutMinutes: SESSION_TTL_SECONDS / 60
+      });
+    }
+
+    if (action === "logout") {
+      const session = validateSession(token, false);
+      if (session) {
+        appendAudit({
+          email: session.user.email,
+          role: session.user.role,
+          action: "Logout",
+          module: "User",
+          detail: e && e.parameter && e.parameter.detail ? String(e.parameter.detail) : "Manual logout"
+        });
+      }
+      deleteSession(token);
+      return callbackResponse(callback, { ok: true });
+    }
+
     if (action === "audit") {
+      const session = validateSession(token, true);
+      if (!session) return callbackResponse(callback, authenticationRequired());
       appendAudit({
-        email,
-        role: e && e.parameter && e.parameter.role ? String(e.parameter.role) : "",
+        email: session.user.email,
+        role: session.user.role,
         action: e && e.parameter && e.parameter.event ? String(e.parameter.event) : "",
         module: e && e.parameter && e.parameter.module ? String(e.parameter.module) : "",
         detail: e && e.parameter && e.parameter.detail ? String(e.parameter.detail) : ""
@@ -103,13 +134,122 @@ function handleUserRequest(e) {
       detail: "Successful login"
     });
 
-    return callbackResponse(callback, { ok: true, user: publicUser(user) });
+    const sessionToken = createSession(user);
+    return callbackResponse(callback, {
+      ok: true,
+      user: publicUser(user),
+      sessionToken,
+      idleTimeoutMinutes: SESSION_TTL_SECONDS / 60
+    });
   } catch (error) {
     return callbackResponse(callback, {
       ok: false,
       error: String(error && error.message ? error.message : error)
     });
   }
+}
+
+function authenticationRequired() {
+  return {
+    ok: false,
+    code: "SESSION_EXPIRED",
+    error: "Authentication required"
+  };
+}
+
+function createSession(user) {
+  cleanupExpiredSessions();
+  const token = `${Utilities.getUuid().replace(/-/g, "")}${Utilities.getUuid().replace(/-/g, "")}`;
+  const now = Date.now();
+  const session = {
+    email: user.email,
+    createdAt: now,
+    lastActivityAt: now,
+    expiresAt: now + (SESSION_TTL_SECONDS * 1000)
+  };
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    PropertiesService.getScriptProperties().setProperty(sessionPropertyKey(token), JSON.stringify(session));
+  } finally {
+    lock.releaseLock();
+  }
+
+  return token;
+}
+
+function validateSession(token, touch) {
+  const cleanToken = String(token || "").trim();
+  if (!/^[a-f0-9]{64}$/i.test(cleanToken)) return null;
+
+  const properties = PropertiesService.getScriptProperties();
+  const key = sessionPropertyKey(cleanToken);
+  const serialized = properties.getProperty(key);
+  if (!serialized) return null;
+
+  let session;
+  try {
+    session = JSON.parse(serialized);
+  } catch (error) {
+    properties.deleteProperty(key);
+    return null;
+  }
+
+  const now = Date.now();
+  if (!session.expiresAt || now >= Number(session.expiresAt)) {
+    properties.deleteProperty(key);
+    return null;
+  }
+
+  const result = findUserByEmail(String(session.email || "").trim().toLowerCase());
+  if (!result || !result.user.active) {
+    properties.deleteProperty(key);
+    return null;
+  }
+
+  if (touch) {
+    session.lastActivityAt = now;
+    session.expiresAt = now + (SESSION_TTL_SECONDS * 1000);
+    properties.setProperty(key, JSON.stringify(session));
+  }
+
+  return {
+    user: result.user,
+    expiresAt: Number(session.expiresAt)
+  };
+}
+
+function deleteSession(token) {
+  const cleanToken = String(token || "").trim();
+  if (!cleanToken) return;
+  PropertiesService.getScriptProperties().deleteProperty(sessionPropertyKey(cleanToken));
+}
+
+function sessionPropertyKey(token) {
+  const digest = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    String(token || ""),
+    Utilities.Charset.UTF_8
+  );
+  const hash = digest.map((value) => (`0${((value + 256) % 256).toString(16)}`).slice(-2)).join("");
+  return `${SESSION_PROPERTY_PREFIX}${hash}`;
+}
+
+function cleanupExpiredSessions() {
+  const properties = PropertiesService.getScriptProperties();
+  const allProperties = properties.getProperties();
+  const now = Date.now();
+
+  Object.keys(allProperties).forEach((key) => {
+    if (!key.startsWith(SESSION_PROPERTY_PREFIX)) return;
+    try {
+      const session = JSON.parse(allProperties[key]);
+      if (!session.expiresAt || now >= Number(session.expiresAt)) properties.deleteProperty(key);
+    } catch (error) {
+      properties.deleteProperty(key);
+    }
+  });
 }
 
 function findUserByEmail(email) {
